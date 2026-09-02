@@ -1,0 +1,756 @@
+/**
+ * Driver Logistics & Route Management Design System
+ * Naam Uzhavar / FarmDirect Platform
+ * Namespace: .drv-*
+ */
+
+:root {
+  --drv-primary: #059669;
+  --drv-primary-dark: #047857;
+  --drv-primary-light: #ecfdf5;
+  --drv-primary-border: #a7f3d0;
+
+  --drv-amber: #d97706;
+  --drv-amber-dark: #b45309;
+  --drv-amber-light: #fffbeb;
+  --drv-amber-border: #fde68a;
+
+  --drv-blue: #2563eb;
+  --drv-blue-light: #eff6ff;
+  --drv-blue-border: #bfdbfe;
+
+  --drv-slate-900: #0f172a;
+  --drv-slate-800: #1e293b;
+  --drv-slate-700: #334155;
+  --drv-slate-600: #475569;
+  --drv-slate-500: #64748b;
+  --drv-slate-400: #94a3b8;
+  --drv-slate-200: #e2e8f0;
+  --drv-slate-100: #f1f5f9;
+  --drv-slate-50: #f8fafc;
+
+  --drv-radius-sm: 8px;
+  --drv-radius-md: 12px;
+  --drv-radius-lg: 16px;
+  --drv-radius-xl: 20px;
+
+  --drv-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --drv-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --drv-shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --drv-shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.1), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+}
+
+/* ==========================================================================
+   Page Layout & Structure
+   ========================================================================== */
+.drv-layout {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  color: var(--drv-slate-800);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+.drv-wrapper {
+  display: flex;
+  flex: 1 1 auto;
+  position: relative;
+  width: 100%;
+}
+
+/* ==========================================================================
+   Desktop & Mobile Sidebar Navigation
+   ========================================================================== */
+.drv-sidebar {
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid var(--drv-slate-200);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 72px;
+  height: calc(100vh - 72px);
+  z-index: 1020;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.drv-nav-list {
+  list-style: none;
+  padding: 1rem 0.75rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.drv-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.95rem;
+  color: #475569;
+  text-decoration: none !important;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--drv-radius-md);
+  transition: all 0.15s ease;
+  border: 1.5px solid transparent;
+}
+
+.drv-nav-link:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.drv-nav-link.active {
+  background: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.12);
+  font-weight: 700;
+}
+
+.drv-nav-link.active i {
+  color: #d97706 !important;
+}
+
+.drv-nav-badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.drv-sidebar-footer {
+  margin-top: auto;
+  padding: 1rem 0.75rem;
+  border-top: 1px solid var(--drv-slate-200);
+}
+
+.drv-driver-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem;
+  background: var(--drv-slate-50);
+  border: 1px solid var(--drv-slate-200);
+  border-radius: var(--drv-radius-md);
+}
+
+.drv-driver-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px var(--drv-slate-200);
+}
+
+/* ==========================================================================
+   Header Bar
+   ========================================================================== */
+.drv-header {
+  height: 72px;
+  min-height: 72px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--drv-slate-200);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  box-shadow: var(--drv-shadow-xs);
+}
+
+.drv-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.drv-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  text-decoration: none !important;
+}
+
+.drv-header-brand img {
+  height: 42px;
+  max-height: 42px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.drv-online-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.drv-online-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+  animation: drvDotPulse 2s infinite ease-in-out;
+}
+
+@keyframes drvDotPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.15);
+  }
+}
+
+/* ==========================================================================
+   Main Content Area
+   ========================================================================== */
+.drv-main {
+  flex: 1 1 auto;
+  padding: 1.5rem 2rem 5rem 2rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.drv-page-fade {
+  animation: drvFadeInUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes drvFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Card Styling
+   ========================================================================== */
+.drv-card {
+  background: #ffffff;
+  border: 1px solid var(--drv-slate-200);
+  border-radius: var(--drv-radius-lg);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--drv-shadow-xs);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.drv-card:hover {
+  box-shadow: var(--drv-shadow-sm);
+  border-color: #cbd5e1;
+}
+
+.drv-card-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--drv-slate-500);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   Status Badges
+   ========================================================================== */
+.drv-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.drv-status-in_transit {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.drv-status-going_to_pickup {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.drv-status-arrived_at_pickup,
+.drv-status-arrived_at_drop {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: #ddd6fe;
+}
+
+.drv-status-picked_up {
+  background: #f0fdf4;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.drv-status-delivered {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+
+.drv-status-assigned {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+/* ==========================================================================
+   Realistic Route Map Component
+   ========================================================================== */
+.drv-map-container {
+  background: #0f172a;
+  border-radius: var(--drv-radius-lg);
+  position: relative;
+  overflow: hidden;
+  height: 440px;
+  box-shadow: var(--drv-shadow-md);
+  border: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+}
+
+.drv-map-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #090d16;
+  background-image: 
+    radial-gradient(#1e293b 1px, transparent 1px),
+    linear-gradient(rgba(15, 23, 42, 0.8) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.8) 1px, transparent 1px);
+  background-size: 24px 24px, 48px 48px, 48px 48px;
+}
+
+.drv-map-overlay-top {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.drv-map-glass-card {
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--drv-radius-md);
+  padding: 0.55rem 0.95rem;
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.drv-map-overlay-bottom {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.drv-truck-marker {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #d97706;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 6px rgba(217, 119, 6, 0.25), 0 8px 16px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  animation: drvTruckPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes drvTruckPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 6px rgba(217, 119, 6, 0.3), 0 8px 16px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(217, 119, 6, 0.1), 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.drv-pin-marker {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+}
+
+.drv-pin-badge {
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  margin-bottom: 4px;
+}
+
+/* ==========================================================================
+   Progress Tracker (Desktop Horizontal & Mobile Vertical)
+   ========================================================================== */
+.drv-progress-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+  padding: 1rem 0;
+}
+
+.drv-progress-line-back {
+  position: absolute;
+  top: 50%;
+  left: 30px;
+  right: 30px;
+  height: 4px;
+  background: var(--drv-slate-200);
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.drv-progress-line-fill {
+  position: absolute;
+  top: 50%;
+  left: 30px;
+  height: 4px;
+  background: var(--drv-primary);
+  transform: translateY(-50%);
+  z-index: 2;
+  transition: width 0.35s ease;
+}
+
+.drv-step-item {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.drv-step-node {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid var(--drv-slate-200);
+  color: var(--drv-slate-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: var(--drv-shadow-xs);
+}
+
+.drv-step-node.completed {
+  background: var(--drv-primary);
+  border-color: var(--drv-primary);
+  color: #ffffff;
+}
+
+.drv-step-node.active {
+  background: var(--drv-amber);
+  border-color: var(--drv-amber);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.2);
+  animation: drvNodeGlow 2s infinite ease-in-out;
+}
+
+@keyframes drvNodeGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.25);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 7px rgba(217, 119, 6, 0.1);
+  }
+}
+
+.drv-step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--drv-slate-500);
+  margin-top: 0.5rem;
+  max-width: 90px;
+  line-height: 1.25;
+}
+
+.drv-step-label.active {
+  color: var(--drv-slate-900);
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   Buttons & Quick Action Controls
+   ========================================================================== */
+.drv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: var(--drv-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  text-decoration: none !important;
+  white-space: nowrap;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.drv-btn:active {
+  transform: scale(0.98);
+}
+
+.drv-btn-primary {
+  background: var(--drv-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+.drv-btn-primary:hover {
+  background: var(--drv-primary-dark);
+  color: #ffffff;
+}
+
+.drv-btn-amber {
+  background: var(--drv-amber);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+}
+
+.drv-btn-amber:hover {
+  background: var(--drv-amber-dark);
+  color: #ffffff;
+}
+
+.drv-btn-outline {
+  background: #ffffff;
+  border-color: var(--drv-slate-200);
+  color: var(--drv-slate-700);
+}
+
+.drv-btn-outline:hover {
+  background: var(--drv-slate-50);
+  border-color: var(--drv-slate-400);
+  color: var(--drv-slate-900);
+}
+
+.drv-btn-lg {
+  padding: 0.9rem 1.75rem;
+  font-size: 1rem;
+  border-radius: var(--drv-radius-lg);
+}
+
+/* ==========================================================================
+   Sticky Mobile Bottom Action Bar
+   ========================================================================== */
+.drv-sticky-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--drv-slate-200);
+  padding: 0.85rem 1.25rem;
+  z-index: 1040;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================================================
+   Shimmer Loading Skeleton
+   ========================================================================== */
+.drv-skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: drvShimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes drvShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 991.98px) {
+  .drv-sidebar {
+    position: fixed;
+    left: 0;
+    top: 72px;
+    bottom: 0;
+    transform: translateX(-100%);
+    box-shadow: 10px 0 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .drv-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .drv-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    top: 72px;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 1015;
+  }
+
+  .drv-main {
+    padding: 1.25rem 1rem 6rem 1rem;
+  }
+
+  .drv-map-container {
+    height: 320px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .drv-header {
+    height: 66px;
+    padding: 0 1rem;
+  }
+
+  .drv-sidebar {
+    top: 66px;
+    height: calc(100vh - 66px);
+  }
+
+  .drv-sidebar-overlay {
+    top: 66px;
+  }
+
+  .drv-main {
+    padding: 1rem 0.75rem 6.5rem 0.75rem;
+  }
+
+  .drv-card {
+    padding: 1rem;
+  }
+
+  .drv-map-container {
+    height: 290px;
+  }
+
+  /* Vertical Step tracker for mobile */
+  .drv-progress-wrap.mobile-vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.5rem 0;
+    gap: 1.25rem;
+  }
+
+  .drv-progress-wrap.mobile-vertical .drv-progress-line-back {
+    left: 17px;
+    top: 20px;
+    bottom: 20px;
+    width: 3px;
+    height: auto;
+    right: auto;
+    transform: none;
+  }
+
+  .drv-progress-wrap.mobile-vertical .drv-progress-line-fill {
+    left: 17px;
+    top: 20px;
+    width: 3px;
+    height: 50%;
+    right: auto;
+    transform: none;
+  }
+
+  .drv-progress-wrap.mobile-vertical .drv-step-item {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+    width: 100%;
+  }
+
+  .drv-progress-wrap.mobile-vertical .drv-step-label {
+    margin-top: 0;
+    max-width: none;
+    font-size: 0.85rem;
+  }
+}
