@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useFarmer } from '../../context/FarmerContext';
+import { useLanguage } from '../../context/LanguageContext';
 import FarmerLayout from '../../components/farmer/FarmerLayout';
 import CropDetailsModal from '../../components/farmer/CropDetailsModal';
 import EditProductModal from '../../components/farmer/EditProductModal';
@@ -8,6 +9,7 @@ import AddProductButton from '../../components/farmer/AddProductButton';
 
 export default function FarmerProductsPage() {
   const { products, deleteProduct } = useFarmer();
+  const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'table'
@@ -34,10 +36,12 @@ export default function FarmerProductsPage() {
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
         <div>
           <h1 className="fw-black text-dark mb-1" style={{ fontSize: '1.85rem' }}>
-            My Harvest Products
+            {language === 'ta' ? 'எனது அறுவடைப் பொருட்கள்' : 'My Harvest Products'}
           </h1>
           <p className="text-muted small mb-0">
-            Manage your listed produce, track stock availability, and update pricing benchmarks.
+            {language === 'ta'
+              ? 'உங்கள் விளைபொருட்களை நிர்வகிக்கவும், இருப்பு மற்றும் விலை விவரங்களை புதுப்பிக்கவும்.'
+              : 'Manage your listed produce, track stock availability, and update pricing benchmarks.'}
           </p>
         </div>
 
@@ -119,7 +123,7 @@ export default function FarmerProductsPage() {
                 <div className="p-3 d-flex flex-column flex-grow-1">
                   <div className="d-flex justify-content-between align-items-start mb-1">
                     <h6 className="fw-bold text-dark mb-0 text-truncate" style={{ maxWidth: '200px' }}>
-                      {item.name}
+                      {language === 'ta' ? (item.tamilName || item.name) : item.name}
                     </h6>
                     <span
                       className={`badge rounded-pill ${
@@ -134,8 +138,8 @@ export default function FarmerProductsPage() {
                   </div>
 
                   <div className="small text-muted mb-2">
-                    {item.tamilName && `${item.tamilName} • `}
-                    Available: <strong className="text-success font-monospace">{item.quantity} {item.unit}</strong>
+                    {language === 'ta' ? 'கிடைக்கும் அளவு:' : 'Available:'}{' '}
+                    <strong className="text-success font-monospace">{item.quantity} {item.unit}</strong>
                   </div>
 
                   <div className="small text-muted mb-3 d-flex align-items-center gap-2">

@@ -1,7 +1,6 @@
 import React from 'react';
 
-const HERO_ILLUSTRATION_URL =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCCRaD6vOUUYuAKFMA8yEr4AfuYl7EF_qLYL9MJoRUYrupwM9NyCv-AI73KNmQWweSob69KY30Ew3DNdNkt_gUqZpho7HF3mp8swMOb3ute2U-3CJ5GwnqZQMwlTEN3Azlo1bSuW8QjUOyC5Rv7DvCX3TIesb3rWDP6YHE7YDls1r9uw93cdtCxHusXsyALuXIKFe3kb6fpV7wnvqoi81fNxZ0NbwyPvkHPhpNB2edD2TnBIYTXKFx6-A';
+const HERO_ILLUSTRATION_URL = '/naam-uzhavar-hero-illustration.jpg';
 
 export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTraceability }) {
   return (

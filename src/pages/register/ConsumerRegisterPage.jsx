@@ -162,6 +162,31 @@ export default function ConsumerRegisterPage() {
 
     setIsSubmitting(true);
 
+    try {
+      const existing = JSON.parse(localStorage.getItem('naam_uzhavar_registered_users') || '[]');
+      const newBuyer = {
+        name: formData.name || 'Registered Buyer',
+        email: `${(formData.name || 'buyer').toLowerCase().replace(/[^a-z0-9]/g, '')}@naamuzhavar.com`,
+        phone: formData.phone,
+        password: formData.password,
+        role: 'Buyer',
+        roleKey: 'buyer',
+        businessType: formData.businessType,
+        district: formData.district,
+        taluk: formData.taluk,
+        address: formData.address,
+        gstin: formData.gstin,
+        location: formData.district ? `${formData.district}, Tamil Nadu` : 'Chennai, Tamil Nadu',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+      };
+      // Prevent duplicate phone entries
+      const filtered = existing.filter((u) => u.phone !== formData.phone);
+      filtered.push(newBuyer);
+      localStorage.setItem('naam_uzhavar_registered_users', JSON.stringify(filtered));
+    } catch (err) {
+      console.warn('Error saving registered buyer:', err);
+    }
+
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccessOpen(true);

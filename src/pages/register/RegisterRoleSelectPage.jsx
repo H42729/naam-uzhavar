@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 /**
  * RegisterRoleSelectPage
@@ -8,14 +10,15 @@ import { useNavigate, Link } from 'react-router-dom';
  */
 export default function RegisterRoleSelectPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const registrationRoles = [
     {
       id: 'farmer',
-      title: 'Farmer / FPO (விவசாயி)',
-      subtitle: 'Sell farm harvests directly without middlemen, get fair market prices, and guaranteed timely payouts.',
+      title: t('farmerRoleTitle'),
+      subtitle: t('farmerRoleSubtitle'),
       icon: 'bi-flower1',
-      badge: 'Agri Producers',
+      badge: t('farmer'),
       color: '#198754',
       bgLight: '#e8f5e9',
       borderLight: '#c8e6c9',
@@ -24,10 +27,10 @@ export default function RegisterRoleSelectPage() {
     },
     {
       id: 'consumer',
-      title: 'Consumer / Buyer (வாங்குவோர்)',
-      subtitle: 'Source fresh agricultural produce for households, restaurants, supermarkets, or food processing units.',
+      title: t('buyerRoleTitle'),
+      subtitle: t('buyerRoleSubtitle'),
       icon: 'bi-cart3',
-      badge: 'Retail & B2B',
+      badge: t('buyer'),
       color: '#0d6efd',
       bgLight: '#e7f1ff',
       borderLight: '#b6d4fe',
@@ -36,10 +39,10 @@ export default function RegisterRoleSelectPage() {
     },
     {
       id: 'driver',
-      title: 'Logistics Driver (ஓட்டுநர்)',
-      subtitle: 'Provide farm-to-table transportation with mini-trucks, pickups, and commercial freight vehicles.',
+      title: t('driverRoleTitle'),
+      subtitle: t('driverRoleSubtitle'),
       icon: 'bi-truck',
-      badge: 'Transport & Fleet',
+      badge: t('driver'),
       color: '#d97706',
       bgLight: '#fef3c7',
       borderLight: '#fde68a',
@@ -61,15 +64,18 @@ export default function RegisterRoleSelectPage() {
             />
           </Link>
 
-          <div className="d-flex align-items-center gap-2">
-            <span className="text-muted small d-none d-sm-inline">Already have an account?</span>
-            <Link
-              to="/login"
-              className="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
-            >
-              <i className="bi bi-box-arrow-in-right"></i>
-              <span>Sign In</span>
-            </Link>
+          <div className="d-flex align-items-center gap-3">
+            <LanguageSwitcher />
+            <div className="d-flex align-items-center gap-2">
+              <span className="text-muted small d-none d-sm-inline">{t('alreadyHaveAccount')}</span>
+              <Link
+                to="/login"
+                className="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
+              >
+                <i className="bi bi-box-arrow-in-right"></i>
+                <span>{t('signIn')}</span>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -78,11 +84,11 @@ export default function RegisterRoleSelectPage() {
       <main className="container flex-grow-1 py-5 d-flex flex-column justify-content-center">
         <div className="text-center mb-5" style={{ maxWidth: '680px', margin: '0 auto' }}>
           <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 mb-2 fw-bold text-uppercase">
-            New Account Registration
+            {t('sihPortalAccess')}
           </span>
-          <h1 className="fw-bold text-dark fs-2 mb-2">Register As</h1>
+          <h1 className="fw-bold text-dark fs-2 mb-2">{t('registerAs')}</h1>
           <p className="text-muted">
-            Choose your role to start registration. Each registration form includes tailored verification fields and location selection.
+            {t('selectRoleSubtitle')}
           </p>
         </div>
 

@@ -1,42 +1,103 @@
 /**
  * Driver Dashboard Layout
- * Naam Uzhavar / FarmDirect Platform
+ * Matches template layout, uses Driver Amber/Gold color theme,
+ * and dynamically switches language between English and Tamil via useLanguage().
  */
 
 import React, { useState } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { DRIVER_PROFILE } from '../../data/driverData';
+import LanguageSwitcher from '../LanguageSwitcher';
 import '../../styles/driver-route.css';
 
-export default function DriverLayout({ children, activeDeliveryId, onRefresh, isOnline = true, onToggleOnline }) {
+export default function DriverLayout({
+  children,
+  activeDeliveryId,
+  onRefresh,
+  isOnline = true,
+  onToggleOnline
+}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [internalOnline, setInternalOnline] = useState(() => {
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_driver_online_status');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const isCurrentOnline = onToggleOnline ? isOnline : internalOnline;
+
+  const handleToggleOnline = () => {
+    if (onToggleOnline) {
+      onToggleOnline();
+    } else {
+      setInternalOnline((prev) => {
+        const next = !prev;
+        try {
+          localStorage.setItem('naam_uzhavar_driver_online_status', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+    }
+  };
+
   const { user, logout } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
   const navigate = useNavigate();
 
-  const driverName = user?.name || DRIVER_PROFILE.name;
+  const driverName = user?.name || DRIVER_PROFILE.name || 'Murugan S.';
   const driverAvatar = user?.avatar || DRIVER_PROFILE.avatar;
 
-  const handleLogout = () => {
+  const handleLogout = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setSidebarOpen(false);
     if (logout) logout();
     navigate('/login');
   };
 
   const navLinks = [
-    { label: 'Delivery Requests', icon: 'bi-inbox', path: '/driver/requests', badge: '3 New', exact: false },
-    { label: 'Active Delivery', icon: 'bi-geo-alt-fill', path: `/driver/routes/${activeDeliveryId || 'ORD-1024'}`, exact: false },
-    { label: 'Routes', icon: 'bi-signpost-split', path: '/driver/routes', exact: true },
-    { label: 'Delivery History', icon: 'bi-clock-history', path: '/driver/history', exact: false },
-    { label: 'Trip Summary', icon: 'bi-speedometer2', path: '/driver/trips', exact: false },
-    { label: 'Notifications', icon: 'bi-bell', path: '/driver/notifications', badge: '2', exact: false },
-    { label: 'Profile', icon: 'bi-person', path: '/driver/profile', exact: false },
+    {
+      key: 'deliveryRequests',
+      icon: 'bi-inbox-fill',
+      path: '/driver/requests',
+      badge: `3 ${t('new')}`,
+      badgeClass: 'drv-nav-badge-amber'
+    },
+    {
+      key: 'activeDelivery',
+      icon: 'bi-geo-alt-fill',
+      path: `/driver/routes/${activeDeliveryId || 'ORD-1024'}`,
+      badge: activeDeliveryId || 'ORD-1024',
+      badgeClass: 'drv-nav-badge-blue'
+    },
+    {
+      key: 'deliveryHistory',
+      icon: 'bi-clock-history',
+      path: '/driver/history'
+    },
+    {
+      key: 'tripSummary',
+      icon: 'bi-speedometer2',
+      path: '/driver/trips'
+    },
+    {
+      key: 'profile',
+      icon: 'bi-person-badge-fill',
+      path: '/driver/profile'
+    }
   ];
 
   return (
     <div className="drv-layout">
-      {/* 1. TOP HEADER */}
-      <header className="drv-header">
+      {/* 1. TOP HEADER (Sticky) */}
+      <header className="drv-header sticky-top">
         <div className="drv-header-left">
           {/* Mobile hamburger button */}
           <button
@@ -56,37 +117,29 @@ export default function DriverLayout({ children, activeDeliveryId, onRefresh, is
               style={{ height: '42px', width: 'auto', objectFit: 'contain', display: 'block' }}
             />
             <span className="badge bg-warning text-dark border border-warning-subtle rounded-pill px-2 py-1 small fw-bold d-none d-sm-inline-block">
-              Logistics Driver
+              {t('logisticsDriver')}
             </span>
           </Link>
         </div>
 
         {/* Header Right Actions */}
-        <div className="d-flex align-items-center gap-3">
-          {/* Online / Offline status toggle */}
-          <div
-            className="drv-online-pill cursor-pointer"
-            onClick={onToggleOnline}
-            title="Click to toggle driver availability status"
-            style={{ cursor: 'pointer' }}
-          >
-            <span className={`drv-online-dot ${isOnline ? '' : 'bg-secondary'}`}></span>
-            <span>{isOnline ? 'Online' : 'Offline'}</span>
-          </div>
+        <div className="d-flex align-items-center gap-2 gap-sm-3">
+          {/* Language Selector: English | தமிழ் */}
+          <LanguageSwitcher className="me-1 me-sm-2" />
 
-          {/* Notification dropdown icon */}
-          <div className="position-relative">
-            <Link
-              to="/driver/notifications"
-              className="btn btn-sm btn-light border rounded-circle p-2 d-flex align-items-center justify-content-center position-relative"
-              style={{ width: '38px', height: '38px' }}
-              title="Notifications"
-            >
-              <i className="bi bi-bell text-secondary"></i>
-              <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                <span className="visually-hidden">New alerts</span>
-              </span>
-            </Link>
+          {/* Online / Offline status toggle (Kept & Functional) */}
+          <div
+            className={`drv-online-pill ${isCurrentOnline ? '' : 'offline'}`}
+            onClick={handleToggleOnline}
+            title={isCurrentOnline ? 'Status: Online (Click to go offline)' : 'Status: Offline (Click to go online)'}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') handleToggleOnline();
+            }}
+          >
+            <span className={`drv-online-dot ${isCurrentOnline ? '' : 'offline'}`}></span>
+            <span>{isCurrentOnline ? 'Online' : 'Offline'}</span>
           </div>
 
           {/* Driver Avatar & Name */}
@@ -116,42 +169,78 @@ export default function DriverLayout({ children, activeDeliveryId, onRefresh, is
           ></div>
         )}
 
-        {/* LEFT SIDEBAR NAVIGATION */}
+        {/* LEFT SIDEBAR NAVIGATION (Matching Template) */}
         <aside className={`drv-sidebar ${sidebarOpen ? 'open' : ''}`}>
-          <ul className="drv-nav-list">
-            {navLinks.map((item, idx) => (
-              <li key={idx}>
-                <NavLink
-                  to={item.path}
-                  end={item.exact}
-                  className={({ isActive }) => `drv-nav-link ${isActive ? 'active' : ''}`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <i className={`bi ${item.icon} fs-5`}></i>
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <span
-                      className={`drv-nav-badge ${
-                        item.badge.includes('New')
-                          ? 'bg-danger text-white'
-                          : 'bg-warning-subtle text-warning-emphasis'
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+          {/* Top Brand Logo inside Sidebar */}
+          <div className="drv-sidebar-header">
+            <Link
+              to="/driver/requests"
+              className="d-flex align-items-center gap-2 text-decoration-none"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <img
+                src="/naam-uzhavar-logo-transparent.png"
+                alt="Naam Uzhavar"
+                style={{ height: '42px', width: 'auto', objectFit: 'contain' }}
+              />
+            </Link>
+          </div>
 
-          {/* Sidebar Footer with Logout & Driver Vehicle Specs */}
+          {/* Driver Profile Chip */}
+          <Link
+            to="/driver/profile"
+            className="drv-profile-chip"
+            onClick={() => setSidebarOpen(false)}
+            title="View Driver Profile"
+          >
+            <img
+              src={driverAvatar}
+              alt={driverName}
+              className="drv-profile-avatar"
+            />
+            <div className="flex-grow-1 overflow-hidden text-start">
+              <span className="drv-profile-name d-block text-truncate">
+                {driverName}
+              </span>
+              <span className="drv-profile-role d-block">
+                <i className="bi bi-patch-check-fill text-warning"></i>
+                <span>{t('verifiedDriver')}</span>
+              </span>
+              <span className="drv-profile-loc">
+                <i className="bi bi-truck text-secondary"></i>
+                <span>{t('dindigulHub')}</span>
+              </span>
+            </div>
+          </Link>
+
+          {/* Main Navigation List (Single language at a time) */}
+          <nav className="drv-nav-list">
+            {navLinks.map((item, idx) => (
+              <NavLink
+                key={idx}
+                to={item.path}
+                end={item.exact}
+                className={({ isActive }) => `drv-nav-item ${isActive ? 'active' : ''}`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <i className={`bi ${item.icon}`}></i>
+                <span className="drv-nav-title flex-grow-1 text-start">{t(item.key)}</span>
+                {item.badge && (
+                  <span className={`drv-nav-badge ${item.badgeClass || 'drv-nav-badge-amber'}`}>
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Sidebar Footer with Vehicle Specs & Logout */}
           <div className="drv-sidebar-footer">
-            <div className="drv-driver-chip mb-3">
+            <div className="drv-driver-chip mb-2">
               <i className="bi bi-truck fs-4 text-warning"></i>
-              <div className="small">
+              <div className="small text-start">
                 <strong className="d-block text-dark">TN-57-AB-4029</strong>
-                <span className="text-muted" style={{ fontSize: '0.72rem' }}>Payload: 750 kg Max</span>
+                <span className="text-muted" style={{ fontSize: '0.72rem' }}>{t('maxPayload')}</span>
               </div>
             </div>
 
@@ -161,7 +250,7 @@ export default function DriverLayout({ children, activeDeliveryId, onRefresh, is
               onClick={handleLogout}
             >
               <i className="bi bi-box-arrow-right"></i>
-              <span>Logout</span>
+              <span>{t('logout')}</span>
             </button>
           </div>
         </aside>
@@ -171,6 +260,7 @@ export default function DriverLayout({ children, activeDeliveryId, onRefresh, is
           {children}
         </main>
       </div>
+
     </div>
   );
 }

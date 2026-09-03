@@ -67,8 +67,39 @@ body {
 }
 
 ::selection {
-  background-color: var(--nu-dark-green);
-  color: #a3e635;
+  background-color: #dcfce7;
+  color: #14532d;
+}
+
+:focus-visible {
+  outline: 2px solid var(--nu-primary);
+  outline-offset: 2px;
+}
+
+/* Polished Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .fd-wrapper {
@@ -669,26 +700,38 @@ body {
 
 /* Modals */
 .fd-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1060;
-  padding: 20px;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
 }
 
 .fd-modal-dialog {
   background: #ffffff;
   border-radius: 20px;
   width: 100%;
-  max-width: 680px;
+  max-width: min(92vw, 680px);
   max-height: 90vh;
   overflow-y: auto;
+  margin: auto !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   border: 1px solid var(--fd-border);
+  display: flex;
+  flex-direction: column;
 }
 
 .fd-modal-header {
@@ -1271,15 +1314,24 @@ body {
 
 /* Modals */
 .nu-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(5px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1060;
-  padding: 20px;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
   animation: nuFadeIn 0.2s ease;
 }
 
@@ -1287,11 +1339,14 @@ body {
   background: var(--nu-surface);
   border-radius: var(--radius-xl);
   width: 100%;
-  max-width: 580px;
+  max-width: min(92vw, 580px);
   max-height: 90vh;
   overflow-y: auto;
+  margin: auto !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   border: 1px solid var(--nu-border);
+  display: flex;
+  flex-direction: column;
   animation: nuSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1380,31 +1435,127 @@ body {
   .nu-content-body {
     padding: 18px 16px;
   }
+
+  .fd-calculator-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .fd-wrapper {
+    padding: 0 16px;
+  }
+
+  .fd-navbar-sticky {
+    padding: 6px 0;
+  }
+
+  .fd-nav-actions {
+    gap: 8px;
+  }
+
+  .fd-icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .modal-dialog {
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
+  }
+
+  .modal-body {
+    padding: 16px !important;
+  }
+
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+  }
+
+  .btn {
+    font-size: 0.875rem;
+  }
 }
 
 @media (max-width: 576px) {
   .fd-hero-text-card {
-    padding: 28px 20px;
+    padding: 24px 16px;
   }
+
   .fd-hero-headline {
-    font-size: 2.1rem;
+    font-size: 1.85rem !important;
+    line-height: 1.25 !important;
   }
+
+  .fd-hero-paragraph {
+    font-size: 0.92rem !important;
+  }
+
   .fd-hero-btn-row {
     flex-direction: column;
     width: 100%;
+    gap: 10px;
   }
+
   .fd-btn-start-selling,
   .fd-btn-explore-market {
     width: 100%;
+    justify-content: center;
+    padding: 12px 18px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .fd-hero-badges-row {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .fd-hero-visual-bento {
+    min-height: 240px;
   }
 
   .nu-main-header {
     flex-direction: column;
+    align-items: stretch;
     gap: 14px;
   }
 
   .nu-btn-add-product {
     width: 100%;
     justify-content: center;
+  }
+
+  .farm-stat-card {
+    padding: 16px 12px;
+  }
+
+  .farm-stat-number {
+    font-size: 1.5rem !important;
+  }
+
+  .bd-brand-title {
+    font-size: 1.05rem;
+  }
+
+  .bd-navbar {
+    padding: 0 1rem;
+    height: 60px;
+  }
+}
+
+@media (max-width: 380px) {
+  .fd-hero-headline {
+    font-size: 1.6rem !important;
+  }
+
+  .fd-wrapper {
+    padding: 0 12px;
+  }
+
+  .btn {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
 }

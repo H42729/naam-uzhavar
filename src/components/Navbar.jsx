@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const DEFAULT_AVATAR =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDbsSudoKNyE7RJZob9ewQOMJwTcwZUjLC5hQwyUPRj0Jw5fUDlpXhqui_Y4_7IcAnQmAdgWVOcPEnf6cV1rotCpFACgesUn3oD-PCwQkJP7f8H7tO4HZzAkGd9HVZm9pXVk9ajbGmq5nOT3u50Rhr06u7IEESRHxHUfaFbkfSXThrWGF37A-1rj954tpLOOk8g1neswi5Qr6ZZQdHyAZ2SODHuakgv-slcE-AxKG-YQO6u39Trc4sqnA';
@@ -7,6 +9,7 @@ const DEFAULT_AVATAR =
 export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUser, onOpenAuth, onOpenMarketplace }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleNavClick = (sectionId, tabName) => {
     setActiveTab(tabName);
@@ -49,7 +52,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                   className={`fd-nav-item-btn ${activeTab === 'home' ? 'active' : ''}`}
                   onClick={() => handleNavClick('top', 'home')}
                 >
-                  Home
+                  {t('navHome')}
                 </button>
               </li>
               <li>
@@ -58,7 +61,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                   className={`fd-nav-item-btn ${activeTab === 'how-it-works' ? 'active' : ''}`}
                   onClick={() => handleNavClick('how-it-works', 'how-it-works')}
                 >
-                  How It Works
+                  {t('navHowItWorks')}
                 </button>
               </li>
               <li>
@@ -70,7 +73,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                     if (onOpenMarketplace) onOpenMarketplace();
                   }}
                 >
-                  <i className="bi bi-shop me-1"></i> Marketplace
+                  <i className="bi bi-shop me-1"></i> {t('navMarketplace')}
                 </button>
               </li>
               <li>
@@ -79,7 +82,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                   className={`fd-nav-item-btn ${activeTab === 'benefits' ? 'active' : ''}`}
                   onClick={() => handleNavClick('calculator', 'benefits')}
                 >
-                  Benefits
+                  {t('navBenefits')}
                 </button>
               </li>
               <li>
@@ -88,7 +91,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                   className={`fd-nav-item-btn ${activeTab === 'about' ? 'active' : ''}`}
                   onClick={() => handleNavClick('how-it-works', 'about')}
                 >
-                  About
+                  {t('navAbout')}
                 </button>
               </li>
             </ul>
@@ -96,6 +99,9 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
 
           {/* Nav Actions (Right) */}
           <div className="fd-nav-actions">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {/* Notification Bell */}
             <button
               type="button"
@@ -133,7 +139,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                   onClick={() => navigate('/login')}
                 >
                   <i className="bi bi-box-arrow-in-right"></i>
-                  <span>Login</span>
+                  <span>{t('signIn')}</span>
                 </button>
                 <button
                   type="button"
@@ -141,7 +147,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                   onClick={() => navigate('/register')}
                 >
                   <i className="bi bi-person-plus"></i>
-                  <span>Register</span>
+                  <span>{t('registerAs')}</span>
                 </button>
               </div>
             )}

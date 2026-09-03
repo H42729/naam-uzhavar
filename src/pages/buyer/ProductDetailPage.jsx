@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBuyer } from '../../context/BuyerContext';
 import BuyerLayout from '../../components/buyer/BuyerLayout';
@@ -491,9 +492,10 @@ export default function ProductDetailPage() {
       {/* ================================================================
           CONFIRM ORDER MODAL
          ================================================================ */}
-      {showOrderModal && (
-        <div className="bd-modal-backdrop" onClick={() => !confirmedOrder && setShowOrderModal(false)}>
-          <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
+      {showOrderModal &&
+        createPortal(
+          <div className="bd-modal-backdrop" onClick={() => !confirmedOrder && setShowOrderModal(false)}>
+            <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
             {!confirmedOrder ? (
               <>
                 <div className="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
@@ -594,15 +596,17 @@ export default function ProductDetailPage() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ================================================================
           CUSTOM QUOTE MODAL
          ================================================================ */}
-      {showQuoteModal && (
-        <div className="bd-modal-backdrop" onClick={() => setShowQuoteModal(false)}>
-          <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
+      {showQuoteModal &&
+        createPortal(
+          <div className="bd-modal-backdrop" onClick={() => setShowQuoteModal(false)}>
+            <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
             <div className="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
               <h5 className="fw-bold mb-0">Send Custom Quote Offer</h5>
               <button
@@ -678,7 +682,8 @@ export default function ProductDetailPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </BuyerLayout>
   );

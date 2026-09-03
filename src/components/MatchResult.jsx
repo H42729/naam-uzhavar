@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function MatchResult({
   matchData,
   onConfirmOrder,
   onViewOrders
 }) {
+  const navigate = useNavigate();
   const [confirmedOrder, setConfirmedOrder] = useState(null);
 
   if (!matchData) return null;
@@ -168,7 +170,7 @@ export default function MatchResult({
                     </div>
                   </div>
 
-                  <div className="d-flex align-items-center gap-4 text-end">
+                  <div className="d-flex align-items-center gap-3 gap-md-4 text-end flex-wrap flex-md-nowrap ms-auto">
                     <div>
                       <span className="text-muted small d-block">Allocated Qty</span>
                       <strong className="text-dark font-monospace">{item.allocatedQty} kg</strong>
@@ -183,6 +185,19 @@ export default function MatchResult({
                         ₹{(item.allocatedQty * item.price).toLocaleString('en-IN')}
                       </strong>
                     </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1.5 shadow-xs text-nowrap"
+                      onClick={() =>
+                        navigate(
+                          `/buyer/aggregate-details/${item.id || item.farmer}?qty=${item.allocatedQty}`
+                        )
+                      }
+                      title="View Farmer & Product details on dedicated page"
+                    >
+                      <i className="bi bi-eye-fill"></i>
+                      <span>See Details</span>
+                    </button>
                   </div>
                 </div>
               ))}

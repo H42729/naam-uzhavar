@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, Link } from 'react-router-dom';
 import { useBuyer } from '../../context/BuyerContext';
 import BuyerLayout from '../../components/buyer/BuyerLayout';
@@ -105,10 +106,10 @@ export default function BuyerRequestsPage() {
           </p>
         </div>
 
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2">
           <button
             type="button"
-            className="bd-btn bd-btn-outline bd-btn-sm"
+            className="bd-btn bd-btn-outline bd-btn-sm justify-content-center"
             onClick={() => navigate('/buyer/browse')}
           >
             <i className="bi bi-search"></i>
@@ -116,7 +117,7 @@ export default function BuyerRequestsPage() {
           </button>
           <button
             type="button"
-            className="bd-btn bd-btn-primary bd-btn-sm"
+            className="bd-btn bd-btn-primary bd-btn-sm justify-content-center"
             onClick={() => setShowCreateModal(true)}
           >
             <i className="bi bi-plus-circle"></i>
@@ -126,51 +127,51 @@ export default function BuyerRequestsPage() {
       </div>
 
       {/* KPI Metric Strip */}
-      <div className="row g-3 mb-4">
-        <div className="col-12 col-sm-6 col-lg-3">
-          <div className="p-3 bg-white rounded-3 border shadow-sm d-flex align-items-center gap-3">
-            <div className="bg-warning text-dark p-3 rounded-3 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
-              <i className="bi bi-hourglass-split fs-4"></i>
+      <div className="row g-2 g-sm-3 mb-4">
+        <div className="col-6 col-sm-6 col-lg-3">
+          <div className="p-2.5 p-sm-3 bg-white rounded-3 border shadow-sm d-flex align-items-center gap-2 gap-sm-3 h-100">
+            <div className="bg-warning text-dark p-2 p-sm-3 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '42px', height: '42px' }}>
+              <i className="bi bi-hourglass-split fs-5"></i>
             </div>
-            <div>
-              <span className="text-muted small d-block">Pending Confirmation</span>
-              <strong className="fs-4 text-dark font-monospace">{pendingCount}</strong>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-12 col-sm-6 col-lg-3">
-          <div className="p-3 bg-white rounded-3 border shadow-sm d-flex align-items-center gap-3">
-            <div className="bg-success text-white p-3 rounded-3 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
-              <i className="bi bi-check2-circle fs-4"></i>
-            </div>
-            <div>
-              <span className="text-muted small d-block">Confirmed Requests</span>
-              <strong className="fs-4 text-success font-monospace">{confirmedCount}</strong>
+            <div className="overflow-hidden">
+              <span className="text-muted small d-block text-truncate">Pending Confirmation</span>
+              <strong className="fs-5 fs-sm-4 text-dark font-monospace">{pendingCount}</strong>
             </div>
           </div>
         </div>
 
-        <div className="col-12 col-sm-6 col-lg-3">
-          <div className="p-3 bg-white rounded-3 border shadow-sm d-flex align-items-center gap-3">
-            <div className="bg-primary text-white p-3 rounded-3 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
-              <i className="bi bi-boxes fs-4"></i>
+        <div className="col-6 col-sm-6 col-lg-3">
+          <div className="p-2.5 p-sm-3 bg-white rounded-3 border shadow-sm d-flex align-items-center gap-2 gap-sm-3 h-100">
+            <div className="bg-success text-white p-2 p-sm-3 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '42px', height: '42px' }}>
+              <i className="bi bi-check2-circle fs-5"></i>
             </div>
-            <div>
-              <span className="text-muted small d-block">Confirmed Volume</span>
-              <strong className="fs-4 text-dark font-monospace">{totalVolumeKg.toLocaleString()} kg</strong>
+            <div className="overflow-hidden">
+              <span className="text-muted small d-block text-truncate">Confirmed Requests</span>
+              <strong className="fs-5 fs-sm-4 text-success font-monospace">{confirmedCount}</strong>
             </div>
           </div>
         </div>
 
-        <div className="col-12 col-sm-6 col-lg-3">
-          <div className="p-3 bg-white rounded-3 border shadow-sm d-flex align-items-center gap-3">
-            <div className="bg-info-subtle text-info p-3 rounded-3 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
-              <i className="bi bi-shield-lock-fill fs-4 text-primary"></i>
+        <div className="col-6 col-sm-6 col-lg-3">
+          <div className="p-2.5 p-sm-3 bg-white rounded-3 border shadow-sm d-flex align-items-center gap-2 gap-sm-3 h-100">
+            <div className="bg-primary text-white p-2 p-sm-3 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '42px', height: '42px' }}>
+              <i className="bi bi-boxes fs-5"></i>
             </div>
-            <div>
-              <span className="text-muted small d-block">Escrow Protocol</span>
-              <strong className="fs-6 text-dark">100% Direct Bank Payout</strong>
+            <div className="overflow-hidden">
+              <span className="text-muted small d-block text-truncate">Confirmed Volume</span>
+              <strong className="fs-5 fs-sm-4 text-dark font-monospace">{totalVolumeKg.toLocaleString()} kg</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-6 col-sm-6 col-lg-3">
+          <div className="p-2.5 p-sm-3 bg-white rounded-3 border shadow-sm d-flex align-items-center gap-2 gap-sm-3 h-100">
+            <div className="bg-info-subtle text-info p-2 p-sm-3 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '42px', height: '42px' }}>
+              <i className="bi bi-shield-lock-fill fs-5 text-primary"></i>
+            </div>
+            <div className="overflow-hidden">
+              <span className="text-muted small d-block text-truncate">Escrow Protocol</span>
+              <strong className="small text-dark fw-bold d-block text-truncate">100% Direct Bank</strong>
             </div>
           </div>
         </div>
@@ -390,9 +391,10 @@ export default function BuyerRequestsPage() {
       {/* ================================================================
           CONFIRMATION MODAL WITH CELEBRATION
          ================================================================ */}
-      {targetRequest && (
-        <div className="bd-modal-backdrop" onClick={() => !confirmationResult && setTargetRequest(null)}>
-          <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
+      {targetRequest &&
+        createPortal(
+          <div className="bd-modal-backdrop" onClick={() => !confirmationResult && setTargetRequest(null)}>
+            <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
             {!confirmationResult ? (
               <>
                 <div className="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
@@ -508,15 +510,17 @@ export default function BuyerRequestsPage() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ================================================================
           POST NEW SOURCING REQUEST MODAL
          ================================================================ */}
-      {showCreateModal && (
-        <div className="bd-modal-backdrop" onClick={() => setShowCreateModal(false)}>
-          <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
+      {showCreateModal &&
+        createPortal(
+          <div className="bd-modal-backdrop" onClick={() => setShowCreateModal(false)}>
+            <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
             <div className="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
               <h5 className="fw-bold mb-0">Post New Sourcing Request</h5>
               <button
@@ -615,7 +619,8 @@ export default function BuyerRequestsPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </BuyerLayout>
   );

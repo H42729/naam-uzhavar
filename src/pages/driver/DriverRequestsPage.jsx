@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DriverLayout from '../../components/driver/DriverLayout';
+import DriverRequestsCarousel from '../../components/driver/DriverRequestsCarousel';
 import { AVAILABLE_REQUESTS, INITIAL_DELIVERIES } from '../../data/driverData';
 
 export default function DriverRequestsPage() {
@@ -107,6 +108,12 @@ export default function DriverRequestsPage() {
             </span>
           </div>
         </div>
+
+        {/* Smooth Dispatch Opportunities Carousel */}
+        <DriverRequestsCarousel
+          requests={requests}
+          onAcceptRequest={handleAcceptRequest}
+        />
 
         {/* Filter Pills */}
         <div className="d-flex gap-2 mb-4 overflow-x-auto pb-1">

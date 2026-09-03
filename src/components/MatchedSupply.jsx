@@ -1,28 +1,33 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function MatchedSupply({
   matchedSupplies = [],
   onCreateNewRequirement
 }) {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+
   return (
     <div className="bd-card">
-      <div className="bd-card-header">
+      <div className="bd-card-header d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
         <div>
           <h3 className="bd-card-title">
-            <i className="bi bi-diagram-3-fill text-success"></i>
-            <span>Active Matched Supply Aggregations</span>
+            <i className="bi bi-diagram-3-fill text-primary"></i>
+            <span>{t('activeMatchedSupply')}</span>
           </h3>
           <span className="text-muted small">
-            Requirements paired across verified farmer pools and ready for purchase
+            {t('matchedSupplySubtitle')}
           </span>
         </div>
         <button
           type="button"
-          className="bd-btn bd-btn-primary bd-btn-sm"
+          className="bd-btn bd-btn-primary bd-btn-sm flex-shrink-0"
           onClick={onCreateNewRequirement}
         >
           <i className="bi bi-plus-lg"></i>
-          <span>New Bulk Requirement</span>
+          <span>{t('bulkRequirement')}</span>
         </button>
       </div>
 
@@ -38,7 +43,7 @@ export default function MatchedSupply({
             className="bd-btn bd-btn-primary bd-btn-sm"
             onClick={onCreateNewRequirement}
           >
-            Create Requirement
+            {t('createRequirement')}
           </button>
         </div>
       ) : (
@@ -47,12 +52,13 @@ export default function MatchedSupply({
             <table className="bd-table">
               <thead>
                 <tr>
-                  <th>Crop</th>
+                  <th>{t('crop')}</th>
                   <th>Required Qty</th>
                   <th>Matched Qty</th>
-                  <th>Farmers Matched</th>
-                  <th>Avg Price / kg</th>
-                  <th>Status</th>
+                  <th>{t('farmers')}</th>
+                  <th>{t('avgPrice')}</th>
+                  <th>{t('status')}</th>
+                  <th className="text-end pe-3">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -82,6 +88,20 @@ export default function MatchedSupply({
                         <i className="bi bi-check-circle-fill"></i>
                         {item.status}
                       </span>
+                    </td>
+                    <td className="text-end pe-3">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-xs"
+                        onClick={() =>
+                          navigate(
+                            `/buyer/aggregate-details/${item.id || item.crop}?qty=${item.matchedQty}`
+                          )
+                        }
+                      >
+                        <i className="bi bi-eye-fill"></i>
+                        <span>See Details</span>
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -27,15 +27,6 @@ export default function BuyerRequirementPage() {
             Enter target produce volume to automatically match and aggregate across local farmer lots with consolidated dispatch
           </p>
         </div>
-
-        <button
-          type="button"
-          className="bd-btn bd-btn-outline bd-btn-sm"
-          onClick={() => navigate('/buyer/matched-supply')}
-        >
-          <i className="bi bi-diagram-3"></i>
-          <span>View Matched Supply Pools</span>
-        </button>
       </div>
 
       {/* Requirement Form Component */}

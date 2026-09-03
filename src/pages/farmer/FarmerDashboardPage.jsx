@@ -1,484 +1,585 @@
+/**
+ * Main Farmer Dashboard Page
+ * Route: /farmer/dashboard
+ * Features:
+ * - Welcome Hero: "Your Harvest. Your Buyers. Your Price."
+ * - 4 Summary Cards (My Harvest, Buyer Requests, Accepted, Deliveries)
+ * - "What did you harvest today?" crop selector with large realistic images
+ * - 4-Step "Add My Harvest" Modal
+ * - "My Harvest" Section preview with real-time add/remove
+ * - Recent Buyer Requests with instant Accept/Decline actions
+ */
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { useFarmer } from '../../context/FarmerContext';
+import { useLanguage } from '../../context/LanguageContext';
 import FarmerLayout from '../../components/farmer/FarmerLayout';
-import CropDetailsModal from '../../components/farmer/CropDetailsModal';
-import EditProductModal from '../../components/farmer/EditProductModal';
-import AddProductButton from '../../components/farmer/AddProductButton';
+import AddHarvestModal from '../../components/farmer/AddHarvestModal';
+import { POPULAR_CROPS, MORE_CROPS } from '../../data/cropsData';
 
 export default function FarmerDashboardPage() {
-  const { user } = useAuth();
+  const { t, language } = useLanguage();
   const {
-    products,
-    requests,
+    harvests,
+    buyerRequests,
+    deliveries,
     stats,
     acceptRequest,
     declineRequest,
-    deleteProduct
+    removeHarvest,
+    farmerProfile
   } = useFarmer();
+
   const navigate = useNavigate();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [editingProduct, setEditingProduct] = useState(null);
+  // Add Harvest Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedCropForModal, setSelectedCropForModal] = useState(POPULAR_CROPS[0]);
 
-  // Filter listings & requests if search query is active
-  const filteredProducts = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.tamilName && p.tamilName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // More Crops Picker Modal
+  const [showMoreCropsModal, setShowMoreCropsModal] = useState(false);
 
-  const filteredRequests = requests
-    .filter(
-      (r) =>
-        r.consumerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (r.businessType && r.businessType.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-    .sort((a, b) => {
-      if (a.status === 'Pending' && b.status !== 'Pending') return -1;
-      if (a.status !== 'Pending' && b.status === 'Pending') return 1;
-      if (a.status === 'Accepted' && b.status === 'Declined') return -1;
-      if (a.status === 'Declined' && b.status === 'Accepted') return 1;
-      return 0;
-    });
+  // Edit Harvest Modal
+  const [editingHarvest, setEditingHarvest] = useState(null);
+
+  const handleCropCardClick = (crop) => {
+    setSelectedCropForModal(crop);
+    setShowAddModal(true);
+  };
 
   return (
-    <FarmerLayout searchQuery={searchQuery} onSearchChange={setSearchQuery}>
-      {/* ----------------------------------------------------------------------
-          1. WELCOME & PRIMARY CTA HEADER
-         ---------------------------------------------------------------------- */}
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 pb-2">
-        <div>
-          <div className="d-flex align-items-center gap-2 mb-1">
-            <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold">
-              🌱 Verified Direct Farmer Hub
-            </span>
-            <span className="text-muted small">
-              <i className="bi bi-geo-alt-fill text-danger me-1"></i>
-              {user?.location || 'Erode, Tamil Nadu'}
-            </span>
+    <FarmerLayout>
+      <div className="w-100 farm-animate-fade">
+        {/* ===================================================================
+            1. WELCOME SECTION (HERO CARD)
+            =================================================================== */}
+        <div
+          className="rounded-4 p-3 p-sm-4 p-md-5 mb-4 position-relative overflow-hidden text-white shadow-lg"
+          style={{
+            background: 'linear-gradient(135deg, #065f46 0%, #059669 50%, #10b981 100%)',
+            border: '1px solid rgba(255,255,255,0.15)'
+          }}
+        >
+          {/* Decorative Leaf / Ambient Glow */}
+          <div
+            className="position-absolute end-0 top-0 bottom-0 opacity-15 d-none d-md-block pointer-events-none"
+            style={{ width: '380px', overflow: 'hidden' }}
+          >
+            <i className="bi bi-flower1" style={{ fontSize: '20rem', transform: 'rotate(25deg) translateY(-20%)', display: 'block' }}></i>
           </div>
-          <h1 className="fw-black text-dark mb-1" style={{ fontSize: '1.85rem', letterSpacing: '-0.5px' }}>
-            Welcome back, {user?.name || 'Ravi Kumar'} 👋
-          </h1>
-          <p className="text-muted small mb-0">
-            Manage your harvest listings, review live consumer offers, and fulfill direct B2B orders with zero middlemen.
-          </p>
+
+          <div className="position-relative" style={{ zIndex: 2, maxWidth: '640px' }}>
+            <div className="d-inline-flex align-items-center gap-1.5 px-2.5 py-1 bg-white bg-opacity-20 rounded-pill mb-2.5 backdrop-blur small" style={{ fontSize: '0.78rem' }}>
+              <span className="text-warning">★</span>
+              <span className="fw-semibold">Direct Mandi Platform • Dindigul Hub</span>
+            </div>
+
+            <h1 className="fw-black mb-2 text-white" style={{ fontSize: 'clamp(1.4rem, 4.5vw, 2.25rem)', lineHeight: 1.25, letterSpacing: '-0.5px' }}>
+              {t('farmerHeroTitle')}
+            </h1>
+
+            <p className="text-white text-opacity-90 mb-3 mb-md-4 fw-normal" style={{ fontSize: 'clamp(0.88rem, 2.2vw, 1.15rem)', lineHeight: 1.4 }}>
+              {t('farmerHeroSubtitle')}
+            </p>
+
+            <div className="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 gap-sm-3">
+              {/* Primary strongest visual button */}
+              <button
+                type="button"
+                className="btn btn-warning text-dark fw-black py-2.5 py-sm-3 px-3 px-sm-4 rounded-pill shadow-lg d-inline-flex align-items-center justify-content-center gap-2 border-0 hover-scale transition text-truncate"
+                style={{
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                  boxShadow: '0 8px 25px rgba(245, 158, 11, 0.4)',
+                  fontSize: 'clamp(0.92rem, 2vw, 1.15rem)'
+                }}
+                onClick={() => {
+                  setSelectedCropForModal(POPULAR_CROPS[0]);
+                  setShowAddModal(true);
+                }}
+              >
+                <i className="bi bi-plus-circle-fill fs-5"></i>
+                <span>+ {t('addMyHarvest')}</span>
+              </button>
+
+              {/* Secondary button */}
+              <Link
+                to="/farmer/harvest"
+                className="btn btn-outline-light fw-bold py-2.5 py-sm-3 px-3 px-sm-4 rounded-pill hover-bg-white hover-text-dark transition text-center text-truncate"
+                style={{ fontSize: 'clamp(0.88rem, 2vw, 1rem)' }}
+              >
+                {t('myHarvests')}
+              </Link>
+            </div>
+          </div>
         </div>
 
-        {/* Primary Action Button */}
-        <AddProductButton className="py-2 px-4 fs-6 shadow-sm" icon="bi-plus-circle-fill" />
-      </div>
-
-      {/* ----------------------------------------------------------------------
-          2. QUICK STATISTICS (4 IN ONE ROW)
-         ---------------------------------------------------------------------- */}
-      <div className="row g-3 mb-4">
-        {/* Active Products */}
-        <div className="col-6 col-lg-3">
-          <div className="farm-stat-card">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <span className="farm-stat-label">ACTIVE PRODUCTS</span>
-              <div className="farm-stat-icon bg-success-subtle text-success">
-                <i className="bi bi-box-seam-fill"></i>
+        {/* ===================================================================
+            2. SUMMARY CARDS (4 SIMPLE CARDS)
+            =================================================================== */}
+        <div className="row g-2 g-sm-3 mb-4 mb-md-5">
+          {/* Card 1: My Harvest */}
+          <div className="col-6 col-lg-3">
+            <Link to="/farmer/harvest" className="text-decoration-none">
+              <div className="farm-card p-2.5 p-sm-3 p-md-4 rounded-4 bg-white border h-100 shadow-xs hover-shadow transition">
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <span className="text-muted small fw-bold text-uppercase text-truncate me-1" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                    {t('myHarvest')}
+                  </span>
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success flex-shrink-0"
+                    style={{ width: '36px', height: '36px' }}
+                  >
+                    <i className="bi bi-flower2 fs-6"></i>
+                  </div>
+                </div>
+                <div className="fs-3 fs-md-2 fw-black text-dark font-monospace mb-1">
+                  {stats.myHarvest} <span className="fs-6 fw-bold text-success">{t('active')}</span>
+                </div>
+                <span className="text-muted small text-truncate d-block" style={{ fontSize: '0.72rem' }}>
+                  <i className="bi bi-check-circle-fill text-success me-1"></i> Live for wholesale buyers
+                </span>
               </div>
-            </div>
-            <div className="farm-stat-number text-success">{stats.activeProducts}</div>
-            <div className="farm-stat-trend text-muted small">
-              <i className="bi bi-check-circle-fill text-success"></i>
-              <span>Live on Direct Mandi</span>
-            </div>
+            </Link>
           </div>
-        </div>
 
-        {/* Pending Requests */}
-        <div className="col-6 col-lg-3">
-          <div className="farm-stat-card">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <span className="farm-stat-label">PENDING REQUESTS</span>
-              <div className="farm-stat-icon bg-warning-subtle text-warning-emphasis">
-                <i className="bi bi-hourglass-split"></i>
+          {/* Card 2: Buyer Requests */}
+          <div className="col-6 col-lg-3">
+            <Link to="/farmer/requests" className="text-decoration-none">
+              <div className="farm-card p-2.5 p-sm-3 p-md-4 rounded-4 bg-white border h-100 shadow-xs hover-shadow transition">
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <span className="text-muted small fw-bold text-uppercase text-truncate me-1" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                    {t('buyerRequests')}
+                  </span>
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center bg-warning-subtle text-warning-emphasis flex-shrink-0"
+                    style={{ width: '36px', height: '36px' }}
+                  >
+                    <i className="bi bi-inbox-fill fs-6"></i>
+                  </div>
+                </div>
+                <div className="fs-3 fs-md-2 fw-black text-warning-emphasis font-monospace mb-1">
+                  {stats.buyerRequests} <span className="fs-6 fw-bold text-muted">{t('pending')}</span>
+                </div>
+                <span className="text-muted small text-truncate d-block" style={{ fontSize: '0.72rem' }}>
+                  <i className="bi bi-bell-fill text-warning me-1"></i> Requires review
+                </span>
               </div>
-            </div>
-            <div className="farm-stat-number text-warning-emphasis">{stats.pendingRequests}</div>
-            <div className="farm-stat-trend" style={{ color: '#d97706' }}>
-              <i className="bi bi-bell-fill"></i>
-              <span>{stats.pendingRequests > 0 ? 'Requires action' : 'All caught up'}</span>
-            </div>
+            </Link>
           </div>
-        </div>
 
-        {/* Accepted Requests */}
-        <div className="col-6 col-lg-3">
-          <div className="farm-stat-card">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <span className="farm-stat-label">ACCEPTED ORDERS</span>
-              <div className="farm-stat-icon bg-info-subtle text-info-emphasis">
-                <i className="bi bi-patch-check-fill"></i>
+          {/* Card 3: Accepted Orders */}
+          <div className="col-6 col-lg-3">
+            <Link to="/farmer/requests" className="text-decoration-none">
+              <div className="farm-card p-2.5 p-sm-3 p-md-4 rounded-4 bg-white border h-100 shadow-xs hover-shadow transition">
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <span className="text-muted small fw-bold text-uppercase text-truncate me-1" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                    {t('accepted')}
+                  </span>
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle text-primary flex-shrink-0"
+                    style={{ width: '36px', height: '36px' }}
+                  >
+                    <i className="bi bi-patch-check-fill fs-6"></i>
+                  </div>
+                </div>
+                <div className="fs-3 fs-md-2 fw-black text-primary font-monospace mb-1">
+                  {stats.accepted} <span className="fs-6 fw-bold text-muted">{t('myOrders')}</span>
+                </div>
+                <span className="text-muted small text-truncate d-block" style={{ fontSize: '0.72rem' }}>
+                  <i className="bi bi-wallet2 text-primary me-1"></i> Direct settlement
+                </span>
               </div>
-            </div>
-            <div className="farm-stat-number text-primary">{stats.acceptedRequests}</div>
-            <div className="farm-stat-trend text-success small">
-              <i className="bi bi-truck"></i>
-              <span>In logistics / dispatch</span>
-            </div>
+            </Link>
           </div>
-        </div>
 
-        {/* Products Sold */}
-        <div className="col-6 col-lg-3">
-          <div className="farm-stat-card">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <span className="farm-stat-label">PRODUCTS SOLD</span>
-              <div className="farm-stat-icon bg-success-subtle text-success">
-                <i className="bi bi-cart-check-fill"></i>
+          {/* Card 4: Deliveries */}
+          <div className="col-6 col-lg-3">
+            <Link to="/farmer/deliveries" className="text-decoration-none">
+              <div className="farm-card p-2.5 p-sm-3 p-md-4 rounded-4 bg-white border h-100 shadow-xs hover-shadow transition">
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <span className="text-muted small fw-bold text-uppercase text-truncate me-1" style={{ fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                    {t('deliveries')}
+                  </span>
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center bg-info-subtle text-info-emphasis flex-shrink-0"
+                    style={{ width: '36px', height: '36px' }}
+                  >
+                    <i className="bi bi-truck fs-6"></i>
+                  </div>
+                </div>
+                <div className="fs-3 fs-md-2 fw-black text-dark font-monospace mb-1">
+                  {stats.deliveries} <span className="fs-6 fw-bold text-info">{t('active')}</span>
+                </div>
+                <span className="text-muted small text-truncate d-block" style={{ fontSize: '0.72rem' }}>
+                  <i className="bi bi-geo-alt-fill text-danger me-1"></i> Tata Ace assigned
+                </span>
               </div>
-            </div>
-            <div className="farm-stat-number text-dark">{stats.productsSold}</div>
-            <div className="farm-stat-trend text-success small">
-              <i className="bi bi-arrow-up-right-circle-fill"></i>
-              <span>100% Direct to Buyer</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ----------------------------------------------------------------------
-          3. CONSUMER REQUESTS (STREAMLINED & NEAT UI)
-         ---------------------------------------------------------------------- */}
-      <div className="farm-card mb-4">
-        <div className="farm-card-header">
-          <div className="d-flex align-items-center gap-2">
-            <div
-              className="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center"
-              style={{ width: '36px', height: '36px' }}
-            >
-              <i className="bi bi-inbox-fill fs-5"></i>
-            </div>
-            <div>
-              <h2 className="farm-card-title">Consumer Requests</h2>
-              <span className="text-muted small">
-                Direct purchasing proposals from verified retail buyers &amp; supermarkets
-              </span>
-            </div>
-          </div>
-
-          <div className="d-flex align-items-center gap-2">
-            <span className="badge bg-warning text-dark fw-bold rounded-pill px-3 py-2">
-              {stats.pendingRequests} Pending
-            </span>
-            <Link
-              to="/farmer/requests"
-              className="btn btn-sm btn-outline-success fw-bold rounded-pill px-3"
-            >
-              View All Requests →
             </Link>
           </div>
         </div>
 
-        {/* Streamlined Requests Cards List */}
-        <div className="d-flex flex-column gap-3">
-          {filteredRequests.slice(0, 3).map((req) => (
-            <div key={req.id} className="farm-request-card">
-              <div
-                className={`farm-request-status-bar ${
-                  req.status === 'Accepted'
-                    ? 'farm-status-accepted'
-                    : req.status === 'Declined'
-                    ? 'farm-status-declined'
-                    : 'farm-status-pending'
-                }`}
-              ></div>
+        {/* ===================================================================
+            3. MAIN FEATURE: "What did you harvest today?"
+            =================================================================== */}
+        <div className="mb-4 mb-md-5">
+          <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mb-3">
+            <div>
+              <h2 className="fw-black text-dark fs-4 fs-md-3 mb-1" style={{ letterSpacing: '-0.3px' }}>
+                {t('whatDidYouHarvestToday')}
+              </h2>
+              <p className="text-muted small mb-0">
+                {t('harvestSubtitle')}
+              </p>
+            </div>
 
-              <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-                {/* Left: Essential Information Only */}
-                <div className="d-flex align-items-center gap-3">
-                  <img
-                    src={
-                      req.avatar ||
-                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'
-                    }
-                    alt={req.consumerName}
-                    className="rounded-circle border"
-                    style={{ width: '48px', height: '48px', objectFit: 'cover' }}
-                  />
-                  <div>
-                    <div className="d-flex align-items-center gap-2">
-                      <h5 className="fw-bold text-dark mb-0">{req.consumerName}</h5>
-                      <span className="badge bg-light text-muted border rounded-pill small">
-                        {req.businessType}
-                      </span>
-                    </div>
+            <button
+              type="button"
+              className="btn btn-outline-success fw-bold rounded-pill px-3 py-1.5 btn-sm flex-shrink-0"
+              onClick={() => setShowMoreCropsModal(true)}
+            >
+              <i className="bi bi-grid-3x3-gap-fill me-1"></i> {t('viewAllCrops')}
+            </button>
+          </div>
 
-                    <div className="small text-muted mt-1">
-                      <span>Crop: </span>
-                      <strong className="text-dark">{req.productName}</strong> • Quantity:{' '}
-                      <strong className="text-success font-monospace">{req.quantity}</strong> • Offer:{' '}
-                      <span className="fw-bold text-dark font-monospace">{req.offerPrice}</span>
-                      {req.totalValue && (
-                        <span className="text-muted ms-1">
-                          (Total: <strong className="text-success">{req.totalValue}</strong>)
-                        </span>
-                      )}
-                    </div>
+          {/* Crop Cards Grid (2 cols on mobile, 3 on tablet, 4 on desktop, 9 total with + More) */}
+          <div className="row g-2 g-sm-3 g-md-4">
+            {POPULAR_CROPS.map((crop) => (
+              <div key={crop.id} className="col-6 col-md-4 col-lg-3">
+                <div
+                  className="bg-white rounded-4 border overflow-hidden shadow-xs hover-shadow transition cursor-pointer h-100 d-flex flex-column text-center p-2 p-sm-3"
+                  style={{ cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+                  onClick={() => handleCropCardClick(crop)}
+                >
+                  <div className="rounded-3 overflow-hidden mb-2 mb-sm-3 position-relative" style={{ height: '115px' }}>
+                    <img
+                      src={crop.image}
+                      alt={crop.name}
+                      className="w-100 h-100 object-fit-cover hover-scale transition"
+                    />
+                    <span
+                      className="position-absolute bottom-0 end-0 badge bg-dark bg-opacity-75 m-1.5 small"
+                      style={{ fontSize: '0.64rem' }}
+                    >
+                      ₹{crop.typicalPricePerKg}/kg
+                    </span>
                   </div>
-                </div>
 
-                {/* Right: Actions */}
-                <div className="d-flex align-items-center gap-2 flex-wrap">
-                  {req.status === 'Pending' ? (
-                    <>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-danger px-3 py-1 fw-semibold rounded-3"
-                        onClick={() => declineRequest(req.id)}
-                      >
-                        <i className="bi bi-x-lg me-1"></i> Decline
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-success px-4 py-1 fw-bold rounded-3 shadow-xs"
-                        onClick={() => acceptRequest(req.id)}
-                      >
-                        <i className="bi bi-check-lg me-1"></i> Accept
-                      </button>
-                    </>
-                  ) : req.status === 'Accepted' ? (
-                    <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
-                      ✓ Accepted
-                    </span>
-                  ) : (
-                    <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold">
-                      ✕ Declined
-                    </span>
-                  )}
+                  <strong className="fs-6 text-dark d-block mb-1 text-truncate">
+                    {language === 'ta' ? crop.tamilName : crop.name}
+                  </strong>
 
-                  {/* Navigates to dedicated page instead of modal */}
                   <button
                     type="button"
-                    className="btn btn-sm btn-outline-secondary px-3 py-1 rounded-3 fw-semibold"
-                    onClick={() => navigate(`/farmer/requests/${req.id}`)}
+                    className="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold mt-auto py-1 py-sm-1.5 px-1 text-truncate"
+                    style={{ fontSize: '0.78rem' }}
                   >
-                    <i className="bi bi-arrow-right-circle me-1"></i> Full Details
+                    <i className="bi bi-plus me-1"></i> {t('addMyHarvest')}
                   </button>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {filteredRequests.length === 0 && (
-            <div className="p-4 text-center text-muted bg-light rounded-3">
-              <i className="bi bi-inbox fs-2 text-muted mb-2 d-block"></i>
-              No consumer requests matching "{searchQuery}".
+            {/* "+ More Crops" Card */}
+            <div className="col-6 col-md-4 col-lg-3">
+              <div
+                className="bg-light rounded-4 border-2 border-dashed border-success-subtle overflow-hidden h-100 d-flex flex-column align-items-center justify-content-center text-center p-3 cursor-pointer hover-bg-white transition"
+                style={{ minHeight: '210px', cursor: 'pointer' }}
+                onClick={() => setShowMoreCropsModal(true)}
+              >
+                <div
+                  className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mb-2 shadow-sm"
+                  style={{ width: '48px', height: '48px' }}
+                >
+                  <i className="bi bi-plus-lg fs-4"></i>
+                </div>
+
+                <strong className="fs-6 text-dark d-block mb-1">+ More Crops</strong>
+                <p className="text-muted small mb-2 d-none d-sm-block" style={{ fontSize: '0.75rem' }}>
+                  Brinjal, Cabbage, Moringa & more
+                </p>
+
+                <span className="badge bg-success-subtle text-success px-2.5 py-1 rounded-pill small fw-bold" style={{ fontSize: '0.72rem' }}>
+                  Browse All →
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ===================================================================
+            4. "MY HARVEST" SECTION PREVIEW
+            =================================================================== */}
+        <div className="mb-5">
+          <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+            <div>
+              <span className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em' }}>
+                ACTIVE MARKETPLACE LISTINGS
+              </span>
+              <h2 className="fs-3 fw-bold text-dark mb-0">My Harvest</h2>
+            </div>
+
+            <Link to="/farmer/harvest" className="btn btn-outline-success btn-sm fw-bold rounded-pill px-3">
+              View All ({harvests.length}) →
+            </Link>
+          </div>
+
+          {harvests.length === 0 ? (
+            <div className="p-5 text-center bg-white rounded-4 border">
+              <i className="bi bi-flower2 fs-1 text-muted mb-2 d-block"></i>
+              <h3 className="fs-5 fw-bold text-dark">No Harvests Published Yet</h3>
+              <p className="text-muted small mb-3">
+                Tap on any crop above to publish your first harvest directly to buyers!
+              </p>
+              <button
+                type="button"
+                className="btn btn-success fw-bold px-4 py-2 rounded-pill"
+                onClick={() => {
+                  setSelectedCropForModal(POPULAR_CROPS[0]);
+                  setShowAddModal(true);
+                }}
+              >
+                + Add My Harvest
+              </button>
+            </div>
+          ) : (
+            <div className="row g-2 g-sm-3">
+              {harvests.slice(0, 4).map((item) => (
+                <div key={item.id} className="col-12 col-sm-6 col-lg-3">
+                  <div className="farm-card p-2.5 p-sm-3 rounded-4 bg-white border h-100 d-flex flex-column shadow-xs">
+                    <div className="rounded-3 overflow-hidden position-relative mb-2" style={{ height: '125px' }}>
+                      <img
+                        src={item.images?.[0] || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80'}
+                        alt={item.name}
+                        className="w-100 h-100 object-fit-cover"
+                      />
+                      <span
+                        className={`position-absolute top-0 end-0 badge m-1.5 ${
+                          item.status === 'Available'
+                            ? 'bg-success'
+                            : item.status === 'Buyer Request'
+                            ? 'bg-warning text-dark'
+                            : item.status === 'Sold'
+                            ? 'bg-secondary'
+                            : 'bg-info text-dark'
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+
+                    <strong className="fs-6 text-dark d-block mb-1 text-truncate">
+                      {item.name}
+                    </strong>
+
+                    <div className="d-flex align-items-center justify-content-between text-muted small mb-2" style={{ fontSize: '0.78rem' }}>
+                      <span>
+                        Qty: <strong className="text-dark font-monospace">{item.quantity} {item.unit || 'kg'}</strong>
+                      </span>
+                      <span className="badge bg-light text-dark border">
+                        {item.isEstimated ? 'Estimated' : 'Exact'}
+                      </span>
+                    </div>
+
+                    <div className="d-flex align-items-center justify-content-between text-muted small mb-3" style={{ fontSize: '0.78rem' }}>
+                      <span>
+                        Quality: <strong className="text-dark">{item.quality || 'Good / Fresh'}</strong>
+                      </span>
+                      <span className="text-success small fw-semibold">
+                        <i className="bi bi-geo-alt-fill text-danger me-1"></i>Dindigul
+                      </span>
+                    </div>
+
+                    <div className="d-flex gap-2 mt-auto pt-2 border-top">
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-outline-secondary flex-grow-1 rounded-2"
+                        onClick={() => {
+                          setSelectedCropForModal({
+                            name: item.cropName || item.name,
+                            tamilName: item.tamilName || '',
+                            image: item.images?.[0] || ''
+                          });
+                          setShowAddModal(true);
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-xs btn-outline-danger rounded-2"
+                        onClick={() => removeHarvest(item.id, item.name)}
+                        title="Remove Harvest"
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
-      </div>
 
-      {/* ----------------------------------------------------------------------
-          4. MY RECENT PRODUCTS & QUICK ACTIONS ROW
-         ---------------------------------------------------------------------- */}
-      <div className="row g-4 mb-4">
-        {/* Left: Recent Products (8 Cols) */}
-        <div className="col-lg-8">
-          <div className="farm-card">
-            <div className="farm-card-header">
-              <div className="d-flex align-items-center gap-2">
-                <div
-                  className="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center"
-                  style={{ width: '36px', height: '36px' }}
-                >
-                  <i className="bi bi-box-seam-fill fs-5"></i>
-                </div>
-                <div>
-                  <h2 className="farm-card-title">My Harvest Produce</h2>
-                  <span className="text-muted small">
-                    {products.length} products active in your inventory
-                  </span>
-                </div>
-              </div>
-
-              <div className="d-flex align-items-center gap-2">
-                <AddProductButton className="farm-btn-sm py-1 px-3 shadow-none" label="Add Product" />
-                <Link to="/farmer/products" className="btn btn-sm btn-outline-secondary rounded-pill px-3">
-                  View All →
-                </Link>
-              </div>
+        {/* ===================================================================
+            5. BUYER REQUESTS PREVIEW
+            =================================================================== */}
+        <div className="mb-4">
+          <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+            <div>
+              <span className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em' }}>
+                {language === 'ta' ? 'நேரடி மொத்த விலை ஏலங்கள்' : 'DIRECT WHOLESALE BIDS'}
+              </span>
+              <h2 className="fs-4 fs-md-3 fw-bold text-dark mb-0">{t('buyerRequests')}</h2>
             </div>
 
-            {/* Product Cards Grid */}
-            <div className="row g-3">
-              {filteredProducts.slice(0, 4).map((item) => (
-                <div key={item.id} className="col-12 col-sm-6">
-                  <div className="farm-product-card h-100">
-                    <div className="farm-product-img-wrap">
-                      <img
-                        src={
-                          item.images && item.images.length > 0
-                            ? item.images[0]
-                            : 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80'
-                        }
-                        alt={item.name}
-                        className="farm-product-img"
-                      />
-                      <span className="farm-product-badge bg-success text-white">
-                        {item.category}
-                      </span>
-                      <span className="farm-product-price-tag">
-                        ₹{item.price} / {item.unit}
+            <Link to="/farmer/requests" className="btn btn-outline-warning text-dark btn-sm fw-bold rounded-pill px-3">
+              {language === 'ta' ? 'அனைத்தையும் பார்க்க' : 'View All'} ({buyerRequests.length}) →
+            </Link>
+          </div>
+
+          <div className="row g-2 g-sm-3">
+            {buyerRequests.slice(0, 3).map((req) => (
+              <div key={req.id} className="col-12 col-md-6 col-lg-4">
+                <div className="p-3 bg-white rounded-4 border shadow-xs h-100 d-flex flex-column">
+                  <div className="d-flex align-items-center gap-3 mb-2">
+                    <img
+                      src={req.avatar}
+                      alt={req.buyerName}
+                      className="rounded-circle object-fit-cover"
+                      style={{ width: '42px', height: '42px' }}
+                    />
+                    <div>
+                      <strong className="text-dark d-block small">{req.buyerName}</strong>
+                      <span className="text-muted small" style={{ fontSize: '0.72rem' }}>
+                        {req.buyerType}
                       </span>
                     </div>
+                    <span
+                      className={`badge ms-auto ${
+                        req.status === 'Accepted'
+                          ? 'bg-success-subtle text-success'
+                          : req.status === 'Declined'
+                          ? 'bg-danger-subtle text-danger'
+                          : 'bg-warning-subtle text-warning-emphasis'
+                      }`}
+                    >
+                      {req.status}
+                    </span>
+                  </div>
 
-                    <div className="p-3 d-flex flex-column flex-grow-1">
-                      <h6 className="fw-bold text-dark mb-1 text-truncate">{item.name}</h6>
-                      <div className="small text-muted mb-2">
-                        {item.tamilName ? `${item.tamilName} • ` : ''}
-                        Available: <strong className="text-success font-monospace">{item.quantity} {item.unit}</strong>
-                      </div>
+                  <div className="p-2 bg-light rounded-3 mb-2 small">
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="text-muted">Crop:</span>
+                      <strong className="text-dark">{req.cropRequested}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="text-muted">Quantity:</span>
+                      <strong className="text-success font-monospace">{req.quantity}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Offer:</span>
+                      <strong className="text-dark font-monospace">{req.offerPrice}</strong>
+                    </div>
+                  </div>
 
-                      <div className="small text-muted mb-3 d-flex align-items-center gap-2">
-                        <span>
-                          <i className="bi bi-geo-alt me-1 text-danger"></i>
-                          {item.district}
-                        </span>
-                        <span>•</span>
-                        <span className="badge bg-success-subtle text-success border border-success-subtle">
-                          {item.status}
-                        </span>
-                      </div>
+                  <p className="text-muted small mb-3 text-truncate" style={{ fontSize: '0.78rem' }}>
+                    "{req.message}"
+                  </p>
 
-                      <div className="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                  <div className="d-flex gap-2 mt-auto">
+                    {req.status === 'Pending' ? (
+                      <>
                         <button
                           type="button"
-                          className="btn btn-sm btn-link text-decoration-none text-success fw-bold p-0"
-                          onClick={() => setSelectedProduct(item)}
+                          className="btn btn-sm btn-success fw-bold flex-grow-1"
+                          onClick={() => acceptRequest(req.id)}
                         >
-                          View Details
+                          Accept
                         </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => declineRequest(req.id)}
+                        >
+                          Decline
+                        </button>
+                      </>
+                    ) : (
+                      <span className="badge bg-light text-muted border w-100 py-2">
+                        Status: {req.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-                        <div className="btn-group btn-group-sm">
-                          <button
-                            type="button"
-                            className="btn btn-outline-secondary btn-sm"
-                            title="Edit Listing"
-                            onClick={() => setEditingProduct(item)}
-                          >
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-outline-danger btn-sm"
-                            title="Delete Listing"
-                            onClick={() => {
-                              if (window.confirm(`Remove ${item.name} from catalog?`)) {
-                                deleteProduct(item.id, item.name);
-                              }
-                            }}
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+      {/* ===================================================================
+          ADD HARVEST 4-STEP POPUP MODAL
+          =================================================================== */}
+      <AddHarvestModal
+        show={showAddModal}
+        initialCrop={selectedCropForModal}
+        onClose={() => setShowAddModal(false)}
+      />
+
+      {/* ===================================================================
+          MORE CROPS CATALOG MODAL
+          =================================================================== */}
+      {showMoreCropsModal && (
+        <div
+          className="position-fixed inset-0 bg-dark bg-opacity-60 d-flex align-items-center justify-content-center p-3 farm-animate-fade"
+          style={{ zIndex: 1200, top: 0, left: 0, right: 0, bottom: 0 }}
+        >
+          <div className="bg-white rounded-4 p-4 max-w-lg w-100 shadow-2xl" style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+              <div>
+                <strong className="fs-5 text-dark">
+                  {language === 'ta' ? 'தமிழ்நாடு பயிர்கள் பட்டியல்' : 'Tamil Nadu Crops Catalog'}
+                </strong>
+                <span className="text-muted small d-block">
+                  {language === 'ta' ? 'உங்கள் அறுவடையைச் சேர்க்க எந்தப் பயிரையும் தேர்ந்தெடுக்கவும்' : 'Select any crop to add your harvest'}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowMoreCropsModal(false)}
+              ></button>
+            </div>
+
+            <div className="row g-3">
+              {[...POPULAR_CROPS, ...MORE_CROPS].map((crop) => (
+                <div key={crop.id} className="col-6 col-sm-4">
+                  <div
+                    className="p-2 border rounded-3 text-center cursor-pointer hover-bg-light transition h-100 d-flex flex-column align-items-center"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      setShowMoreCropsModal(false);
+                      setSelectedCropForModal(crop);
+                      setShowAddModal(true);
+                    }}
+                  >
+                    <img
+                      src={crop.image}
+                      alt={crop.name}
+                      className="rounded-3 object-fit-cover mb-2"
+                      style={{ width: '100%', height: '85px' }}
+                    />
+                    <strong className="text-dark small d-block mb-1">{crop.name}</strong>
+                    <span className="text-muted small" style={{ fontSize: '0.72rem' }}>
+                      {crop.tamilName}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-
-        {/* Right: Quick Actions (4 Cols) */}
-        <div className="col-lg-4">
-          <div className="farm-card">
-            <h4 className="fw-bold text-dark fs-6 mb-3 d-flex align-items-center gap-2">
-              <i className="bi bi-lightning-charge-fill text-warning"></i>
-              <span>Quick Actions</span>
-            </h4>
-            <div className="d-grid gap-2 mb-3">
-              <Link
-                to="/farmer/add-product"
-                className="btn btn-light border text-start d-flex align-items-center gap-2 py-3 fw-semibold rounded-3 hover-shadow"
-              >
-                <span className="bg-success text-white p-2 rounded-3 d-flex">
-                  <i className="bi bi-plus-lg fs-6"></i>
-                </span>
-                <div>
-                  <div className="text-dark fw-bold">Add New Product</div>
-                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
-                    Publish new harvest to buyer mandi
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                to="/farmer/requests"
-                className="btn btn-light border text-start d-flex align-items-center gap-2 py-3 fw-semibold rounded-3 hover-shadow"
-              >
-                <span className="bg-warning text-dark p-2 rounded-3 d-flex">
-                  <i className="bi bi-inbox fs-6"></i>
-                </span>
-                <div>
-                  <div className="text-dark fw-bold">Consumer Requests</div>
-                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
-                    Review {stats.pendingRequests} pending buyer proposals
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                to="/farmer/demand-forecast"
-                className="btn btn-light border text-start d-flex align-items-center gap-2 py-3 fw-semibold rounded-3 hover-shadow"
-              >
-                <span className="bg-info text-dark p-2 rounded-3 d-flex">
-                  <i className="bi bi-graph-up fs-6"></i>
-                </span>
-                <div>
-                  <div className="text-dark fw-bold">Demand Forecast</div>
-                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
-                    Regional mandi benchmarks &amp; analytics
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                to="/farmer/profile"
-                className="btn btn-light border text-start d-flex align-items-center gap-2 py-3 fw-semibold rounded-3 hover-shadow"
-              >
-                <span className="bg-primary text-white p-2 rounded-3 d-flex">
-                  <i className="bi bi-person-badge fs-6"></i>
-                </span>
-                <div>
-                  <div className="text-dark fw-bold">Farmer Profile &amp; KYC</div>
-                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
-                    Edit farm info and photo
-                  </div>
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ----------------------------------------------------------------------
-          5. MODALS FOR CROPS ONLY
-         ---------------------------------------------------------------------- */}
-      {selectedProduct && (
-        <CropDetailsModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-          onEdit={(prod) => setEditingProduct(prod)}
-        />
-      )}
-
-      {editingProduct && (
-        <EditProductModal
-          product={editingProduct}
-          onClose={() => setEditingProduct(null)}
-        />
       )}
     </FarmerLayout>
   );

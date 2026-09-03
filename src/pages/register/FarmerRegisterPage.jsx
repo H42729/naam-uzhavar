@@ -149,6 +149,30 @@ export default function FarmerRegisterPage() {
 
     setIsSubmitting(true);
 
+    try {
+      const existing = JSON.parse(localStorage.getItem('naam_uzhavar_registered_users') || '[]');
+      const newFarmer = {
+        name: formData.fullName || 'Registered Farmer',
+        email: `${(formData.fullName || 'farmer').toLowerCase().replace(/[^a-z0-9]/g, '')}@naamuzhavar.com`,
+        phone: formData.phone,
+        password: formData.password,
+        role: 'Farmer',
+        roleKey: 'farmer',
+        district: formData.district,
+        taluk: formData.taluk,
+        village: formData.village,
+        landArea: formData.landArea,
+        pattaNumber: formData.pattaNumber,
+        location: formData.district ? `${formData.district}, Tamil Nadu` : 'Erode, Tamil Nadu',
+        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDbsSudoKNyE7RJZob9ewQOMJwTcwZUjLC5hQwyUPRj0Jw5fUDlpXhqui_Y4_7IcAnQmAdgWVOcPEnf6cV1rotCpFACgesUn3oD-PCwQkJP7f8H7tO4HZzAkGd9HVZm9pXVk9ajbGmq5nOT3u50Rhr06u7IEESRHxHUfaFbkfSXThrWGF37A-1rj954tpLOOk8g1neswi5Qr6ZZQdHyAZ2SODHuakgv-slcE-AxKG-YQO6u39Trc4sqnA',
+      };
+      const filtered = existing.filter((u) => u.phone !== formData.phone);
+      filtered.push(newFarmer);
+      localStorage.setItem('naam_uzhavar_registered_users', JSON.stringify(filtered));
+    } catch (err) {
+      console.warn('Error saving registered farmer:', err);
+    }
+
     // Simulate clean state processing for API readiness
     setTimeout(() => {
       setIsSubmitting(false);

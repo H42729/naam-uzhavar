@@ -1,45 +1,51 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function RoleSelectionPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const roles = [
     {
       id: 'farmer',
-      title: 'Farmer / FPO (விவசாயி)',
-      subtitle: 'List crops, check AI demand forecast & receive direct UPI payouts.',
+      title: t('farmerRoleTitle'),
+      subtitle: t('farmerRoleSubtitle'),
       icon: 'bi-flower1',
-      badge: 'Most Popular',
+      badge: t('mostPopular'),
       color: '#198754',
       bgLight: '#e8f5e9',
       borderLight: '#c8e6c9',
       route: '/login/farmer',
       demoEmail: 'farmer@naamuzhavar.com',
+      buttonText: t('loginAsFarmer')
     },
     {
       id: 'buyer',
-      title: 'Buyer (வாங்குவோர்)',
-      subtitle: 'Procure bulk farm-fresh produce with cold-chain logistics & traceability.',
+      title: t('buyerRoleTitle'),
+      subtitle: t('buyerRoleSubtitle'),
       icon: 'bi-cart3',
-      badge: 'B2B & Retail',
+      badge: t('b2bRetail'),
       color: '#0d6efd',
       bgLight: '#e7f1ff',
       borderLight: '#b6d4fe',
       route: '/login/buyer',
       demoEmail: 'buyer@naamuzhavar.com',
+      buttonText: t('loginAsBuyer')
     },
     {
       id: 'driver',
-      title: 'Logistics Driver (ஓட்டுநர்)',
-      subtitle: 'Manage farm-to-depot consignments, cold-chain pickups & live delivery tracking.',
+      title: t('driverRoleTitle'),
+      subtitle: t('driverRoleSubtitle'),
       icon: 'bi-truck',
-      badge: 'Logistics & Fleet',
+      badge: t('logisticsFleet'),
       color: '#d97706',
       bgLight: '#fef3c7',
       borderLight: '#fde68a',
       route: '/login/driver',
       demoEmail: 'driver@naamuzhavar.com',
+      buttonText: t('loginAsDriver')
     },
   ];
 
@@ -60,14 +66,17 @@ export default function RoleSelectionPage() {
             />
           </div>
 
-          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
-            onClick={() => navigate('/')}
-          >
-            <i className="bi bi-arrow-left"></i>
-            <span>Back to Home</span>
-          </button>
+          <div className="d-flex align-items-center gap-3">
+            <LanguageSwitcher />
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
+              onClick={() => navigate('/')}
+            >
+              <i className="bi bi-arrow-left"></i>
+              <span>{t('backToHome')}</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -75,11 +84,11 @@ export default function RoleSelectionPage() {
       <main className="container flex-grow-1 py-5 d-flex flex-column justify-content-center">
         <div className="text-center mb-5" style={{ maxWidth: '640px', margin: '0 auto' }}>
           <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 mb-2 fw-bold text-uppercase">
-            SIH 2026 Portal Access
+            {t('sihPortalAccess')}
           </span>
-          <h1 className="fw-bold text-dark fs-2 mb-2">Select Your Role to Continue</h1>
+          <h1 className="fw-bold text-dark fs-2 mb-2">{t('selectRoleTitle')}</h1>
           <p className="text-muted">
-            Choose your account type to access your tailored Naam Uzhavar marketplace experience.
+            {t('selectRoleSubtitle')}
           </p>
         </div>
 
@@ -141,12 +150,12 @@ export default function RoleSelectionPage() {
                       navigate(role.route);
                     }}
                   >
-                    <span>Login as {role.id.charAt(0).toUpperCase() + role.id.slice(1)}</span>
+                    <span>{role.buttonText}</span>
                     <i className="bi bi-arrow-right"></i>
                   </button>
 
                   <div className="text-center mt-2" style={{ fontSize: '0.74rem', color: '#64748b' }}>
-                    Demo: <code>{role.demoEmail}</code>
+                    {t('demoLabel')} <code>{role.demoEmail}</code>
                   </div>
                 </div>
               </div>

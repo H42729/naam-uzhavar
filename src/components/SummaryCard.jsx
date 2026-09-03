@@ -41,9 +41,9 @@ export default function SummaryCard({
       title={onClick ? `View ${title}` : undefined}
     >
       <div className="bd-kpi-top">
-        <span className="bd-kpi-label">{title}</span>
+        <span className="bd-kpi-label text-truncate me-1">{title}</span>
         <div
-          className="bd-kpi-icon"
+          className="bd-kpi-icon flex-shrink-0"
           style={{
             backgroundColor: scheme.bg,
             color: scheme.text,
@@ -53,9 +53,9 @@ export default function SummaryCard({
           <i className={`bi ${icon}`}></i>
         </div>
       </div>
-      <div className="bd-kpi-value">{value}</div>
-      <div className="bd-kpi-sub">
-        <i className="bi bi-arrow-up-right text-success small"></i>
+      <div className="bd-kpi-value text-truncate">{value}</div>
+      <div className="bd-kpi-sub text-truncate">
+        <i className="bi bi-arrow-up-right text-success small me-1"></i>
         <span>{subtext}</span>
       </div>
     </div>

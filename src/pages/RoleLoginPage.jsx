@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth, DEMO_CREDENTIALS } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function RoleLoginPage({ defaultRole }) {
   const { role: routeRole } = useParams();
   const currentRoleKey = (defaultRole || routeRole || 'farmer').toLowerCase();
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useLanguage();
+
+  const getRoleDisplayName = (rk) => {
+    if (rk === 'farmer') return t('farmer');
+    if (rk === 'buyer') return t('buyer');
+    if (rk === 'driver') return t('driver');
+    if (rk === 'admin') return t('admin');
+    return rk;
+  };
 
   const roleConfig = DEMO_CREDENTIALS[currentRoleKey] || DEMO_CREDENTIALS.farmer;
 
@@ -81,9 +92,12 @@ export default function RoleLoginPage({ defaultRole }) {
             />
           </Link>
 
-          <Link to="/login" className="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
-            <i className="bi bi-arrow-left me-1"></i> Switch Role
-          </Link>
+          <div className="d-flex align-items-center gap-3">
+            <LanguageSwitcher />
+            <Link to="/login" className="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+              <i className="bi bi-arrow-left me-1"></i> {t('switchRole')}
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -109,7 +123,7 @@ export default function RoleLoginPage({ defaultRole }) {
           >
             <div className="d-flex align-items-center justify-content-between">
               <span className="badge bg-white text-dark fw-bold text-uppercase px-2 py-1">
-                {roleConfig.role} Login
+                {getRoleDisplayName(currentRoleKey)} {t('login')}
               </span>
               <button
                 type="button"
@@ -117,15 +131,15 @@ export default function RoleLoginPage({ defaultRole }) {
                 onClick={handleAutoFill}
                 title="Reset to demo credentials"
               >
-                ⚡ Reset Demo Info
+                ⚡ {t('resetDemoInfo')}
               </button>
             </div>
 
             <h2 className="fs-4 fw-bold mt-3 mb-1">
-              Welcome back, {roleConfig.role}
+              {t('welcomeBackRole')}, {getRoleDisplayName(currentRoleKey)}
             </h2>
             <p className="small mb-0 text-white-50">
-              Sign in to manage your {currentRoleKey} operations on {currentRoleKey === 'buyer' ? 'FarmDirect' : 'Naam Uzhavar'}.
+              {t('signInPrompt')}
             </p>
           </div>
 
@@ -143,7 +157,7 @@ export default function RoleLoginPage({ defaultRole }) {
                         className="btn btn-sm btn-danger fw-bold"
                         onClick={handleAutoFillAndSubmit}
                       >
-                        ⚡ 1-Click Login as {roleConfig.role}
+                        ⚡ 1-Click Login as {getRoleDisplayName(currentRoleKey)}
                       </button>
                     </div>
                   </div>
@@ -154,7 +168,7 @@ export default function RoleLoginPage({ defaultRole }) {
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label className="form-label small fw-bold text-muted text-uppercase mb-1">
-                  Email / Username
+                  {t('emailUsername')}
                 </label>
                 <div className="input-group">
                   <span className="input-group-text bg-light text-muted">
@@ -164,23 +178,23 @@ export default function RoleLoginPage({ defaultRole }) {
                     type="text"
                     required
                     className="form-control py-2"
-                    placeholder={`e.g. ${roleConfig.email} or farmer`}
+                    placeholder={`e.g. ${roleConfig.email} or ${currentRoleKey}`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div className="form-text text-muted" style={{ fontSize: '0.72rem' }}>
-                  Accepted: <code>{roleConfig.email}</code> or <code>farmer</code>
+                  {t('accepted', 'Accepted:')} <code>{roleConfig.email}</code> or <code>{currentRoleKey}</code>
                 </div>
               </div>
 
               <div className="mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-1">
                   <label className="form-label small fw-bold text-muted text-uppercase mb-0">
-                    Password
+                    {t('passwordLabel')}
                   </label>
                   <span className="text-muted small" style={{ fontSize: '0.75rem' }}>
-                    Demo: <code>{roleConfig.password}</code>
+                    {t('demoLabel')} <code>{roleConfig.password}</code>
                   </span>
                 </div>
                 <div className="input-group">
@@ -197,7 +211,7 @@ export default function RoleLoginPage({ defaultRole }) {
                   />
                 </div>
                 <div className="form-text text-muted" style={{ fontSize: '0.72rem' }}>
-                  Accepted: <code>Farmer@123</code>, <code>farmer@123</code>, or <code>123456</code>
+                  {t('accepted', 'Accepted:')} <code>{roleConfig.password}</code>, <code>{roleConfig.password.toLowerCase()}</code>, or <code>123456</code>
                 </div>
               </div>
 
@@ -210,7 +224,7 @@ export default function RoleLoginPage({ defaultRole }) {
                     defaultChecked
                   />
                   <label className="form-check-label small text-muted" htmlFor="rememberMe">
-                    Remember me
+                    {t('rememberMe')}
                   </label>
                 </div>
                 <span className="small text-muted">SIH 2026 Demo Sandbox</span>
@@ -225,7 +239,9 @@ export default function RoleLoginPage({ defaultRole }) {
                     currentRoleKey === 'farmer'
                       ? '#198754'
                       : currentRoleKey === 'buyer'
-                      ? '#15803d'
+                      ? '#0d6efd'
+                      : currentRoleKey === 'driver'
+                      ? '#d97706'
                       : '#6f42c1',
                   border: 'none',
                 }}
@@ -233,11 +249,11 @@ export default function RoleLoginPage({ defaultRole }) {
                 {isLoading ? (
                   <>
                     <span className="spinner-border spinner-border-sm"></span>
-                    <span>Authenticating...</span>
+                    <span>{t('authenticating')}</span>
                   </>
                 ) : (
                   <>
-                    <span>Sign In as {roleConfig.role}</span>
+                    <span>{t('signIn')} ({getRoleDisplayName(currentRoleKey)})</span>
                     <i className="bi bi-arrow-right"></i>
                   </>
                 )}
@@ -246,17 +262,25 @@ export default function RoleLoginPage({ defaultRole }) {
               {/* 1-Click Instant Demo Login button */}
               <button
                 type="button"
-                className="btn btn-outline-success w-100 py-2 fw-bold rounded-3 d-flex align-items-center justify-content-center gap-2"
+                className={`btn ${
+                  currentRoleKey === 'buyer'
+                    ? 'btn-outline-primary'
+                    : currentRoleKey === 'driver'
+                    ? 'btn-outline-warning text-dark'
+                    : currentRoleKey === 'admin'
+                    ? 'btn-outline-secondary'
+                    : 'btn-outline-success'
+                } w-100 py-2 fw-bold rounded-3 d-flex align-items-center justify-content-center gap-2`}
                 onClick={handleAutoFillAndSubmit}
               >
                 <i className="bi bi-lightning-charge-fill text-warning"></i>
-                <span>Instant 1-Click {roleConfig.role} Login</span>
+                <span>⚡ {t('instantOneClickLogin')} ({getRoleDisplayName(currentRoleKey)})</span>
               </button>
             </form>
 
             {/* Link to Registration */}
             <div className="mt-3 text-center">
-              <span className="small text-muted">Don't have an account yet? </span>
+              <span className="small text-muted">{t('dontHaveAccount')} </span>
               <Link
                 to={
                   currentRoleKey === 'buyer'
@@ -267,40 +291,38 @@ export default function RoleLoginPage({ defaultRole }) {
                     ? '/register/driver'
                     : '/register'
                 }
-                className="small fw-bold text-success text-decoration-none"
-              >
-                Register as {
+                className={`small fw-bold text-decoration-none ${
                   currentRoleKey === 'buyer'
-                    ? 'Consumer / Buyer'
+                    ? 'text-primary'
                     : currentRoleKey === 'farmer'
-                    ? 'Farmer'
-                    : currentRoleKey === 'driver'
-                    ? 'Logistics Driver'
-                    : 'New User'
-                } →
+                    ? 'text-success'
+                    : 'text-dark'
+                }`}
+              >
+                {t('registerAs')} {getRoleDisplayName(currentRoleKey)} →
               </Link>
             </div>
 
             <div className="mt-3 pt-3 border-top text-center">
-              <div className="small text-muted mb-2">Need to log in with another role?</div>
+              <div className="small text-muted mb-2">{t('needAnotherRole')}</div>
               <div className="btn-group btn-group-sm w-100">
                 <Link
                   to="/login/farmer"
                   className={`btn ${currentRoleKey === 'farmer' ? 'btn-success' : 'btn-outline-secondary'}`}
                 >
-                  Farmer
+                  {t('farmer')}
                 </Link>
                 <Link
                   to="/login/buyer"
                   className={`btn ${currentRoleKey === 'buyer' ? 'btn-primary' : 'btn-outline-secondary'}`}
                 >
-                  Buyer
+                  {t('buyer')}
                 </Link>
                 <Link
                   to="/login/driver"
                   className={`btn ${currentRoleKey === 'driver' ? 'btn-warning text-dark fw-bold' : 'btn-outline-secondary'}`}
                 >
-                  Logistics Driver
+                  {t('driver')}
                 </Link>
               </div>
             </div>

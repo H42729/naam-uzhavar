@@ -50,8 +50,8 @@ export default function FarmerMessagesPage() {
 
   const filteredConversations = conversations.filter(
     (c) =>
-      c.consumerName.toLowerCase().includes(chatSearch.toLowerCase()) ||
-      (c.businessType && c.businessType.toLowerCase().includes(chatSearch.toLowerCase())) ||
+      (c.consumerName || c.buyerName || '').toLowerCase().includes(chatSearch.toLowerCase()) ||
+      (c.businessType || c.buyerType || '').toLowerCase().includes(chatSearch.toLowerCase()) ||
       (c.lastMessage && c.lastMessage.toLowerCase().includes(chatSearch.toLowerCase()))
   );
 
@@ -113,14 +113,14 @@ export default function FarmerMessagesPage() {
                       conv.avatar ||
                       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'
                     }
-                    alt={conv.consumerName}
+                    alt={conv.consumerName || conv.buyerName}
                     className="rounded-circle border"
                     style={{ width: '44px', height: '44px', objectFit: 'cover' }}
                   />
                   <div className="flex-grow-1 overflow-hidden">
                     <div className="d-flex justify-content-between align-items-center mb-1">
                       <span className="fw-bold text-dark text-truncate small" style={{ maxWidth: '140px' }}>
-                        {conv.consumerName}
+                        {conv.consumerName || conv.buyerName}
                       </span>
                       <span className="text-muted" style={{ fontSize: '0.7rem' }}>
                         {conv.timestamp}
@@ -175,24 +175,18 @@ export default function FarmerMessagesPage() {
                       activeConversation.avatar ||
                       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'
                     }
-                    alt={activeConversation.consumerName}
+                    alt={activeConversation.consumerName || activeConversation.buyerName}
                     className="rounded-circle border"
                     style={{ width: '42px', height: '42px', objectFit: 'cover' }}
                   />
 
                   <div>
-                    <div className="fw-bold text-dark fs-6 mb-0">
-                      {activeConversation.consumerName}
-                    </div>
-                    <div className="small text-muted d-flex align-items-center gap-2">
-                      <span className="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill">
-                        {activeConversation.businessType || 'Direct Buyer'}
-                      </span>
-                      <span>
-                        <i className="bi bi-geo-alt me-1 text-danger"></i>
-                        {activeConversation.location || 'Tamil Nadu'}
-                      </span>
-                    </div>
+                    <strong className="d-block text-dark">
+                      {activeConversation.consumerName || activeConversation.buyerName}
+                    </strong>
+                    <span className="text-muted small" style={{ fontSize: '0.75rem' }}>
+                      {activeConversation.businessType || activeConversation.buyerType || 'Wholesale Buyer'}
+                    </span>
                   </div>
                 </div>
 

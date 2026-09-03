@@ -14,7 +14,8 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1592924357228-91a4daad
 export default function ProductCard({
   product,
   onViewDetails,
-  onAddToRequirement
+  onAddToRequirement,
+  onBuy
 }) {
   const navigate = useNavigate();
 
@@ -103,25 +104,35 @@ export default function ProductCard({
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="d-flex gap-2 mt-auto pt-2 border-top">
-            <Link
-              to={`/buyer/products/${product.id}`}
-              className="bd-btn bd-btn-outline bd-btn-sm flex-fill text-decoration-none d-flex align-items-center justify-content-center gap-1"
-            >
-              <i className="bi bi-eye"></i>
-              <span>View Details</span>
-            </Link>
-            {onAddToRequirement && (
+          {/* Actions: 3 Cleanly & Professionally Arranged Buttons */}
+          <div className="d-flex flex-column gap-2 mt-auto pt-2.5 border-top">
+            <div className="d-flex gap-2">
+              <Link
+                to={`/buyer/products/${product.id}`}
+                className="btn btn-sm btn-outline-secondary flex-fill rounded-3 fw-semibold py-1.5 d-flex align-items-center justify-content-center gap-1.5 shadow-xs text-decoration-none"
+              >
+                <i className="bi bi-eye"></i>
+                <span>View Details</span>
+              </Link>
               <button
                 type="button"
-                className="bd-btn bd-btn-primary bd-btn-sm flex-fill"
-                onClick={() => onAddToRequirement(product)}
+                className="btn btn-sm btn-outline-primary flex-fill rounded-3 fw-semibold py-1.5 d-flex align-items-center justify-content-center gap-1.5 shadow-xs"
+                onClick={() => onAddToRequirement && onAddToRequirement(product)}
+                title="Add to Bulk Sourcing Requirement"
               >
                 <i className="bi bi-plus-circle"></i>
-                <span>Add to Req</span>
+                <span>Add Request</span>
               </button>
-            )}
+            </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-success w-100 rounded-3 fw-bold py-2 d-flex align-items-center justify-content-center gap-2 shadow-xs"
+              onClick={() => (onBuy ? onBuy(product) : navigate(`/buyer/products/${product.id}?action=buy`))}
+              title="Buy directly from farmer"
+            >
+              <i className="bi bi-bag-check-fill"></i>
+              <span>Buy Produce (₹{product.price}/kg)</span>
+            </button>
           </div>
         </div>
       </div>

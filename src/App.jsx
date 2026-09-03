@@ -1,8 +1,18 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { FarmerProvider } from './context/FarmerContext';
 import { BuyerProvider } from './context/BuyerContext';
+
+function ScrollToTop() {
+  const { pathname, search } = useLocation();
+
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname, search]);
+
+  return null;
+}
 
 // Public & Auth Pages
 import HomePage from './pages/HomePage';
@@ -18,10 +28,10 @@ import AdminDashboard from './pages/AdminDashboard';
 
 // Farmer Marketplace Module Pages
 import FarmerDashboardPage from './pages/farmer/FarmerDashboardPage';
-import AddProductPage from './pages/farmer/AddProductPage';
-import FarmerProductsPage from './pages/farmer/FarmerProductsPage';
+import FarmerHarvestPage from './pages/farmer/FarmerHarvestPage';
+import FarmerDeliveriesPage from './pages/farmer/FarmerDeliveriesPage';
+import FarmerMessagesPage from './pages/farmer/FarmerMessagesPage';
 import FarmerRequestsPage from './pages/farmer/FarmerRequestsPage';
-import FarmerRequestDetailPage from './pages/farmer/FarmerRequestDetailPage';
 import FarmerDemandForecastPage from './pages/farmer/FarmerDemandForecastPage';
 import FarmerProfilePage from './pages/farmer/FarmerProfilePage';
 
@@ -29,10 +39,11 @@ import FarmerProfilePage from './pages/farmer/FarmerProfilePage';
 import BuyerDashboard from './pages/BuyerDashboard';
 import BuyerBrowsePage from './pages/buyer/BuyerBrowsePage';
 import ProductDetailPage from './pages/buyer/ProductDetailPage';
-import BuyerRequestsPage from './pages/buyer/BuyerRequestsPage';
+import BuyerRequestStatusPage from './pages/buyer/BuyerRequestStatusPage';
 import BuyerRequirementPage from './pages/buyer/BuyerRequirementPage';
-import BuyerMatchedSupplyPage from './pages/buyer/BuyerMatchedSupplyPage';
+import BuyerAggregateDetailsPage from './pages/buyer/BuyerAggregateDetailsPage';
 import BuyerOrdersPage from './pages/buyer/BuyerOrdersPage';
+import BuyerDeliveriesPage from './pages/buyer/BuyerDeliveriesPage';
 import DriverRoutePage from './pages/driver/DriverRoutePage';
 import DriverRequestsPage from './pages/driver/DriverRequestsPage';
 import DriverMessagesPage from './pages/driver/DriverMessagesPage';
@@ -40,14 +51,17 @@ import DriverHistoryPage from './pages/driver/DriverHistoryPage';
 import DriverTripSummaryPage from './pages/driver/DriverTripSummaryPage';
 import DriverNotificationsPage from './pages/driver/DriverNotificationsPage';
 import DriverProfilePage from './pages/driver/DriverProfilePage';
+import { LanguageProvider } from './context/LanguageContext';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <FarmerProvider>
-        <BuyerProvider>
-          <BrowserRouter>
-            <Routes>
+    <LanguageProvider>
+      <AuthProvider>
+        <FarmerProvider>
+          <BuyerProvider>
+            <BrowserRouter>
+              <ScrollToTop />
+              <Routes>
               {/* 1. Public Home Page */}
               <Route path="/" element={<HomePage />} />
 
@@ -72,34 +86,42 @@ export default function App() {
               {/* 5. Farmer Marketplace Module */}
               <Route path="/farmer" element={<Navigate to="/farmer/dashboard" replace />} />
               <Route path="/farmer/dashboard" element={<FarmerDashboardPage />} />
-              <Route path="/farmer/products" element={<FarmerProductsPage />} />
-              <Route path="/farmer/add-product" element={<AddProductPage />} />
+              <Route path="/farmer/harvest" element={<FarmerHarvestPage />} />
+              <Route path="/farmer/products" element={<FarmerHarvestPage />} />
+              <Route path="/farmer/add-product" element={<Navigate to="/farmer/harvest" replace />} />
               <Route path="/farmer/requests" element={<FarmerRequestsPage />} />
-              <Route path="/farmer/requests/:id" element={<FarmerRequestDetailPage />} />
+              <Route path="/farmer/requests/:id" element={<FarmerRequestsPage />} />
+              <Route path="/farmer/messages" element={<FarmerMessagesPage />} />
               <Route path="/farmer/demand-forecast" element={<FarmerDemandForecastPage />} />
+              <Route path="/farmer/deliveries" element={<FarmerDeliveriesPage />} />
               <Route path="/farmer/profile" element={<FarmerProfilePage />} />
 
               {/* 6. Buyer & Consumer SPA Routed Module */}
-              <Route path="/consumer" element={<Navigate to="/buyer/dashboard" replace />} />
-              <Route path="/buyer" element={<Navigate to="/buyer/dashboard" replace />} />
-              <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
+              <Route path="/consumer" element={<Navigate to="/buyer/browse" replace />} />
+              <Route path="/buyer" element={<Navigate to="/buyer/browse" replace />} />
+              <Route path="/buyer/dashboard" element={<Navigate to="/buyer/browse" replace />} />
               <Route path="/buyer/browse" element={<BuyerBrowsePage />} />
               <Route path="/buyer/products/:id" element={<ProductDetailPage />} />
-              <Route path="/buyer/requests" element={<BuyerRequestsPage />} />
+              <Route path="/buyer/request-status" element={<BuyerRequestStatusPage />} />
+              <Route path="/buyer/requests" element={<Navigate to="/buyer/request-status" replace />} />
               <Route path="/buyer/requirement" element={<BuyerRequirementPage />} />
-              <Route path="/buyer/matched-supply" element={<BuyerMatchedSupplyPage />} />
+              <Route path="/buyer/aggregate-details/:id" element={<BuyerAggregateDetailsPage />} />
+              <Route path="/buyer/aggregate-details" element={<BuyerAggregateDetailsPage />} />
+              <Route path="/buyer/matched-supply" element={<BuyerAggregateDetailsPage />} />
+              <Route path="/buyer/messages" element={<Navigate to="/buyer/browse" replace />} />
               <Route path="/buyer/orders" element={<BuyerOrdersPage />} />
+              <Route path="/buyer/deliveries" element={<BuyerDeliveriesPage />} />
 
               {/* 7. Logistics Driver Module */}
-              <Route path="/driver" element={<Navigate to="/driver/routes" replace />} />
-              <Route path="/driver/dashboard" element={<Navigate to="/driver/routes" replace />} />
-              <Route path="/driver/routes" element={<DriverRoutePage />} />
+              <Route path="/driver" element={<Navigate to="/driver/requests" replace />} />
+              <Route path="/driver/dashboard" element={<Navigate to="/driver/requests" replace />} />
+              <Route path="/driver/routes" element={<Navigate to="/driver/requests" replace />} />
               <Route path="/driver/routes/:deliveryId" element={<DriverRoutePage />} />
               <Route path="/driver/requests" element={<DriverRequestsPage />} />
               <Route path="/driver/messages" element={<DriverMessagesPage />} />
               <Route path="/driver/history" element={<DriverHistoryPage />} />
               <Route path="/driver/trips" element={<DriverTripSummaryPage />} />
-              <Route path="/driver/notifications" element={<DriverNotificationsPage />} />
+              <Route path="/driver/notifications" element={<Navigate to="/driver/requests" replace />} />
               <Route path="/driver/profile" element={<DriverProfilePage />} />
 
               {/* 8. Admin Dashboard */}
@@ -112,5 +134,6 @@ export default function App() {
         </BuyerProvider>
       </FarmerProvider>
     </AuthProvider>
+    </LanguageProvider>
   );
 }

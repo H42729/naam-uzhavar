@@ -1,10 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
+  const [approvedIds, setApprovedIds] = useState(new Set());
+
+  const handleApprove = (id) => {
+    setApprovedIds((prev) => new Set([...prev, id]));
+  };
 
   const handleLogout = () => {
     logout();
@@ -22,12 +30,13 @@ export default function AdminDashboard() {
               alt="Naam Uzhavar"
               style={{ height: '38px', width: 'auto', objectFit: 'contain' }}
             />
-            <span className="badge bg-dark ms-2">Admin Portal</span>
+            <span className="badge bg-dark ms-2">{t('admin')} Portal</span>
           </div>
 
           <div className="d-flex align-items-center gap-3">
+            <LanguageSwitcher />
             <Link to="/" className="btn btn-outline-secondary btn-sm rounded-pill px-3">
-              <i className="bi bi-house-door me-1"></i> Public Site
+              <i className="bi bi-house-door me-1"></i> {t('navHome')}
             </Link>
             <div className="d-flex align-items-center gap-2 ps-2 border-start">
               <span className="fw-bold small text-dark">{user?.name || 'Administrator'}</span>
@@ -36,7 +45,7 @@ export default function AdminDashboard() {
                 className="btn btn-outline-danger btn-sm rounded-pill px-3"
                 onClick={handleLogout}
               >
-                Logout
+                {t('logout')}
               </button>
             </div>
           </div>
@@ -60,8 +69,8 @@ export default function AdminDashboard() {
           <div className="col-6 col-lg-3">
             <div className="bg-white rounded-4 border p-3 shadow-sm">
               <div className="text-muted small fw-bold text-uppercase">Verified Farmers</div>
-              <div className="fs-3 fw-bold text-dark mt-1">2,840</div>
-              <div className="small text-success">+34 pending KYC approval</div>
+              <div className="fs-3 fw-bold text-dark mt-1">{(2840 + approvedIds.size).toLocaleString()}</div>
+              <div className="small text-success">+{34 - approvedIds.size} pending KYC approval</div>
             </div>
           </div>
           <div className="col-6 col-lg-3">
@@ -109,7 +118,20 @@ export default function AdminDashboard() {
                   <td>Sathyamangalam, Erode</td>
                   <td>4.5 Acres (Verified)</td>
                   <td>Turmeric & Banana</td>
-                  <td><button className="btn btn-sm btn-success fw-bold px-3">Approve KYC</button></td>
+                  <td>
+                    {approvedIds.has('TN-FRM-8491') ? (
+                      <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">
+                        <i className="bi bi-check-circle-fill me-1"></i> KYC Approved
+                      </span>
+                    ) : (
+                      <button
+                        className="btn btn-sm btn-success fw-bold px-3 shadow-xs"
+                        onClick={() => handleApprove('TN-FRM-8491')}
+                      >
+                        Approve KYC
+                      </button>
+                    )}
+                  </td>
                 </tr>
                 <tr>
                   <td className="font-monospace fw-bold">#TN-FRM-8492</td>
@@ -117,7 +139,20 @@ export default function AdminDashboard() {
                   <td>Pollachi, Coimbatore</td>
                   <td>6.0 Acres (Verified)</td>
                   <td>Coconut & Spices</td>
-                  <td><button className="btn btn-sm btn-success fw-bold px-3">Approve KYC</button></td>
+                  <td>
+                    {approvedIds.has('TN-FRM-8492') ? (
+                      <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">
+                        <i className="bi bi-check-circle-fill me-1"></i> KYC Approved
+                      </span>
+                    ) : (
+                      <button
+                        className="btn btn-sm btn-success fw-bold px-3 shadow-xs"
+                        onClick={() => handleApprove('TN-FRM-8492')}
+                      >
+                        Approve KYC
+                      </button>
+                    )}
+                  </td>
                 </tr>
               </tbody>
             </table>

@@ -167,6 +167,30 @@ export default function DriverRegisterPage() {
 
     setIsSubmitting(true);
 
+    try {
+      const existing = JSON.parse(localStorage.getItem('naam_uzhavar_registered_users') || '[]');
+      const newDriver = {
+        name: formData.name || 'Murugan Logistics',
+        email: `${(formData.name || 'driver').toLowerCase().replace(/[^a-z0-9]/g, '')}@naamuzhavar.com`,
+        phone: formData.phone,
+        password: formData.password,
+        role: 'Logistics Driver',
+        roleKey: 'driver',
+        district: formData.district,
+        taluk: formData.taluk,
+        vehicleType: formData.vehicleType,
+        drivingLicenceNumber: formData.drivingLicenceNumber,
+        rcBookNumber: formData.rcBookNumber,
+        location: formData.district ? `${formData.district}, Tamil Nadu` : 'Madurai, Tamil Nadu',
+        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
+      };
+      const filtered = existing.filter((u) => u.phone !== formData.phone);
+      filtered.push(newDriver);
+      localStorage.setItem('naam_uzhavar_registered_users', JSON.stringify(filtered));
+    } catch (err) {
+      console.warn('Error saving registered driver:', err);
+    }
+
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccessOpen(true);

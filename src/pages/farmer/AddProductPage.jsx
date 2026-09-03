@@ -40,6 +40,7 @@ export default function AddProductPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [globalError, setGlobalError] = useState('');
 
   const districts = getDistricts();
   const taluks = getTaluksByDistrict(formData.district);
@@ -57,10 +58,11 @@ export default function AddProductPage() {
   const validate = () => {
     const errors = {};
     if (!formData.name.trim()) errors.name = 'Product name is required';
-    if (!formData.quantity || Number(formData.quantity) <= 0) errors.quantity = 'Enter valid quantity';
+    if (!formData.quantity || Number(formData.quantity) <= 0) errors.quantity = 'Enter valid quantity greater than 0';
     if (!formData.price || Number(formData.price) <= 0) errors.price = 'Enter valid price per unit';
     if (!formData.district) errors.district = 'Select district';
     if (!formData.taluk) errors.taluk = 'Select taluk';
+    if (!formData.address.trim()) errors.address = 'Farm gate address is required';
     return errors;
   };
 
@@ -69,9 +71,13 @@ export default function AddProductPage() {
     const errors = validate();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+      const missingFields = Object.keys(errors).join(', ');
+      setGlobalError(`Please fill in all required fields marked in red before publishing: ${missingFields}.`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
+    setGlobalError('');
     setIsSubmitting(true);
 
     // If no images uploaded, assign a default realistic produce image based on category
@@ -144,7 +150,19 @@ export default function AddProductPage() {
             )}
           </button>
         </div>
-      </div>
+      {/* Global Error Banner */}
+      {globalError && (
+        <div className="alert alert-danger d-flex align-items-center gap-2 mb-4 rounded-3 shadow-xs border-danger py-3 px-4 farm-animate-fade">
+          <i className="bi bi-exclamation-triangle-fill fs-4 text-danger flex-shrink-0"></i>
+          <div className="flex-grow-1 fw-bold">{globalError}</div>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => setGlobalError('')}
+            aria-label="Dismiss error"
+          ></button>
+        </div>
+      )}
 
       {/* Form Content */}
       <div className="row g-4">

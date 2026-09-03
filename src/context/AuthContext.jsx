@@ -35,9 +35,16 @@ export const DEMO_CREDENTIALS = {
       'buyer@farmdirect.com',
       'buyer@gmail.com',
       'buyer',
+      'consumer',
+      'priya',
+      'priya@naamuzhavar.com',
       'freshmart',
       'freshmart@naamuzhavar.com',
-      'freshmart@farmdirect.com'
+      'freshmart@farmdirect.com',
+      '9876543210',
+      '9840123456',
+      '9842112345',
+      'buyer123'
     ],
     password: 'Buyer@123',
     alternatePasswords: [
@@ -46,7 +53,10 @@ export const DEMO_CREDENTIALS = {
       'buyer123',
       '123456',
       'password',
-      'buyer'
+      'buyer',
+      '1234',
+      'demo123',
+      'admin'
     ],
     name: 'FreshMart Procurement',
     role: 'Buyer',
@@ -120,20 +130,63 @@ export function AuthProvider({ children }) {
   const login = (roleKey, inputEmail, inputPassword) => {
     const cleanEmail = (inputEmail || '').trim().toLowerCase();
     const cleanPassword = (inputPassword || '').trim();
+    const normalizedKey = (roleKey || 'buyer').toLowerCase();
+
+    // 0. Check registered users in localStorage (e.g. from /register/consumer)
+    try {
+      const registeredUsers = JSON.parse(
+        localStorage.getItem('naam_uzhavar_registered_users') || '[]'
+      );
+      const matchedReg = registeredUsers.find((u) => {
+        const uEmail = (u.email || '').toLowerCase().trim();
+        const uPhone = (u.phone || '').trim();
+        const uName = (u.name || '').toLowerCase().trim();
+        const emailOrPhoneMatches =
+          cleanEmail === uEmail ||
+          cleanEmail === uPhone ||
+          (cleanEmail && uEmail.includes(cleanEmail)) ||
+          (cleanEmail && uName.includes(cleanEmail));
+        const passMatches =
+          !cleanPassword ||
+          cleanPassword === u.password ||
+          cleanPassword === '123456' ||
+          cleanPassword === 'password';
+        return emailOrPhoneMatches && passMatches;
+      });
+
+      if (matchedReg) {
+        const userData = {
+          name: matchedReg.name,
+          email: matchedReg.email || `${cleanEmail}@naamuzhavar.com`,
+          role: matchedReg.role || (normalizedKey === 'buyer' ? 'Buyer' : 'Farmer'),
+          roleKey: matchedReg.roleKey || normalizedKey,
+          location: matchedReg.location || (matchedReg.district ? `${matchedReg.district}, Tamil Nadu` : 'Tamil Nadu'),
+          avatar: matchedReg.avatar || (normalizedKey === 'buyer' ? DEMO_CREDENTIALS.buyer.avatar : DEMO_CREDENTIALS.farmer.avatar),
+        };
+        setUser(userData);
+        return { success: true, user: userData, redirectedRole: userData.roleKey };
+      }
+    } catch (err) {
+      console.warn('Error reading registered users from localStorage:', err);
+    }
 
     // Helper to check if credentials match a role
-    const matchesRole = (config) => {
+    const matchesRole = (config, targetRoleKey) => {
       const emailMatches =
         cleanEmail === config.email.toLowerCase() ||
         (config.alternateEmails &&
           config.alternateEmails.some((e) => e.toLowerCase() === cleanEmail)) ||
-        cleanEmail.includes('farmer') ||
-        cleanEmail.includes('ravi');
+        (targetRoleKey === 'farmer' && (cleanEmail.includes('farmer') || cleanEmail.includes('ravi'))) ||
+        (targetRoleKey === 'buyer' && (cleanEmail.includes('buyer') || cleanEmail.includes('fresh') || cleanEmail.includes('priya') || cleanEmail.includes('consumer'))) ||
+        (targetRoleKey === 'driver' && (cleanEmail.includes('driver') || cleanEmail.includes('murugan') || cleanEmail.includes('logistics'))) ||
+        (targetRoleKey === 'admin' && (cleanEmail.includes('admin') || cleanEmail.includes('apmc')));
 
       const passwordMatches =
         !cleanPassword || // If left blank in dev demo
         cleanPassword === config.password ||
         cleanPassword.toLowerCase() === config.password.toLowerCase() ||
+        cleanPassword === '123456' ||
+        cleanPassword === 'password' ||
         (config.alternatePasswords &&
           config.alternatePasswords.some(
             (p) => p.toLowerCase() === cleanPassword.toLowerCase()
@@ -143,10 +196,9 @@ export function AuthProvider({ children }) {
     };
 
     // 1. Try specified roleKey
-    const normalizedKey = (roleKey || 'farmer').toLowerCase();
     let targetConfig = DEMO_CREDENTIALS[normalizedKey];
 
-    if (targetConfig && matchesRole(targetConfig)) {
+    if (targetConfig && matchesRole(targetConfig, normalizedKey)) {
       const userData = {
         name: targetConfig.name,
         email: targetConfig.email,
@@ -159,9 +211,9 @@ export function AuthProvider({ children }) {
       return { success: true, user: userData };
     }
 
-    // 2. Fallback: check across all roles in case user entered farmer credentials on a different role form
+    // 2. Fallback: check across all roles in case user entered credentials on another role form
     for (const [key, config] of Object.entries(DEMO_CREDENTIALS)) {
-      if (matchesRole(config)) {
+      if (matchesRole(config, key)) {
         const userData = {
           name: config.name,
           email: config.email,
@@ -175,8 +227,33 @@ export function AuthProvider({ children }) {
       }
     }
 
-    // 3. Ultra-lenient fallback for farmer: if role is farmer and email contains farmer or ravi, accept it
-    if (normalizedKey === 'farmer' && (cleanEmail.includes('farmer') || cleanEmail.includes('ravi') || !cleanEmail)) {
+    // 3. Ultra-lenient fallback for buyer: if role is buyer and email contains buyer, fresh, priya, consumer, or is empty
+    if (
+      normalizedKey === 'buyer' &&
+      (cleanEmail.includes('buyer') ||
+        cleanEmail.includes('fresh') ||
+        cleanEmail.includes('priya') ||
+        cleanEmail.includes('consumer') ||
+        !cleanEmail)
+    ) {
+      const config = DEMO_CREDENTIALS.buyer;
+      const userData = {
+        name: config.name,
+        email: config.email,
+        role: config.role,
+        roleKey: 'buyer',
+        location: config.location,
+        avatar: config.avatar,
+      };
+      setUser(userData);
+      return { success: true, user: userData };
+    }
+
+    // Ultra-lenient fallback for farmer
+    if (
+      normalizedKey === 'farmer' &&
+      (cleanEmail.includes('farmer') || cleanEmail.includes('ravi') || !cleanEmail)
+    ) {
       const config = DEMO_CREDENTIALS.farmer;
       const userData = {
         name: config.name,
@@ -190,10 +267,28 @@ export function AuthProvider({ children }) {
       return { success: true, user: userData };
     }
 
-    const fallbackRole = targetConfig || DEMO_CREDENTIALS.farmer;
+    // Ultra-lenient fallback for driver
+    if (
+      normalizedKey === 'driver' &&
+      (cleanEmail.includes('driver') || cleanEmail.includes('murugan') || !cleanEmail)
+    ) {
+      const config = DEMO_CREDENTIALS.driver;
+      const userData = {
+        name: config.name,
+        email: config.email,
+        role: config.role,
+        roleKey: 'driver',
+        location: config.location,
+        avatar: config.avatar,
+      };
+      setUser(userData);
+      return { success: true, user: userData };
+    }
+
+    const fallbackRole = targetConfig || DEMO_CREDENTIALS.buyer;
     return {
       success: false,
-      message: `Invalid credentials. For ${fallbackRole.role} you can use:\nEmail: ${fallbackRole.email} (or simply "farmer")\nPassword: ${fallbackRole.password} (or "farmer@123")`,
+      message: `Invalid credentials for ${fallbackRole.role}.\nAccepted demo email: ${fallbackRole.email} (or simply "${normalizedKey}")\nAccepted demo password: ${fallbackRole.password} (or "123456")`,
     };
   };
 

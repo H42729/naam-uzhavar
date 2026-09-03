@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const LOGIN_HERO_IMAGE =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuCrp76EbxgKVitgPsUozqIfTg1RY01rtH-xO9jIl_ahdYWzCJ1CubFmQtm05LBODpdqRNo5H5rY1ZgjjKTt_anPsohtKWyWGenyikvOFEL9jKjMZqKGHGtOcJTfyi93ZiVUqhGWgk0wtO9faUaMbD1jpPh5WtUo51hXvwRbyrQUTj74eNrNpEFpxOhaSrR1eNn5EX7I2ume-809p_p1KJXzdmNb_SoyS0eOmT7EGdx3u42NacsXw27F1Q';
 
 export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 'login' }) {
   const { login } = useAuth();
+  const { t } = useLanguage();
   const [selectedRole, setSelectedRole] = useState('farmer'); // 'farmer', 'buyer', 'admin'
   const [isRegisterMode, setIsRegisterMode] = useState(initialMode === 'register');
   const [identifier, setIdentifier] = useState('farmer@naamuzhavar.com');
@@ -40,16 +43,17 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
   return (
     <div className="fd-login-page-wrapper">
       <div className="fd-wrapper py-4 py-md-5">
-        {/* Back to Home button */}
-        <div className="mb-3">
+        {/* Back to Home & Language Switcher */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-pill px-3"
             onClick={onBackToHome}
           >
             <i className="bi bi-arrow-left"></i>
-            <span>Back to FarmDirect Home</span>
+            <span>{t('backToHome')}</span>
           </button>
+          <LanguageSwitcher />
         </div>
 
         {/* Main 2-Column Split Card */}
@@ -98,15 +102,15 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
               <div className="text-center py-5">
                 <div className="spinner-border text-success mb-3" role="status" style={{ width: '3rem', height: '3rem' }}></div>
                 <h5 className="fw-bold text-dark">
-                  Logging into {selectedRole === 'farmer' ? 'Farmer Dashboard' : selectedRole.toUpperCase() + ' Portal'}...
+                  Logging into {selectedRole === 'farmer' ? t('farmer') : selectedRole === 'buyer' ? t('buyer') : t('admin')}...
                 </h5>
-                <p className="text-muted small">Verifying Kisan credentials and loading your crop telemetry.</p>
+                <p className="text-muted small">Verifying credentials and loading your crop telemetry.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
                 {/* Role Selection (3 Cards: Farmer/FPO, Buyer, Admin) */}
                 <div className="mb-4">
-                  <label className="fd-form-label mb-2">SELECT YOUR ROLE</label>
+                  <label className="fd-form-label mb-2">{t('selectRoleTitle')}</label>
                   <div className="fd-role-grid">
                     {/* Farmer / FPO Card */}
                     <button
@@ -115,7 +119,7 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
                       onClick={() => setSelectedRole('farmer')}
                     >
                       <i className="bi bi-tree text-2xl fd-role-icon"></i>
-                      <span className="fd-role-text">Farmer / FPO</span>
+                      <span className="fd-role-text">{t('farmer')}</span>
                     </button>
 
                     {/* Buyer Card */}
@@ -125,7 +129,7 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
                       onClick={() => setSelectedRole('buyer')}
                     >
                       <i className="bi bi-cart3 text-2xl fd-role-icon"></i>
-                      <span className="fd-role-text">Buyer</span>
+                      <span className="fd-role-text">{t('buyer')}</span>
                     </button>
 
                     {/* Admin Card */}
@@ -135,7 +139,7 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
                       onClick={() => setSelectedRole('admin')}
                     >
                       <i className="bi bi-shield-lock text-2xl fd-role-icon"></i>
-                      <span className="fd-role-text">Admin</span>
+                      <span className="fd-role-text">{t('admin')}</span>
                     </button>
                   </div>
                 </div>
@@ -144,7 +148,7 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
                 {isRegisterMode && (
                   <div className="mb-3">
                     <label className="fd-form-label" htmlFor="fullName">
-                      {selectedRole === 'farmer' ? 'Full Name / Farm or FPO Name' : 'Full Name / Business Name'}
+                      {selectedRole === 'farmer' ? t('farmerFullName') : t('fullName', 'Full Name')}
                     </label>
                     <div className="position-relative">
                       <i className="bi bi-person position-absolute text-muted" style={{ left: '12px', top: '12px', fontSize: '18px' }}></i>
@@ -164,7 +168,7 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
                 {/* Mobile / Email Input */}
                 <div className="mb-3">
                   <label className="fd-form-label" htmlFor="identifier">
-                    Mobile Number or Email
+                    {t('emailUsername')}
                   </label>
                   <div className="position-relative">
                     <i className="bi bi-person-badge position-absolute text-muted" style={{ left: '12px', top: '12px', fontSize: '18px' }}></i>
@@ -184,7 +188,7 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
                 <div className="mb-3">
                   <div className="d-flex justify-content-between align-items-center mb-1">
                     <label className="fd-form-label mb-0" htmlFor="password">
-                      Password
+                      {t('passwordLabel')}
                     </label>
                     {!isRegisterMode && (
                       <a
@@ -224,7 +228,7 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
                     onChange={(e) => setRememberMe(e.target.checked)}
                   />
                   <label className="form-check-label small text-muted cursor-pointer" htmlFor="rememberMe">
-                    Remember me for 30 days
+                    {t('rememberMe')}
                   </label>
                 </div>
 
@@ -234,7 +238,7 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
                     type="submit"
                     className="btn fd-btn-primary-action w-100 py-2 fw-bold"
                   >
-                    {isRegisterMode ? 'Create Account & Open Dashboard' : `Login as ${selectedRole === 'farmer' ? 'Farmer' : selectedRole === 'buyer' ? 'Buyer' : 'Admin'}`}
+                    {isRegisterMode ? t('createAccount', 'Create Account') : `${t('signIn')} (${selectedRole === 'farmer' ? t('farmer') : selectedRole === 'buyer' ? t('buyer') : t('admin')})`}
                   </button>
 
                   <button
@@ -243,7 +247,7 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
                     style={{ borderRadius: '8px' }}
                     onClick={() => setIsRegisterMode(!isRegisterMode)}
                   >
-                    {isRegisterMode ? 'Already have an account? Sign In' : 'Create New Account'}
+                    {isRegisterMode ? `${t('alreadyHaveAccount')} ${t('signIn')}` : `${t('registerAs')} (${selectedRole === 'farmer' ? t('farmer') : selectedRole === 'buyer' ? t('buyer') : t('admin')})`}
                   </button>
                 </div>
               </form>
