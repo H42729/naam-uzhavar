@@ -57,7 +57,7 @@ export default function RouteStats({ delivery }) {
               PAYLOAD USED
             </span>
             <strong className="fs-6 text-dark font-monospace">
-              {Math.round((delivery.totalWeight / (delivery.vehicle?.payloadCapacityKg || 750)) * 100)}% (33%)
+              {Math.round(((delivery?.totalWeight || 0) / (delivery?.vehicle?.payloadCapacityKg || 750)) * 100)}%
             </strong>
           </div>
         </div>

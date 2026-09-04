@@ -4,8 +4,8 @@
  * Displays farmer details, masked Aadhaar, Patta land verification, Dindigul location, and credentials.
  */
 
-import React, { useState } from 'react';
-import { useFarmer } from '../../context/FarmerContext';
+import React, { useState, useEffect } from 'react';
+import { useFarmer, DEFAULT_FARMER_PROFILE } from '../../context/FarmerContext';
 import { useLanguage } from '../../context/LanguageContext';
 import FarmerLayout from '../../components/farmer/FarmerLayout';
 
@@ -13,8 +13,14 @@ export default function FarmerProfilePage() {
   const { farmerProfile, setFarmerProfile, showToast } = useFarmer();
   const { t, language } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState(farmerProfile);
+  const [profile, setProfile] = useState(() => farmerProfile || DEFAULT_FARMER_PROFILE);
   const [profileError, setProfileError] = useState('');
+
+  useEffect(() => {
+    if (farmerProfile) {
+      setProfile(farmerProfile);
+    }
+  }, [farmerProfile]);
 
   const handleSave = (e) => {
     e.preventDefault();

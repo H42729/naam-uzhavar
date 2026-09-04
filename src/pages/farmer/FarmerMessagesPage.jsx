@@ -1,18 +1,19 @@
+/**
+ * Farmer Messages Page
+ * Route: /farmer/messages
+ * Simple farmer-to-buyer direct messaging with active conversation threads,
+ * unread badges, quick reply chips, and mobile-friendly chat navigation.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useFarmer } from '../../context/FarmerContext';
+import { useLanguage } from '../../context/LanguageContext';
 import FarmerLayout from '../../components/farmer/FarmerLayout';
-
-const QUICK_REPLIES = [
-  'Yes, the produce is available for immediate pickup.',
-  'Can you confirm the pickup truck arrival timing?',
-  'Our produce is Grade A certified and freshly harvested.',
-  'We have agreed to your requested rate of ₹24/kg.',
-  'Dispatch will be prepared tomorrow at 6:00 AM.'
-];
 
 export default function FarmerMessagesPage() {
   const { conversations, sendMessage, markConversationAsRead } = useFarmer();
+  const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const requestedConvId = searchParams.get('conv');
 
@@ -27,7 +28,22 @@ export default function FarmerMessagesPage() {
   const [chatSearch, setChatSearch] = useState('');
   const messagesEndRef = useRef(null);
 
-  // Update active conversation if URL query changes
+  const quickReplies =
+    language === 'ta'
+      ? [
+          'ஆம், சரக்கு உடனடியாக ஏற்றுமதி செய்யத் தயாராக உள்ளது.',
+          'வாகனம் வரும் நேரத்தை உறுதிப்படுத்த முடியுமா?',
+          'எங்கள் விளைச்சல் முதல் தரம் (Grade A) கொண்டதாகும்.',
+          'நாளை காலை 6:00 மணிக்கு ஏற்றுமதிக்கு தயாராக வைக்கப்படும்.'
+        ]
+      : [
+          'Yes, the produce is ready for immediate pickup.',
+          'Can you confirm the pickup truck arrival timing?',
+          'Our produce is Grade A certified and freshly sorted.',
+          'Dispatch will be prepared tomorrow at 6:00 AM.'
+        ];
+
+  // Update active conversation if query parameter changes
   useEffect(() => {
     if (requestedConvId && conversations.some((c) => c.id === requestedConvId)) {
       setActiveConvId(requestedConvId);
@@ -41,46 +57,44 @@ export default function FarmerMessagesPage() {
     }
   }, [activeConvId]);
 
-  // Auto-scroll to bottom on message change
+  // Auto-scroll on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversations, activeConvId]);
 
   const activeConversation = conversations.find((c) => c.id === activeConvId);
 
-  const filteredConversations = conversations.filter(
-    (c) =>
-      (c.consumerName || c.buyerName || '').toLowerCase().includes(chatSearch.toLowerCase()) ||
-      (c.businessType || c.buyerType || '').toLowerCase().includes(chatSearch.toLowerCase()) ||
-      (c.lastMessage && c.lastMessage.toLowerCase().includes(chatSearch.toLowerCase()))
-  );
+  const filteredConversations = conversations.filter((c) => {
+    const searchTarget = `${c.consumerName || ''} ${c.buyerName || ''} ${c.businessType || ''} ${c.buyerType || ''} ${c.lastMessage || ''}`.toLowerCase();
+    return searchTarget.includes(chatSearch.toLowerCase());
+  });
 
   const handleSend = (e) => {
     if (e) e.preventDefault();
     if (!inputText.trim() || !activeConvId) return;
 
-    sendMessage(activeConvId, inputText, 'farmer');
+    sendMessage(activeConvId, inputText.trim());
     setInputText('');
   };
 
   const handleQuickReply = (text) => {
     if (!activeConvId) return;
-    sendMessage(activeConvId, text, 'farmer');
+    sendMessage(activeConvId, text);
   };
 
   return (
     <FarmerLayout>
-      <div className="farm-messages-container">
-        {/* ----------------------------------------------------------------------
-            LEFT: CONVERSATIONS SIDEBAR
-           ---------------------------------------------------------------------- */}
-        <div className={`farm-chat-sidebar ${activeConvId ? 'chat-selected' : ''}`}>
-          {/* Search bar */}
+      <div className="farm-messages-container bg-white rounded-4 border shadow-xs overflow-hidden">
+        {/* ===================================================================
+            LEFT: CONVERSATION LIST PANEL
+            =================================================================== */}
+        <div className={`farm-chat-sidebar border-end ${activeConvId ? 'chat-selected' : ''}`}>
+          {/* Header & Search */}
           <div className="p-3 border-bottom bg-light">
             <div className="d-flex align-items-center justify-content-between mb-2">
-              <h5 className="fw-bold text-dark mb-0">Messages &amp; Inquiries</h5>
-              <span className="badge bg-success rounded-pill">
-                {conversations.length} Threads
+              <h2 className="fw-bold text-dark fs-6 mb-0">{t('messages')}</h2>
+              <span className="badge bg-success rounded-pill px-2.5 py-1 small">
+                {conversations.length} {language === 'ta' ? 'உரையாடல்கள்' : 'Chats'}
               </span>
             </div>
             <div className="position-relative">
@@ -91,54 +105,56 @@ export default function FarmerMessagesPage() {
               <input
                 type="text"
                 className="form-control form-control-sm rounded-pill ps-4 bg-white"
-                placeholder="Search consumer or buyer..."
+                placeholder={language === 'ta' ? 'வாங்குபவரைத் தேடுங்கள்...' : 'Search buyer...'}
                 value={chatSearch}
                 onChange={(e) => setChatSearch(e.target.value)}
               />
             </div>
           </div>
 
-          {/* Conversation List */}
+          {/* List of Conversations */}
           <div className="farm-chat-list">
             {filteredConversations.map((conv) => {
               const isActive = conv.id === activeConvId;
+              const name = conv.buyerName || conv.consumerName || 'Wholesale Buyer';
+
               return (
                 <div
                   key={conv.id}
-                  className={`farm-chat-item ${isActive ? 'active' : ''}`}
+                  className={`farm-chat-item p-3 border-bottom cursor-pointer transition ${isActive ? 'active bg-success-subtle' : 'hover-bg-light'}`}
+                  style={{ cursor: 'pointer' }}
                   onClick={() => setActiveConvId(conv.id)}
                 >
-                  <img
-                    src={
-                      conv.avatar ||
-                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'
-                    }
-                    alt={conv.consumerName || conv.buyerName}
-                    className="rounded-circle border"
-                    style={{ width: '44px', height: '44px', objectFit: 'cover' }}
-                  />
-                  <div className="flex-grow-1 overflow-hidden">
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <span className="fw-bold text-dark text-truncate small" style={{ maxWidth: '140px' }}>
-                        {conv.consumerName || conv.buyerName}
-                      </span>
-                      <span className="text-muted" style={{ fontSize: '0.7rem' }}>
-                        {conv.timestamp}
-                      </span>
-                    </div>
-
-                    <div className="d-flex justify-content-between align-items-center">
-                      <p
-                        className="small text-muted mb-0 text-truncate"
-                        style={{ fontSize: '0.78rem', maxWidth: '170px' }}
-                      >
-                        {conv.lastMessage}
-                      </p>
-                      {conv.unreadCount > 0 && (
-                        <span className="badge bg-danger rounded-pill" style={{ fontSize: '0.65rem' }}>
-                          {conv.unreadCount}
+                  <div className="d-flex align-items-center gap-2.5">
+                    <img
+                      src={
+                        conv.avatar ||
+                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'
+                      }
+                      alt={name}
+                      className="rounded-circle border object-fit-cover flex-shrink-0"
+                      style={{ width: '44px', height: '44px' }}
+                    />
+                    <div className="flex-grow-1 overflow-hidden">
+                      <div className="d-flex justify-content-between align-items-center mb-0.5">
+                        <strong className="text-dark small text-truncate d-block" style={{ maxWidth: '140px' }}>
+                          {name}
+                        </strong>
+                        <span className="text-muted" style={{ fontSize: '0.68rem' }}>
+                          {conv.timestamp}
                         </span>
-                      )}
+                      </div>
+
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span className="text-muted small text-truncate d-block" style={{ fontSize: '0.75rem', maxWidth: '160px' }}>
+                          {conv.lastMessage}
+                        </span>
+                        {conv.unreadCount > 0 && (
+                          <span className="badge bg-danger rounded-pill" style={{ fontSize: '0.65rem' }}>
+                            {conv.unreadCount}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -147,27 +163,28 @@ export default function FarmerMessagesPage() {
 
             {filteredConversations.length === 0 && (
               <div className="p-4 text-center text-muted small">
-                No active conversations found.
+                {t('noMessagesYetDesc')}
               </div>
             )}
           </div>
         </div>
 
-        {/* ----------------------------------------------------------------------
-            RIGHT: ACTIVE CHAT VIEWPORT
-           ---------------------------------------------------------------------- */}
-        <div className="farm-chat-main">
+        {/* ===================================================================
+            RIGHT: CHAT VIEWPORT
+            =================================================================== */}
+        <div className="farm-chat-main d-flex flex-column">
           {activeConversation ? (
             <>
               {/* Chat Header */}
-              <div className="farm-chat-header">
-                <div className="d-flex align-items-center gap-3">
+              <div className="farm-chat-header p-3 border-bottom bg-white d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center gap-2.5">
                   <button
                     type="button"
-                    className="btn btn-sm btn-light rounded-circle d-md-none border"
+                    className="btn btn-sm btn-light rounded-circle d-md-none border p-1"
                     onClick={() => setActiveConvId(null)}
+                    aria-label="Back to conversations"
                   >
-                    <i className="bi bi-arrow-left"></i>
+                    <i className="bi bi-arrow-left fs-6"></i>
                   </button>
 
                   <img
@@ -175,54 +192,69 @@ export default function FarmerMessagesPage() {
                       activeConversation.avatar ||
                       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'
                     }
-                    alt={activeConversation.consumerName || activeConversation.buyerName}
-                    className="rounded-circle border"
-                    style={{ width: '42px', height: '42px', objectFit: 'cover' }}
+                    alt={activeConversation.buyerName}
+                    className="rounded-circle border object-fit-cover"
+                    style={{ width: '42px', height: '42px' }}
                   />
 
                   <div>
-                    <strong className="d-block text-dark">
-                      {activeConversation.consumerName || activeConversation.buyerName}
+                    <strong className="text-dark d-block fs-6 mb-0">
+                      {activeConversation.buyerName || activeConversation.consumerName}
                     </strong>
-                    <span className="text-muted small" style={{ fontSize: '0.75rem' }}>
-                      {activeConversation.businessType || activeConversation.buyerType || 'Wholesale Buyer'}
+                    <span className="text-muted small" style={{ fontSize: '0.74rem' }}>
+                      {activeConversation.buyerType || 'Wholesale Buyer'}
                     </span>
                   </div>
                 </div>
 
                 <div className="d-flex align-items-center gap-2">
-                  <span className="badge bg-success-subtle text-success border border-success-subtle d-none d-sm-inline">
-                    ● Active Buyer
+                  <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 small">
+                    ● {language === 'ta' ? 'சரிபார்க்கப்பட்ட வாங்குபவர்' : 'Verified Buyer'}
                   </span>
                 </div>
               </div>
 
               {/* Chat Message History */}
-              <div className="farm-chat-history">
+              <div className="farm-chat-history p-3 flex-grow-1 overflow-y-auto" style={{ minHeight: '340px', maxHeight: '520px', background: '#f8fafc' }}>
                 <div className="text-center my-2">
-                  <span className="badge bg-light text-muted border rounded-pill px-3 py-1 small">
-                    Direct marketplace conversation with verified B2B buyer
+                  <span className="badge bg-white text-muted border rounded-pill px-3 py-1.5 small shadow-2xs">
+                    🔒 {language === 'ta' ? 'நேரடி பாதுகாப்பான உழவர் - வாங்குபவர் உரையாடல்' : 'Direct secure farmer-to-buyer negotiation'}
                   </span>
                 </div>
 
                 {activeConversation.messages &&
                   activeConversation.messages.map((msg) => {
                     const isFarmer = msg.sender === 'farmer';
+
                     return (
                       <div
                         key={msg.id}
-                        className={`farm-bubble ${
-                          isFarmer ? 'farm-bubble-outgoing' : 'farm-bubble-incoming'
-                        }`}
+                        className={`d-flex mb-3 ${isFarmer ? 'justify-content-end' : 'justify-content-start'}`}
                       >
-                        <div>{msg.text}</div>
                         <div
-                          className={`farm-bubble-time d-flex align-items-center gap-1 ${
-                            isFarmer ? 'justify-content-end text-white-50' : 'text-muted'
-                          }`}
+                          className="rounded-4 p-3 shadow-2xs position-relative"
+                          style={{
+                            maxWidth: '78%',
+                            background: isFarmer ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#ffffff',
+                            color: isFarmer ? '#ffffff' : '#0f172a',
+                            border: isFarmer ? 'none' : '1px solid #e2e8f0',
+                            borderBottomRightRadius: isFarmer ? '4px' : '16px',
+                            borderBottomLeftRadius: isFarmer ? '16px' : '4px'
+                          }}
                         >
-                          <span>{msg.timestamp}</span>
-                          {isFarmer && <i className="bi bi-check2-all text-white"></i>}
+                          <div className="fw-bold mb-1" style={{ fontSize: '0.72rem', opacity: isFarmer ? 0.85 : 0.65 }}>
+                            {isFarmer ? t('farmerLabel') : t('buyerLabel')}:
+                          </div>
+                          <div className="small mb-1" style={{ fontSize: '0.88rem', lineHeight: 1.45 }}>
+                            {msg.text}
+                          </div>
+                          <div
+                            className={`d-flex align-items-center gap-1 small ${isFarmer ? 'justify-content-end text-white-50' : 'text-muted'}`}
+                            style={{ fontSize: '0.68rem' }}
+                          >
+                            <span>{msg.time || msg.timestamp || 'Today'}</span>
+                            {isFarmer && <i className="bi bi-check2-all text-white"></i>}
+                          </div>
                         </div>
                       </div>
                     );
@@ -231,13 +263,13 @@ export default function FarmerMessagesPage() {
               </div>
 
               {/* Quick Reply Chips */}
-              <div className="px-3 pt-2 pb-1 bg-white border-top d-flex gap-2 overflow-x-auto">
-                {QUICK_REPLIES.map((reply, idx) => (
+              <div className="px-3 py-2 bg-white border-top d-flex gap-2 overflow-x-auto">
+                {quickReplies.map((reply, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    className="btn btn-sm btn-light border rounded-pill text-truncate text-muted"
-                    style={{ fontSize: '0.75rem', flexShrink: 0, maxWidth: '280px' }}
+                    className="btn btn-sm btn-light border rounded-pill text-truncate text-muted flex-shrink-0"
+                    style={{ fontSize: '0.75rem', maxWidth: '300px' }}
                     onClick={() => handleQuickReply(reply)}
                   >
                     💬 {reply}
@@ -246,43 +278,33 @@ export default function FarmerMessagesPage() {
               </div>
 
               {/* Message Input Bar */}
-              <div className="farm-chat-input-area">
+              <div className="p-3 bg-white border-top">
                 <form onSubmit={handleSend} className="d-flex align-items-center gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-light rounded-circle text-muted border p-2 d-flex align-items-center justify-content-center"
-                    style={{ width: '40px', height: '40px' }}
-                    title="Attach Harvest Photo / Certificate"
-                    onClick={() => alert('Photo / Lab certificate attachment simulation.')}
-                  >
-                    <i className="bi bi-paperclip fs-5"></i>
-                  </button>
-
                   <input
                     type="text"
-                    className="form-control rounded-pill px-3 py-2"
-                    placeholder="Type your message to consumer (e.g. Yes, 100 kg is ready for pickup)..."
+                    className="form-control form-control-lg rounded-pill px-3.5 fs-6"
+                    placeholder={t('typeYourMessagePlaceholder')}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                   />
 
                   <button
                     type="submit"
-                    className="btn btn-success rounded-circle d-flex align-items-center justify-content-center shadow-sm p-2"
-                    style={{ width: '44px', height: '44px' }}
+                    className="btn btn-success fw-bold rounded-pill px-4 py-2.5 d-inline-flex align-items-center gap-1.5 shadow-sm"
                     disabled={!inputText.trim()}
                   >
+                    <span>{t('sendBtn')}</span>
                     <i className="bi bi-send-fill fs-6"></i>
                   </button>
                 </form>
               </div>
             </>
           ) : (
-            <div className="d-flex flex-column align-items-center justify-content-center h-100 p-4 text-center text-muted">
+            <div className="d-flex flex-column align-items-center justify-content-center h-100 p-5 text-center text-muted">
               <i className="bi bi-chat-dots fs-1 text-success mb-2"></i>
-              <h5 className="fw-bold text-dark">Select a Conversation</h5>
+              <h3 className="fs-5 fw-bold text-dark">{t('noMessagesYetTitle')}</h3>
               <p className="small text-muted" style={{ maxWidth: '320px' }}>
-                Choose a consumer or buyer from the left panel to discuss order quantities, rates, and dispatch timelines.
+                {t('noMessagesYetDesc')}
               </p>
             </div>
           )}

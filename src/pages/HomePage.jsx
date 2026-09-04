@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import Stats from '../components/Stats';
-import Marketplace from '../components/Marketplace';
-import HowItWorks from '../components/HowItWorks';
-import SavingsCalculator from '../components/SavingsCalculator';
 import Footer from '../components/Footer';
 import TraceabilityModal from '../components/TraceabilityModal';
 import { useNavigate } from 'react-router-dom';
@@ -29,15 +26,12 @@ export default function HomePage() {
   };
 
   const handleExploreMarketplace = () => {
-    const el = document.getElementById('marketplace');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    navigate('/buyer/browse');
   };
 
   const handleSelectStat = (stat) => {
     if (stat.id === 'products') {
-      handleExploreMarketplace();
+      navigate('/buyer/browse');
     } else if (stat.id === 'farmers') {
       if (isAuthenticated && user?.roleKey === 'farmer') {
         navigate('/farmer/dashboard');
@@ -71,15 +65,6 @@ export default function HomePage() {
 
         {/* 4-Column Key Metric KPI Cards */}
         <Stats onSelectStat={handleSelectStat} />
-
-        {/* Live Filterable Marketplace Section */}
-        <Marketplace onOpenTraceability={() => setIsTraceabilityOpen(true)} />
-
-        {/* How It Works 4-Step Flow */}
-        <HowItWorks />
-
-        {/* Farmer Profit & Savings Calculator */}
-        <SavingsCalculator onStartSelling={handleStartSelling} />
 
         {/* Modern Footer */}
         <Footer onOpenAuth={handleOpenAuth} />

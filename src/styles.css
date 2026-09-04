@@ -50,15 +50,20 @@
   --shadow-glow: 0 8px 20px rgba(25, 135, 84, 0.22);
 }
 
-/* Base Resets */
+/* Base Resets & Smooth Scrolling */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  scroll-behavior: smooth;
+  font-family: 'Inter', 'Noto Sans Tamil', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--fd-bg);
   color: var(--fd-text-main);
   line-height: 1.6;

@@ -7,7 +7,7 @@ const CROP_FALLBACKS = {
   tomato: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&auto=format&fit=crop&q=80',
   onion: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&auto=format&fit=crop&q=80',
   banana: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&auto=format&fit=crop&q=80',
-  brinjal: 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&auto=format&fit=crop&q=80',
+  brinjal: '/images/brinjal.jpg',
   carrot: 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=400&auto=format&fit=crop&q=80',
   cabbage: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=400&auto=format&fit=crop&q=80'
 };

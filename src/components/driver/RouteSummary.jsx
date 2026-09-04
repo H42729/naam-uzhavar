@@ -67,10 +67,10 @@ export default function RouteSummary({ delivery }) {
               <i className="bi bi-person-fill text-success"></i>
               <span>Farmer & Source</span>
             </div>
-            <div className="fs-6 fw-bold text-dark mb-1">{delivery.farmer.name}</div>
+            <div className="fs-6 fw-bold text-dark mb-1">{delivery?.farmer?.name || 'Local Producer'}</div>
             <div className="text-muted small">
               <i className="bi bi-geo-alt me-1 text-danger"></i>
-              <strong>Pickup:</strong> {delivery.farmer.address}
+              <strong>Pickup:</strong> {delivery?.farmer?.address || 'Pickup Hub, Tamil Nadu'}
             </div>
           </div>
         </div>
@@ -82,10 +82,10 @@ export default function RouteSummary({ delivery }) {
               <i className="bi bi-shop text-primary"></i>
               <span>Buyer & Destination</span>
             </div>
-            <div className="fs-6 fw-bold text-dark mb-1">{delivery.buyer.name}</div>
+            <div className="fs-6 fw-bold text-dark mb-1">{delivery?.buyer?.name || 'Commercial Buyer'}</div>
             <div className="text-muted small">
               <i className="bi bi-geo-fill me-1 text-success"></i>
-              <strong>Drop:</strong> {delivery.buyer.address}
+              <strong>Drop:</strong> {delivery?.buyer?.address || 'Wholesale Depot, Tamil Nadu'}
             </div>
           </div>
         </div>

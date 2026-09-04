@@ -159,15 +159,6 @@ export default function Marketplace({ onOpenTraceability }) {
   return (
     <section id="marketplace" className="fd-content-section" aria-label="Fresh Harvest Marketplace">
       <div className="fd-wrapper">
-        {/* Header */}
-        <div className="mb-4">
-          <span className="fd-section-tag">Direct Mandi Catalog</span>
-          <h1 className="fd-section-heading fs-2 mb-2">Fresh Produce Directly From Farmers</h1>
-          <p className="fd-section-desc mb-0" style={{ maxWidth: '680px' }}>
-            Connect with verified farmers and FPOs to source high-quality agricultural products with full transparency and AI-driven matching.
-          </p>
-        </div>
-
         {/* Filters & Search Bento Layout */}
         <div className="bg-white rounded-4 border p-3 p-md-4 shadow-sm mb-4">
           <div className="row g-3 align-items-end">

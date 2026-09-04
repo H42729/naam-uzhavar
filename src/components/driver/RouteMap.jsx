@@ -28,8 +28,8 @@ export default function RouteMap({ delivery }) {
   // Generate external Google Maps navigation URL
   const handleOpenGoogleNavigation = () => {
     if (!delivery) return;
-    const origin = encodeURIComponent(delivery.farmer.address);
-    const destination = encodeURIComponent(delivery.buyer.address);
+    const origin = encodeURIComponent(delivery?.farmer?.address || 'Nilakottai, Tamil Nadu');
+    const destination = encodeURIComponent(delivery?.buyer?.address || 'Dindigul, Tamil Nadu');
     const navUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
     window.open(navUrl, '_blank', 'noopener,noreferrer');
   };

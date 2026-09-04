@@ -26,7 +26,7 @@ export const POPULAR_CROPS = [
     id: 'crop-carrot',
     name: 'Carrot',
     tamilName: 'கேரட்',
-    image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5c317?w=600&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80',
     defaultUnit: 'kg',
     typicalPricePerKg: 46,
     category: 'Vegetables'
@@ -83,7 +83,7 @@ export const MORE_CROPS = [
     id: 'crop-brinjal',
     name: 'Brinjal / Eggplant',
     tamilName: 'கத்தரிக்காய்',
-    image: 'https://images.unsplash.com/photo-1628773822503-930a84501a1b?w=600&auto=format&fit=crop&q=80',
+    image: '/images/brinjal.jpg',
     defaultUnit: 'kg',
     typicalPricePerKg: 32,
     category: 'Vegetables'

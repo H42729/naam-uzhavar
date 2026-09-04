@@ -1,440 +1,332 @@
+/**
+ * Buyer Marketplace (Browse Produce) Page
+ * Route: /buyer/browse
+ * Main buyer experience for discovering fresh smallholder farmgate produce with search, filters, and high-clarity cards.
+ * Follows Master Prompt Sections 6, 7, 8.
+ */
+
 import React, { useState, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useBuyer } from '../../context/BuyerContext';
+import { useLanguage } from '../../context/LanguageContext';
 import BuyerLayout from '../../components/buyer/BuyerLayout';
 import ProductCard from '../../components/ProductCard';
-import { LOCATIONS_LIST } from '../../data/buyerData';
+import ProduceDetailsModal from '../../components/ProduceDetailsModal';
+import BulkProcurementModal from '../../components/buyer/BulkProcurementModal';
+import DirectBuyModal from '../../components/buyer/DirectBuyModal';
 
 export default function BuyerBrowsePage() {
-  const navigate = useNavigate();
-  const { products, setRequirementPrefill, confirmOrder, showToast } = useBuyer();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearch = searchParams.get('search') || '';
 
-  // Search, filter, and sort states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [locationFilter, setLocationFilter] = useState('All Locations');
+  const { products } = useBuyer();
+  const { t, language } = useLanguage();
+
+  // Search & Filter State
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [bulkProduct, setBulkProduct] = useState(null);
+  const [directBuyProduct, setDirectBuyProduct] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [locationFilter, setLocationFilter] = useState('All');
+  const [gradeFilter, setGradeFilter] = useState('All');
   const [sortBy, setSortBy] = useState('default');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Direct Buy Modal State
-  const [buyingProduct, setBuyingProduct] = useState(null);
-  const [buyQty, setBuyQty] = useState(100);
-  const [deliveryHub, setDeliveryHub] = useState('Chennai Central Hub');
-  const [confirmedOrder, setConfirmedOrder] = useState(null);
+  // Extract unique locations from products
+  const availableLocations = useMemo(() => {
+    const locs = new Set(products.map((p) => p.location).filter(Boolean));
+    return ['All', ...Array.from(locs)];
+  }, [products]);
 
+  // Filtered & Sorted Produce
   const filteredProducts = useMemo(() => {
     return products
       .filter((item) => {
+        const query = searchQuery.toLowerCase().trim();
         const matchesSearch =
-          item.crop.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.farmer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.location.toLowerCase().includes(searchQuery.toLowerCase());
+          !query ||
+          item.crop.toLowerCase().includes(query) ||
+          (item.tamilName && item.tamilName.toLowerCase().includes(query)) ||
+          (item.farmer && item.farmer.toLowerCase().includes(query)) ||
+          (item.location && item.location.toLowerCase().includes(query));
 
         const matchesLocation =
-          locationFilter === 'All Locations' || item.location === locationFilter;
+          locationFilter === 'All' ||
+          (item.location && item.location.toLowerCase() === locationFilter.toLowerCase());
 
-        return matchesSearch && matchesLocation;
+        const matchesGrade =
+          gradeFilter === 'All' ||
+          (item.grade && item.grade.toLowerCase().includes(gradeFilter.toLowerCase()));
+
+        return matchesSearch && matchesLocation && matchesGrade;
       })
       .sort((a, b) => {
         if (sortBy === 'price-low') return a.price - b.price;
         if (sortBy === 'price-high') return b.price - a.price;
-        if (sortBy === 'qty-high') return b.quantity - a.quantity;
-        if (sortBy === 'qty-low') return a.quantity - b.quantity;
+        if (sortBy === 'qty-high') return (b.quantity || 0) - (a.quantity || 0);
         return 0;
       });
-  }, [products, searchQuery, locationFilter, sortBy]);
+  }, [products, searchQuery, locationFilter, gradeFilter, sortBy]);
 
-  const handleAddToRequirement = (product) => {
-    setRequirementPrefill({
-      crop: product.crop,
-      location: product.location,
-      price: product.price,
-      quantity: product.minOrder || 100
-    });
-    showToast(`✓ Pre-filled requirement with ${product.crop} from ${product.location}.`);
-    navigate('/buyer/requirement');
-  };
-
-  const handleOpenBuy = (product) => {
-    setBuyingProduct(product);
-    setBuyQty(product.minOrder || 100);
-    setConfirmedOrder(null);
-  };
-
-  const handleConfirmDirectBuy = () => {
-    if (!buyingProduct) return;
-    const subtotal = buyQty * buyingProduct.price;
-    const newOrder = confirmOrder({
-      crop: buyingProduct.crop,
-      quantity: buyQty,
-      farmers: 1,
-      amount: subtotal,
-      deliveryDate: new Date(Date.now() + 48 * 3600 * 1000).toISOString().split('T')[0],
-      location: deliveryHub,
-      farmerBreakdown: [
-        {
-          farmer: buyingProduct.farmer,
-          qty: buyQty,
-          price: buyingProduct.price
-        }
-      ]
-    });
-
-    setConfirmedOrder(newOrder);
-    showToast(`✓ Direct order #${newOrder.id} placed for ${buyingProduct.crop}!`);
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setLocationFilter('All');
+    setGradeFilter('All');
+    setSortBy('default');
   };
 
   return (
     <BuyerLayout>
-      {/* Header */}
-      <div className="bd-page-header">
-        <div>
-          <h2 className="bd-page-title">Browse Available Produce</h2>
-          <p className="bd-page-subtitle">
-            Explore verified farmer & FPO crop inventories ready for direct farmgate procurement
-          </p>
+      <div className="w-100 farm-animate-fade">
+        {/* ===================================================================
+            1. PAGE HEADER & SEARCH BAR
+            =================================================================== */}
+        <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4 pb-2 border-bottom">
+          <div>
+            <span className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.04em' }}>
+              {language === 'ta' ? 'விவசாயிகளிடமிருந்து நேரடி கொள்முதல்' : 'DIRECT FARMGATE HARVESTS'}
+            </span>
+            <h1 className="fw-black text-dark fs-3 mb-0">{t('marketplace')}</h1>
+          </div>
+
+          <span className="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-bold">
+            {filteredProducts.length} {language === 'ta' ? 'விளைச்சல்கள் உள்ளன' : 'Produce Lots Available'}
+          </span>
         </div>
 
-        <button
-          type="button"
-          className="bd-btn bd-btn-primary bd-btn-sm"
-          onClick={() => navigate('/buyer/requirement')}
+        {/* ===================================================================
+            2. SEARCH & FILTER TOOLBAR (STICKY SUB-HEADER)
+            =================================================================== */}
+        <div
+          className="bd-sticky-sub-header sticky top-0 z-20 rounded-4 border p-3 mb-4"
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 20,
+            backgroundColor: 'rgba(255, 255, 255, 0.88)',
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)',
+            borderBottom: '1px solid #e2e8f0',
+            boxShadow: '0 4px 14px -3px rgba(15, 23, 42, 0.05)'
+          }}
         >
-          <i className="bi bi-plus-circle"></i>
-          <span>Bulk Aggregation Tool</span>
-        </button>
-      </div>
+          <div className="row g-2 align-items-center">
+            {/* Search Input */}
+            <div className="col-12 col-md-5">
+              <div className="position-relative">
+                <i
+                  className="bi bi-search position-absolute text-muted small"
+                  style={{ left: '14px', top: '50%', transform: 'translateY(-50%)' }}
+                ></i>
+                <input
+                  type="text"
+                  className="form-control rounded-pill ps-4.5 bg-light border-0"
+                  style={{ paddingLeft: '38px' }}
+                  placeholder={t('searchProducePlaceholder')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-link position-absolute end-0 top-50 translate-middle-y text-muted p-2"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    <i className="bi bi-x"></i>
+                  </button>
+                )}
+              </div>
+            </div>
 
-      {/* Search, Filter & Sort Toolbar */}
-      <div className="bd-toolbar mb-4">
-        {/* Search input */}
-        <div className="bd-search-wrap">
-          <i className="bi bi-search"></i>
-          <input
-            type="text"
-            className="bd-search-input"
-            placeholder="Search by crop, farmer, or location..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+            {/* Desktop Filters */}
+            <div className="col-12 col-md-7 d-none d-md-flex align-items-center justify-content-end gap-2">
+              {/* Location Select */}
+              <select
+                className="form-select form-select-sm rounded-pill border w-auto text-dark"
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
+              >
+                {availableLocations.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc === 'All' ? `📍 ${t('allLocations')}` : `📍 ${loc}`}
+                  </option>
+                ))}
+              </select>
 
-        {/* Filter by Location */}
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small fw-semibold">Location:</span>
-          <select
-            className="bd-select"
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-          >
-            {LOCATIONS_LIST.map((loc) => (
-              <option key={loc} value={loc}>
-                {loc}
-              </option>
-            ))}
-          </select>
-        </div>
+              {/* Grade Select */}
+              <select
+                className="form-select form-select-sm rounded-pill border w-auto text-dark"
+                value={gradeFilter}
+                onChange={(e) => setGradeFilter(e.target.value)}
+              >
+                <option value="All">{language === 'ta' ? 'அனைத்து தரம்' : 'All Grades'}</option>
+                <option value="Grade A">Grade A (Premium)</option>
+                <option value="Export">Export Quality</option>
+                <option value="Organic">Organic Certified</option>
+              </select>
 
-        {/* Sort dropdown */}
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small fw-semibold">Sort by:</span>
-          <select
-            className="bd-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="default">Default</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="qty-high">Quantity: High to Low</option>
-            <option value="qty-low">Quantity: Low to High</option>
-          </select>
-        </div>
+              {/* Sort By Select */}
+              <select
+                className="form-select form-select-sm rounded-pill border w-auto text-dark"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="default">{language === 'ta' ? 'இயல்பு வரிசை' : 'Default Sorting'}</option>
+                <option value="price-low">{t('priceLowToHigh')}</option>
+                <option value="price-high">{t('priceHighToLow')}</option>
+                <option value="qty-high">{language === 'ta' ? 'அதிக இருப்பு' : 'Highest Quantity'}</option>
+              </select>
 
-        {/* Reset Filters */}
-        {(searchQuery || locationFilter !== 'All Locations' || sortBy !== 'default') && (
-          <button
-            type="button"
-            className="btn btn-sm btn-link text-muted p-0 text-decoration-none ms-auto"
-            onClick={() => {
-              setSearchQuery('');
-              setLocationFilter('All Locations');
-              setSortBy('default');
-            }}
-          >
-            Reset Filters
-          </button>
-        )}
-      </div>
-
-      {/* Produce Grid */}
-      {filteredProducts.length === 0 ? (
-        <div className="text-center py-5 bg-white rounded-4 border p-5">
-          <i className="bi bi-search fs-1 text-secondary mb-2 d-block"></i>
-          <h5 className="fw-semibold text-dark">No Agricultural Produce Found</h5>
-          <p className="text-muted small mb-3">
-            Try adjusting your search query or location filter to discover available crops.
-          </p>
-          <button
-            type="button"
-            className="bd-btn bd-btn-outline bd-btn-sm"
-            onClick={() => {
-              setSearchQuery('');
-              setLocationFilter('All Locations');
-              setSortBy('default');
-            }}
-          >
-            Clear Filters
-          </button>
-        </div>
-      ) : (
-        <div className="row g-3">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onViewDetails={() => navigate(`/buyer/products/${product.id}`)}
-              onAddToRequirement={handleAddToRequirement}
-              onBuy={handleOpenBuy}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* ===================================================================
-          DIRECT BUY MODAL (PORTALIZED FOR PERFECT WINDOW CENTERING)
-          =================================================================== */}
-      {buyingProduct &&
-        createPortal(
-          <div
-            className="bd-modal-backdrop"
-            onClick={() => !confirmedOrder && setBuyingProduct(null)}
-          >
-            <div
-              className="bd-modal-box p-4"
-              onClick={(e) => e.stopPropagation()}
-              style={{ maxWidth: '580px' }}
-            >
-              {confirmedOrder ? (
-                <div>
-                  <div className="d-flex align-items-center gap-3 p-3 bg-success-subtle border border-success-subtle rounded-3 text-success mb-3">
-                    <i className="bi bi-check-circle-fill fs-2"></i>
-                    <div>
-                      <strong className="d-block text-success-emphasis fs-6">
-                        Order #{confirmedOrder.id} Placed Successfully!
-                      </strong>
-                      <span className="small text-secondary">
-                        Payment secured in FarmDirect Escrow. Farmer has been notified for consignment dispatch.
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-light rounded-3 border mb-3 small">
-                    <div className="d-flex justify-content-between py-1.5 border-bottom">
-                      <span className="text-muted">Produce:</span>
-                      <strong className="text-dark">{buyingProduct.crop}</strong>
-                    </div>
-                    <div className="d-flex justify-content-between py-1.5 border-bottom">
-                      <span className="text-muted">Farmer:</span>
-                      <strong className="text-dark">{buyingProduct.farmer}</strong>
-                    </div>
-                    <div className="d-flex justify-content-between py-1.5 border-bottom">
-                      <span className="text-muted">Quantity:</span>
-                      <strong className="font-monospace text-success">{buyQty} kg</strong>
-                    </div>
-                    <div className="d-flex justify-content-between py-1.5 border-bottom">
-                      <span className="text-muted">Total Amount:</span>
-                      <strong className="font-monospace text-success fs-6">
-                        ₹{(buyQty * buyingProduct.price).toLocaleString('en-IN')}
-                      </strong>
-                    </div>
-                    <div className="d-flex justify-content-between py-1.5">
-                      <span className="text-muted">Destination:</span>
-                      <span className="text-dark">{deliveryHub}</span>
-                    </div>
-                  </div>
-
-                  <div className="d-flex justify-content-end gap-2">
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary btn-sm rounded-pill px-3"
-                      onClick={() => setBuyingProduct(null)}
-                    >
-                      Close
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-success btn-sm rounded-pill px-4 fw-bold"
-                      onClick={() => {
-                        setBuyingProduct(null);
-                        navigate('/buyer/orders');
-                      }}
-                    >
-                      View in Orders
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div className="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-                    <div>
-                      <h5 className="fw-bold mb-0 text-dark">
-                        <i className="bi bi-bag-check-fill text-success me-2"></i>
-                        Direct Farmgate Purchase
-                      </h5>
-                      <span className="text-muted small">
-                        Buying directly from verified grower
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-close"
-                      onClick={() => setBuyingProduct(null)}
-                    ></button>
-                  </div>
-
-                  {/* Product & Farmer Chip */}
-                  <div className="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border mb-3">
-                    <img
-                      src={buyingProduct.image}
-                      alt={buyingProduct.crop}
-                      className="rounded-3 object-fit-cover border flex-shrink-0"
-                      style={{ width: '64px', height: '64px' }}
-                    />
-                    <div className="flex-grow-1 overflow-hidden">
-                      <h6 className="fw-bold text-dark mb-0.5">{buyingProduct.crop}</h6>
-                      <div className="text-muted small mb-1">
-                        <i className="bi bi-person-fill text-success me-1"></i>
-                        Farmer: {buyingProduct.farmer} ({buyingProduct.location})
-                      </div>
-                      <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace small">
-                        ₹{buyingProduct.price} / kg
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Quantity Selector */}
-                  <div className="mb-3">
-                    <label className="form-label small fw-bold text-dark mb-1">
-                      Purchase Quantity (kg)
-                    </label>
-                    <div className="input-group">
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={() =>
-                          setBuyQty((prev) =>
-                            Math.max(buyingProduct.minOrder || 50, prev - 25)
-                          )
-                        }
-                      >
-                        -25
-                      </button>
-                      <input
-                        type="number"
-                        className="form-control text-center font-monospace fw-bold"
-                        value={buyQty}
-                        min={buyingProduct.minOrder || 50}
-                        max={buyingProduct.quantity || 10000}
-                        step="25"
-                        onChange={(e) =>
-                          setBuyQty(
-                            Math.max(
-                              buyingProduct.minOrder || 50,
-                              Math.min(
-                                buyingProduct.quantity || 10000,
-                                Number(e.target.value) || 50
-                              )
-                            )
-                          )
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={() =>
-                          setBuyQty((prev) =>
-                            Math.min(buyingProduct.quantity || 10000, prev + 25)
-                          )
-                        }
-                      >
-                        +25
-                      </button>
-                    </div>
-                    <div className="d-flex justify-content-between small text-muted mt-1">
-                      <span>Min Order: {buyingProduct.minOrder || 50} kg</span>
-                      <span>Available: {buyingProduct.quantity} kg</span>
-                    </div>
-                  </div>
-
-                  {/* Delivery Hub */}
-                  <div className="mb-3">
-                    <label className="form-label small fw-bold text-dark mb-1">
-                      Receiving Hub / Delivery Point
-                    </label>
-                    <select
-                      className="form-select form-select-sm"
-                      value={deliveryHub}
-                      onChange={(e) => setDeliveryHub(e.target.value)}
-                    >
-                      <option value="Chennai Central Hub">Chennai Central Hub</option>
-                      <option value="Coimbatore Wholesale Terminal">Coimbatore Wholesale Terminal</option>
-                      <option value="Madurai Consolidation Point">Madurai Consolidation Point</option>
-                      <option value="Dindigul Regional Mandi Hub">Dindigul Regional Mandi Hub</option>
-                    </select>
-                  </div>
-
-                  {/* Price & Savings Summary */}
-                  <div className="p-3 bg-light rounded-3 border mb-3 small">
-                    <div className="d-flex justify-content-between py-1 border-bottom">
-                      <span className="text-muted">Unit Farmgate Rate:</span>
-                      <strong className="text-dark">₹{buyingProduct.price} / kg</strong>
-                    </div>
-                    <div className="d-flex justify-content-between py-1 border-bottom">
-                      <span className="text-muted">Mandi Retail Benchmark:</span>
-                      <span className="text-secondary text-decoration-line-through">
-                        ₹{buyingProduct.mandiPrice || Math.round(buyingProduct.price * 1.25)} / kg
-                      </span>
-                    </div>
-                    <div className="d-flex justify-content-between py-1.5 mt-1">
-                      <span className="fw-bold text-dark">Subtotal Payable:</span>
-                      <span className="fw-black text-success font-monospace fs-5">
-                        ₹{(buyQty * buyingProduct.price).toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Escrow Badge */}
-                  <div className="d-flex align-items-center gap-2 p-2 bg-success-subtle bg-opacity-40 rounded-3 border border-success-subtle text-success small mb-3">
-                    <i className="bi bi-shield-lock-fill fs-5"></i>
-                    <span style={{ fontSize: '0.78rem' }}>
-                      FarmDirect Escrow Protection: Funds held securely until lot inspection upon delivery.
-                    </span>
-                  </div>
-
-                  {/* Modal Action Buttons */}
-                  <div className="d-flex justify-content-end gap-2">
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary btn-sm rounded-pill px-3"
-                      onClick={() => setBuyingProduct(null)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-xs d-flex align-items-center gap-1.5"
-                      onClick={handleConfirmDirectBuy}
-                    >
-                      <i className="bi bi-bag-check-fill"></i>
-                      <span>Confirm &amp; Place Order</span>
-                    </button>
-                  </div>
-                </div>
+              {(searchQuery || locationFilter !== 'All' || gradeFilter !== 'All' || sortBy !== 'default') && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-light border rounded-pill px-3 text-muted"
+                  onClick={handleClearFilters}
+                  title="Reset filters"
+                >
+                  <i className="bi bi-arrow-counterclockwise"></i>
+                </button>
               )}
             </div>
-          </div>,
-          document.body
+
+            {/* Mobile Filter Trigger Button */}
+            <div className="col-12 d-md-none d-flex justify-content-between align-items-center pt-2 border-top">
+              <span className="text-muted small">
+                {filteredProducts.length} {language === 'ta' ? 'பொருட்கள்' : 'items'}
+              </span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold d-inline-flex align-items-center gap-1.5"
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+              >
+                <i className="bi bi-funnel"></i>
+                <span>{t('filterProduceLabel')}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Filters Drawer/Panel */}
+          {showMobileFilters && (
+            <div className="d-md-none pt-3 mt-3 border-top farm-animate-fade">
+              <div className="row g-2">
+                <div className="col-6">
+                  <label className="form-label small text-muted mb-1">{t('locationFilterLabel')}</label>
+                  <select
+                    className="form-select form-select-sm rounded-3"
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                  >
+                    {availableLocations.map((loc) => (
+                      <option key={loc} value={loc}>
+                        {loc === 'All' ? t('allLocations') : loc}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-6">
+                  <label className="form-label small text-muted mb-1">{language === 'ta' ? 'தரம்' : 'Grade'}</label>
+                  <select
+                    className="form-select form-select-sm rounded-3"
+                    value={gradeFilter}
+                    onChange={(e) => setGradeFilter(e.target.value)}
+                  >
+                    <option value="All">All Grades</option>
+                    <option value="Grade A">Grade A</option>
+                    <option value="Export">Export</option>
+                  </select>
+                </div>
+
+                <div className="col-12">
+                  <label className="form-label small text-muted mb-1">{language === 'ta' ? 'வரிசைப்படுத்து' : 'Sort'}</label>
+                  <select
+                    className="form-select form-select-sm rounded-3"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <option value="default">Default</option>
+                    <option value="price-low">{t('priceLowToHigh')}</option>
+                    <option value="price-high">{t('priceHighToLow')}</option>
+                    <option value="qty-high">Highest Quantity</option>
+                  </select>
+                </div>
+
+                <div className="col-12 d-flex justify-content-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-light rounded-pill px-3"
+                    onClick={handleClearFilters}
+                  >
+                    {language === 'ta' ? 'மீட்டமை' : 'Reset'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-primary rounded-pill px-3"
+                    onClick={() => setShowMobileFilters(false)}
+                  >
+                    {language === 'ta' ? 'முடிந்தது' : 'Apply'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ===================================================================
+            3. PRODUCT GRID / EMPTY STATE
+            =================================================================== */}
+        {filteredProducts.length === 0 ? (
+          <div className="p-5 text-center bg-white rounded-4 border my-4">
+            <i className="bi bi-flower1 fs-1 text-muted mb-2 d-block"></i>
+            <h3 className="fs-5 fw-bold text-dark mb-1">{t('noProduceFoundTitle')}</h3>
+            <p className="text-muted small mb-4" style={{ maxWidth: '380px', margin: '0 auto' }}>
+              {t('noProduceFoundDesc')}
+            </p>
+            <button
+              type="button"
+              className="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold shadow-xs"
+              onClick={handleClearFilters}
+            >
+              {language === 'ta' ? 'அனைத்து வடிகட்டிகளையும் நீக்குக' : 'Clear All Filters'}
+            </button>
+          </div>
+        ) : (
+          <div className="row g-3 g-md-4">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onViewDetails={(p) => setSelectedProduct(p)}
+                onBuyNow={(p) => setDirectBuyProduct(p)}
+              />
+            ))}
+          </div>
         )}
+
+        {/* View Details Produce Modal */}
+        {selectedProduct && (
+          <ProduceDetailsModal
+            product={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+          />
+        )}
+
+        {/* Bulk Procurement Multi-Farmer Matching Modal */}
+        {bulkProduct && (
+          <BulkProcurementModal
+            product={bulkProduct}
+            onClose={() => setBulkProduct(null)}
+          />
+        )}
+
+        {/* Standard Direct Buy Now Modal */}
+        {directBuyProduct && (
+          <DirectBuyModal
+            product={directBuyProduct}
+            onClose={() => setDirectBuyProduct(null)}
+          />
+        )}
+      </div>
     </BuyerLayout>
   );
 }

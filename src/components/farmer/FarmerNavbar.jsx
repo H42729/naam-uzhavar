@@ -13,13 +13,24 @@ import LanguageSwitcher from '../LanguageSwitcher';
 export default function FarmerNavbar({ onToggleMobileSidebar }) {
   const { user, logout } = useAuth();
   const { stats, farmerProfile } = useFarmer();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const notifRef = useRef(null);
   const profileRef = useRef(null);
+
+  // Smooth scroll elevation detection
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 8);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -41,7 +52,7 @@ export default function FarmerNavbar({ onToggleMobileSidebar }) {
   };
 
   return (
-    <header className="farm-top-navbar bg-white border-bottom px-2 px-sm-3 px-md-4 py-2 d-flex align-items-center justify-content-between sticky-top" style={{ zIndex: 1030, minHeight: '62px' }}>
+    <header className={`farm-top-navbar bg-white border-bottom px-2 px-sm-3 px-md-4 py-2 d-flex align-items-center justify-content-between sticky-top ${isScrolled ? 'scrolled shadow-sm' : ''}`} style={{ zIndex: 1030, minHeight: '62px' }}>
       {/* Left: Mobile Hamburger & Farmer Greeting */}
       <div className="d-flex align-items-center gap-1 gap-sm-2">
         {/* Mobile Hamburger */}
@@ -50,7 +61,7 @@ export default function FarmerNavbar({ onToggleMobileSidebar }) {
           className="btn btn-light d-lg-none border-0 p-1.5 text-dark rounded-circle d-flex align-items-center justify-content-center"
           onClick={onToggleMobileSidebar}
           aria-label="Toggle navigation menu"
-          style={{ width: '38px', height: '38px' }}
+          style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
         >
           <i className="bi bi-list fs-4"></i>
         </button>
@@ -72,47 +83,35 @@ export default function FarmerNavbar({ onToggleMobileSidebar }) {
         <div className="d-none d-sm-block">
           <div className="d-flex align-items-center gap-2">
             <h1 className="fw-bold text-dark fs-5 mb-0" style={{ letterSpacing: '-0.3px' }}>
-              {t('welcomeFarmer')}
+              {t('goodMorning')}, {language === 'ta' ? (farmerProfile?.tamilName || farmerProfile?.name || 'விவசாயி') : (farmerProfile?.name || 'Farmer')} 👋
             </h1>
-            <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold small">
+            <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fw-bold small" style={{ fontSize: '0.7rem' }}>
               <i className="bi bi-patch-check-fill me-1"></i> {t('verifiedBadge')}
             </span>
           </div>
           <span className="text-muted small d-flex align-items-center gap-1 mt-0">
             <i className="bi bi-geo-alt-fill text-danger small"></i>
             <span>{farmerProfile?.district || 'Dindigul'}, {farmerProfile?.state || 'Tamil Nadu'}</span>
-            <span className="text-muted mx-1">•</span>
-            <span className="text-success fw-semibold">{t('mandiHub')}</span>
           </span>
         </div>
       </div>
 
       {/* Right: Language Switcher, Notifications & Profile Avatar */}
-      <div className="d-flex align-items-center gap-1.5 gap-sm-2 gap-md-3">
+      <div className="d-flex align-items-center gap-2 gap-sm-3">
         {/* Language Selector: English | தமிழ் */}
         <LanguageSwitcher />
-
-        {/* Quick Harvest CTA for Header */}
-        <Link
-          to="/farmer/harvest"
-          className="btn btn-success fw-bold d-none d-md-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-xs"
-          style={{ fontSize: '0.85rem' }}
-        >
-          <i className="bi bi-plus-circle-fill"></i>
-          <span>{t('addMyHarvest')}</span>
-        </Link>
 
         {/* Notification Bell */}
         <div className="position-relative" ref={notifRef}>
           <button
             type="button"
-            className="btn btn-light rounded-circle p-0 position-relative border d-flex align-items-center justify-content-center"
-            style={{ width: '38px', height: '38px' }}
-            title="Notifications"
+            className="btn btn-light rounded-circle p-0 position-relative border d-flex align-items-center justify-content-center shadow-2xs"
+            style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
+            title={t('notifications')}
             onClick={() => setNotificationsOpen(!notificationsOpen)}
           >
-            <i className="bi bi-bell-fill text-dark"></i>
-            {stats.buyerRequests > 0 && (
+            <i className="bi bi-bell-fill text-dark fs-6"></i>
+            {(stats?.buyerRequests || 0) > 0 && (
               <span
                 className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                 style={{ fontSize: '0.65rem' }}
@@ -124,8 +123,8 @@ export default function FarmerNavbar({ onToggleMobileSidebar }) {
 
           {notificationsOpen && (
             <div
-              className="position-absolute end-0 mt-2 bg-white rounded-4 border shadow-lg p-3 farm-animate-fade"
-              style={{ width: '320px', maxWidth: 'calc(100vw - 32px)', zIndex: 1060 }}
+              className="position-absolute end-0 mt-2 bg-white rounded-4 border shadow-xl p-3 farm-animate-fade"
+              style={{ width: '330px', maxWidth: 'calc(100vw - 32px)', zIndex: 1060 }}
             >
               <div className="d-flex justify-content-between align-items-center pb-2 border-bottom mb-2">
                 <strong className="text-dark small">🔔 {t('notifications')}</strong>
@@ -137,30 +136,64 @@ export default function FarmerNavbar({ onToggleMobileSidebar }) {
               </div>
 
               <div className="d-flex flex-column gap-2 small">
+                {/* 1. New Buyer Request */}
                 <div
-                  className="p-2 bg-warning-subtle text-warning-emphasis rounded-3 cursor-pointer"
+                  className="p-2.5 bg-warning-subtle text-warning-emphasis rounded-3 cursor-pointer border border-warning-subtle"
                   style={{ cursor: 'pointer' }}
                   onClick={() => {
                     setNotificationsOpen(false);
                     navigate('/farmer/requests');
                   }}
                 >
-                  <div className="fw-bold">New Buyer Request!</div>
-                  <div>ABC Retail Dindigul requested 150 kg Tomatoes.</div>
-                  <span className="text-muted" style={{ fontSize: '0.7rem' }}>Today, 08:30 AM</span>
+                  <div className="fw-bold d-flex align-items-center gap-1">
+                    <span>📩 {t('newBuyerRequestNotif')}</span>
+                  </div>
+                  <div className="text-dark mt-0.5">
+                    ABC Retail Dindigul requested 150 kg Tomato at ₹28/kg.
+                  </div>
+                  <span className="text-muted small d-block mt-1" style={{ fontSize: '0.7rem' }}>
+                    <i className="bi bi-clock me-1"></i> Today, 08:30 AM
+                  </span>
                 </div>
 
+                {/* 2. Driver Assigned */}
                 <div
-                  className="p-2 bg-info-subtle text-info-emphasis rounded-3 cursor-pointer"
+                  className="p-2.5 bg-info-subtle text-info-emphasis rounded-3 cursor-pointer border border-info-subtle"
                   style={{ cursor: 'pointer' }}
                   onClick={() => {
                     setNotificationsOpen(false);
-                    navigate('/farmer/deliveries');
+                    navigate('/farmer/orders');
                   }}
                 >
-                  <div className="fw-bold">Driver Assigned</div>
-                  <div>Driver Raj Kumar assigned for Tomato pickup (#ORD-1024).</div>
-                  <span className="text-muted" style={{ fontSize: '0.7rem' }}>25 mins ago</span>
+                  <div className="fw-bold d-flex align-items-center gap-1">
+                    <span>🚚 {t('driverAssignedNotif')}</span>
+                  </div>
+                  <div className="text-dark mt-0.5">
+                    Driver Raj Kumar assigned for Tomato pickup (#ORD-1024).
+                  </div>
+                  <span className="text-muted small d-block mt-1" style={{ fontSize: '0.7rem' }}>
+                    <i className="bi bi-clock me-1"></i> 25 mins ago
+                  </span>
+                </div>
+
+                {/* 3. Request Accepted / Confirmed */}
+                <div
+                  className="p-2.5 bg-success-subtle text-success-emphasis rounded-3 cursor-pointer border border-success-subtle"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    setNotificationsOpen(false);
+                    navigate('/farmer/orders');
+                  }}
+                >
+                  <div className="fw-bold d-flex align-items-center gap-1">
+                    <span>✅ {t('requestAcceptedTitle')}</span>
+                  </div>
+                  <div className="text-dark mt-0.5">
+                    FreshBasket Supermarkets accepted your Onion consignment.
+                  </div>
+                  <span className="text-muted small d-block mt-1" style={{ fontSize: '0.7rem' }}>
+                    <i className="bi bi-clock me-1"></i> Yesterday, 04:45 PM
+                  </span>
                 </div>
               </div>
 
@@ -170,7 +203,7 @@ export default function FarmerNavbar({ onToggleMobileSidebar }) {
                   className="text-success text-decoration-none fw-bold small"
                   onClick={() => setNotificationsOpen(false)}
                 >
-                  View All Requests →
+                  {t('viewRequestsCTA')}
                 </Link>
               </div>
             </div>
@@ -188,7 +221,7 @@ export default function FarmerNavbar({ onToggleMobileSidebar }) {
               src={farmerProfile?.avatar || user?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80'}
               alt={farmerProfile?.name || 'Farmer'}
               className="rounded-circle object-fit-cover shadow-xs"
-              style={{ width: '40px', height: '40px', border: '2px solid #10b981' }}
+              style={{ width: '44px', height: '44px', border: '2px solid #10b981' }}
             />
             <div className="d-none d-xl-block text-start">
               <span className="fw-bold text-dark d-block small line-height-1">

@@ -278,12 +278,12 @@ export default function AddHarvestModal({
 
           <button
             type="button"
-            className="btn btn-sm btn-light border-0 rounded-circle text-muted"
-            style={{ width: '36px', height: '36px' }}
+            className="btn btn-sm btn-light border-0 rounded-circle text-muted d-flex align-items-center justify-content-center"
+            style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
             onClick={onClose}
             aria-label="Close"
           >
-            <i className="bi bi-x-lg"></i>
+            <i className="bi bi-x-lg fs-6"></i>
           </button>
         </div>
 

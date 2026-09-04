@@ -1,8 +1,24 @@
+/**
+ * Product Detail Page
+ * Route: /buyer/products/:id
+ * Implements the clean details page and request submission flow matching Master Prompt Sections 9 & 10:
+ * - Multi-image gallery with thumbnails
+ * - Produce name (English & Tamil)
+ * - Current price vs Mandi reference
+ * - Grade, available quantity, shelf life
+ * - Farmer trust credentials (verified badge, location, FPO)
+ * - Interactive quantity selector with dynamic total calculation
+ * - Validation & double-submission prevention
+ * - SEND REQUEST modal / form submitting to BuyerContext.requests
+ */
+
 import React, { useState, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBuyer } from '../../context/BuyerContext';
+import { useLanguage } from '../../context/LanguageContext';
 import BuyerLayout from '../../components/buyer/BuyerLayout';
+import BulkProcurementModal from '../../components/buyer/BulkProcurementModal';
+import DirectBuyModal from '../../components/buyer/DirectBuyModal';
 import { INITIAL_PRODUCTS } from '../../data/buyerData';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=700&auto=format&fit=crop&q=80';
@@ -10,24 +26,21 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1592924357228-91a4daad
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, setRequirementPrefill, confirmOrder, createRequest, showToast } = useBuyer();
+  const { products, createRequest, showToast } = useBuyer();
+  const { t, language } = useLanguage();
 
-  // Find product by id or slug or fallback to initial catalog
+  // Find product by id
   const product = useMemo(() => {
     const searchId = String(id || '').toLowerCase().trim();
-    const cleanSearchId = searchId.replace(/[^a-z0-9]/g, '');
-
     return (
       products.find(
         (p) =>
           String(p.id).toLowerCase() === searchId ||
-          String(p.id).replace(/[^a-z0-9]/gi, '').toLowerCase() === cleanSearchId ||
           p.crop.toLowerCase() === searchId
       ) ||
       INITIAL_PRODUCTS.find(
         (p) =>
           String(p.id).toLowerCase() === searchId ||
-          String(p.id).replace(/[^a-z0-9]/gi, '').toLowerCase() === cleanSearchId ||
           p.crop.toLowerCase() === searchId
       ) ||
       null
@@ -37,654 +50,607 @@ export default function ProductDetailPage() {
   // Image gallery state
   const images = useMemo(() => {
     if (!product) return [FALLBACK_IMAGE];
+    if (product.crop?.toLowerCase().includes('brinjal')) {
+      return [
+        '/images/brinjal.jpg',
+        '/images/brinjal-2.jpg'
+      ];
+    }
     if (product.images && product.images.length > 0) return product.images;
     return [product.image || FALLBACK_IMAGE];
   }, [product]);
 
   const [selectedImg, setSelectedImg] = useState(0);
 
-  // Dynamic Quantity Calculator
-  const maxQty = Math.max(Number(product?.quantity) || 500, 50);
-  const minQty = Math.min(Number(product?.minOrder) || 50, maxQty);
-  const [orderQty, setOrderQty] = useState(minQty);
+  // Dynamic Quantity Selector
+  const maxAvailable = Math.max(Number(product?.quantity) || 500, 10);
+  const minOrder = Math.min(Number(product?.minOrder) || 50, maxAvailable);
+  const [requestedQty, setRequestedQty] = useState(minOrder);
 
-  // Modals
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [showQuoteModal, setShowQuoteModal] = useState(false);
-  const [quotePrice, setQuotePrice] = useState(product ? product.price - 2 : 20);
-  const [quoteMessage, setQuoteMessage] = useState('');
-  const [confirmedOrder, setConfirmedOrder] = useState(null);
+  // Request Form State
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [showDirectBuyModal, setShowDirectBuyModal] = useState(false);
+  const [deliveryPreference, setDeliveryPreference] = useState('hub');
+  const [buyerMessage, setBuyerMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestError, setRequestError] = useState('');
 
   if (!product) {
     return (
       <BuyerLayout>
         <div className="text-center py-5 bg-white rounded-4 border p-5 my-4">
           <i className="bi bi-exclamation-octagon fs-1 text-warning mb-3 d-block"></i>
-          <h3 className="fw-bold text-dark">Produce Lot Not Found</h3>
+          <h3 className="fw-bold text-dark">
+            {language === 'ta' ? 'விளைச்சல் பதிவு காணப்படவில்லை' : 'Produce Lot Not Found'}
+          </h3>
           <p className="text-muted mb-4">
-            The requested produce lot <code>{id}</code> may have been completely fulfilled or removed from active farm listings.
+            {language === 'ta'
+              ? `தேடப்பட்ட விளைச்சல் #${id} சந்தையிலிருந்து அகற்றப்பட்டிருக்கலாம்.`
+              : `The requested produce lot #${id} may have expired or been fulfilled.`}
           </p>
-          <button
-            type="button"
-            className="bd-btn bd-btn-primary"
-            onClick={() => navigate('/buyer/browse')}
-          >
-            <i className="bi bi-arrow-left"></i>
-            <span>Back to Browse Produce</span>
-          </button>
+          <Link to="/buyer/browse" className="btn btn-primary rounded-pill px-4 py-2 fw-bold">
+            ← {t('backToMarketplace')}
+          </Link>
         </div>
       </BuyerLayout>
     );
   }
 
-  // Financial calculations
-  const mandiRate = product.mandiPrice || Math.round(product.price * 1.25);
-  const subtotal = orderQty * product.price;
-  const mandiCost = orderQty * mandiRate;
-  const buyerSavings = mandiCost - subtotal;
-  const savingsPct = Math.round((buyerSavings / mandiCost) * 100);
+  // Dynamic total calculation
+  const unitPrice = Number(product.price) || 25;
+  const calculatedTotal = requestedQty * unitPrice;
 
-  // Handlers
-  const handleAddToRequirement = () => {
-    setRequirementPrefill({
-      crop: product.crop,
-      location: product.location,
-      price: product.price,
-      quantity: orderQty
-    });
-    showToast(`✓ Pre-filled requirement form with ${orderQty} kg of ${product.crop}.`);
-    navigate('/buyer/requirement');
+  // Quantity Stepper Handlers
+  const handleQuantityChange = (val) => {
+    const num = Number(val);
+    if (isNaN(num)) return;
+    if (num > maxAvailable) {
+      setRequestedQty(maxAvailable);
+      setRequestError(t('maxQuantityExceeded'));
+    } else if (num < 1) {
+      setRequestedQty(1);
+      setRequestError('');
+    } else {
+      setRequestedQty(num);
+      setRequestError('');
+    }
   };
 
-  const handleExecuteDirectOrder = () => {
-    const newOrder = confirmOrder({
-      crop: product.crop,
-      quantity: orderQty,
-      farmers: 1,
-      amount: subtotal,
-      deliveryDate: new Date(Date.now() + 48 * 3600 * 1000).toISOString().split('T')[0],
-      location: `${product.location} to Regional Buyer Hub`,
-      farmerBreakdown: [
-        { farmer: product.farmer, qty: orderQty, price: product.price }
-      ]
-    });
-
-    setConfirmedOrder(newOrder);
+  const handleStepQty = (delta) => {
+    const next = requestedQty + delta;
+    if (next > maxAvailable) {
+      setRequestedQty(maxAvailable);
+      setRequestError(t('maxQuantityExceeded'));
+    } else if (next < 1) {
+      setRequestedQty(1);
+      setRequestError('');
+    } else {
+      setRequestedQty(next);
+      setRequestError('');
+    }
   };
 
-  const handleSendCustomQuote = (e) => {
+  // Submit Sourcing Request Handler
+  const handleSendRequest = (e) => {
     e.preventDefault();
-    createRequest({
-      crop: product.crop,
-      tamilName: product.tamilName,
-      productId: product.id,
-      farmer: product.farmer,
-      farmerPhone: product.farmerPhone,
-      location: `${product.location}, Tamil Nadu`,
-      quantity: orderQty,
-      offeredPrice: Number(quotePrice),
-      targetPrice: product.price,
-      mandiPrice: mandiRate,
-      totalAmount: Number(quotePrice) * orderQty,
-      deliveryDate: new Date(Date.now() + 72 * 3600 * 1000).toISOString().split('T')[0],
-      image: product.image,
-      message: quoteMessage || `Counter-offer of ₹${quotePrice}/kg submitted for ${orderQty}kg direct farm procurement.`
-    });
+    if (requestedQty <= 0) {
+      setRequestError(t('minQuantityRequired'));
+      return;
+    }
+    if (requestedQty > maxAvailable) {
+      setRequestError(t('maxQuantityExceeded'));
+      return;
+    }
 
-    setShowQuoteModal(false);
-    navigate('/buyer/requests');
+    setIsSubmitting(true);
+    setRequestError('');
+
+    setTimeout(() => {
+      createRequest({
+        farmerName: product.farmer || 'Verified Farmer',
+        farmerPhone: product.farmerPhone || '+91 98421 77234',
+        farmerLocation: product.location || 'Dindigul',
+        farmerFpo: product.fpo || 'Dindigul Farmers Producer Co-op',
+        productName: product.crop,
+        productTamilName: product.tamilName || 'நாட்டு விளைச்சல்',
+        productImage: images[0],
+        quantity: requestedQty,
+        unit: 'kg',
+        price: unitPrice,
+        offeredPrice: unitPrice,
+        totalAmount: calculatedTotal,
+        deliveryPreference:
+          deliveryPreference === 'farmgate'
+            ? 'Direct Farmgate Pickup'
+            : 'Consolidated Regional Hub Delivery',
+        deliveryLocation: product.location || 'Dindigul Central Hub',
+        message: buyerMessage.trim() || null
+      });
+
+      setIsSubmitting(false);
+      setShowRequestModal(false);
+      navigate('/buyer/requests');
+    }, 500);
   };
 
   return (
     <BuyerLayout>
-      {/* Breadcrumb Navigation */}
-      <nav aria-label="breadcrumb" className="mb-3">
-        <ol className="breadcrumb small mb-0">
-          <li className="breadcrumb-item">
-            <Link to="/buyer/dashboard" className="text-decoration-none text-muted">Dashboard</Link>
-          </li>
-          <li className="breadcrumb-item">
-            <Link to="/buyer/browse" className="text-decoration-none text-muted">Browse Produce</Link>
-          </li>
-          <li className="breadcrumb-item active text-dark fw-bold" aria-current="page">
-            {product.crop} ({product.id})
-          </li>
-        </ol>
-      </nav>
-
-      {/* Top Header Bar */}
-      <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <div>
-          <button
-            type="button"
-            className="btn btn-sm btn-link text-muted p-0 text-decoration-none mb-1 d-inline-flex align-items-center gap-1"
-            onClick={() => navigate(-1)}
+      <div className="w-100 farm-animate-fade" style={{ maxWidth: '980px', margin: '0 auto' }}>
+        {/* Navigation Breadcrumb */}
+        <div className="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+          <Link
+            to="/buyer/browse"
+            className="btn btn-light rounded-pill px-3 py-1.5 fw-bold d-inline-flex align-items-center gap-1.5 border text-decoration-none text-dark"
           >
             <i className="bi bi-arrow-left"></i>
-            <span>Back</span>
-          </button>
-          <div className="d-flex align-items-center gap-3">
-            <h2 className="fw-bold mb-0 text-dark">{product.crop}</h2>
-            {product.tamilName && (
-              <span className="badge bg-light text-secondary border fs-6 fw-normal">
-                {product.tamilName}
-              </span>
-            )}
-            <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
-              <i className="bi bi-patch-check-fill me-1"></i> Verified Farm Lot
-            </span>
-          </div>
+            <span>{t('backToMarketplace')}</span>
+          </Link>
+
+          <span className="badge bg-light text-muted border font-monospace px-3 py-1.5 small">
+            #{product.id}
+          </span>
         </div>
 
-        <div className="d-flex gap-2">
-          <button
-            type="button"
-            className="bd-btn bd-btn-outline bd-btn-sm"
-            onClick={handleAddToRequirement}
-          >
-            <i className="bi bi-boxes"></i>
-            <span>Aggregate in Bulk</span>
-          </button>
-          <button
-            type="button"
-            className="bd-btn bd-btn-primary bd-btn-sm"
-            onClick={() => setShowOrderModal(true)}
-          >
-            <i className="bi bi-bag-check-fill"></i>
-            <span>Book Lot ({orderQty} kg)</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="row g-4">
-        {/* ================================================================
-            LEFT COLUMN: GALLERY, TRACEABILITY SPECS & FARMER PROFILE
-           ================================================================ */}
-        <div className="col-12 col-lg-7">
-          {/* Main Gallery Card */}
-          <div className="bd-card p-3 mb-4">
-            <div className="position-relative rounded-4 overflow-hidden mb-3 bg-light" style={{ height: '380px' }}>
-              <img
-                src={images[selectedImg] || FALLBACK_IMAGE}
-                alt={product.crop}
-                className="w-100 h-100 object-fit-cover transition-all"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = FALLBACK_IMAGE;
-                }}
-              />
-              <div className="position-absolute top-0 start-0 m-3 d-flex flex-column gap-1">
-                <span className="badge bg-dark bg-opacity-75 text-white px-3 py-2 rounded-pill backdrop-blur">
-                  <i className="bi bi-geo-alt-fill text-warning me-1"></i>
-                  {product.location}, Tamil Nadu
-                </span>
-                <span className="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm">
-                  {product.grade || 'Grade A Premium'}
+        {/* Main Content Grid */}
+        <div className="row g-4 mb-4">
+          {/* ===================================================================
+              LEFT: PRODUCT IMAGE GALLERY
+              =================================================================== */}
+          <div className="col-12 col-md-6">
+            <div className="bg-white rounded-4 border shadow-xs p-3 sticky-top" style={{ top: '80px' }}>
+              {/* Large Image Preview */}
+              <div className="rounded-3 overflow-hidden position-relative mb-2.5" style={{ height: '320px', backgroundColor: '#f8fafc' }}>
+                <img
+                  src={images[selectedImg]}
+                  alt={product.crop}
+                  className="w-100 h-100 object-fit-cover"
+                />
+                <span className="position-absolute top-0 end-0 m-2 badge bg-success text-white fw-bold shadow-xs">
+                  {product.grade || 'Grade A'}
                 </span>
               </div>
-              <div className="position-absolute bottom-0 end-0 m-3">
-                <span className="badge bg-white text-dark shadow-sm px-3 py-2 rounded-3 border">
-                  Harvest: <strong>{product.harvestDate}</strong>
-                </span>
-              </div>
-            </div>
 
-            {/* Thumbnail Row */}
-            {images.length > 1 && (
-              <div className="d-flex gap-2">
-                {images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    className={`border rounded-3 p-1 bg-transparent overflow-hidden ${selectedImg === idx ? 'border-2 border-success shadow-sm' : 'border-light opacity-75'}`}
-                    style={{ width: '70px', height: '60px' }}
-                    onClick={() => setSelectedImg(idx)}
-                  >
-                    <img
-                      src={img}
-                      alt=""
-                      className="w-100 h-100 object-fit-cover rounded-2"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = FALLBACK_IMAGE;
-                      }}
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Mandi Benchmark Price Comparison */}
-          <div className="p-4 rounded-4 mb-4 bg-gradient-mandi border shadow-sm">
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <div className="d-flex align-items-center gap-2">
-                <div className="bg-warning text-dark p-2 rounded-3 d-flex align-items-center justify-content-center" style={{ width: '38px', height: '38px' }}>
-                  <i className="bi bi-graph-down-arrow fs-5"></i>
-                </div>
-                <div>
-                  <h6 className="fw-bold mb-0 text-dark">Tamil Nadu APMC Mandi Benchmark</h6>
-                  <span className="text-muted small">Real-time Oddanchatram & Dindigul wholesale rates</span>
-                </div>
-              </div>
-              <span className="badge bg-success text-white rounded-pill px-3 py-1">
-                Save {savingsPct}% Direct
-              </span>
-            </div>
-
-            <div className="row g-2 text-center">
-              <div className="col-6">
-                <div className="bg-white p-3 rounded-3 border">
-                  <span className="text-muted small d-block mb-1">Local APMC Mandi Rate</span>
-                  <span className="fs-5 fw-bold text-secondary text-decoration-line-through">
-                    ₹{mandiRate} / kg
-                  </span>
-                </div>
-              </div>
-              <div className="col-6">
-                <div className="bg-success-subtle p-3 rounded-3 border border-success-subtle">
-                  <span className="text-success small fw-bold d-block mb-1">FarmDirect Direct Price</span>
-                  <span className="fs-5 fw-bold text-success">
-                    ₹{product.price} / kg
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Produce Description & Quality Specs */}
-          <div className="bd-card p-4 mb-4">
-            <h5 className="fw-bold text-dark mb-3">Harvest Quality & Traceability Specs</h5>
-            <p className="text-secondary mb-4 leading-relaxed">
-              {product.description || 'Verified agricultural lot harvested at peak ripeness under direct oversight.'}
-            </p>
-
-            <div className="row g-3">
-              <div className="col-sm-6">
-                <div className="p-3 bg-light rounded-3 border-0">
-                  <span className="text-muted small d-block">Cultivation / Farming Standard</span>
-                  <strong className="text-dark">{product.organicStatus || 'Naturally Cultivated'}</strong>
-                </div>
-              </div>
-              <div className="col-sm-6">
-                <div className="p-3 bg-light rounded-3 border-0">
-                  <span className="text-muted small d-block">Expected Shelf Life</span>
-                  <strong className="text-dark">{product.shelfLife || '7 - 10 Days in Ambient'}</strong>
-                </div>
-              </div>
-              <div className="col-sm-6">
-                <div className="p-3 bg-light rounded-3 border-0">
-                  <span className="text-muted small d-block">Cold Chain / Packaging</span>
-                  <strong className="text-dark">Ventilated Crates / Mesh Sacks</strong>
-                </div>
-              </div>
-              <div className="col-sm-6">
-                <div className="p-3 bg-light rounded-3 border-0">
-                  <span className="text-muted small d-block">Lot Verification Protocol</span>
-                  <strong className="text-success">SIH 2026 Direct APMC Gate Check</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Farmer & Cluster Info */}
-          <div className="bd-card p-4">
-            <h5 className="fw-bold text-dark mb-3">Farmer & Regional Cluster</h5>
-            <div className="d-flex align-items-center gap-3 mb-3">
-              <div
-                className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold fs-4"
-                style={{ width: '56px', height: '56px' }}
-              >
-                {product.farmer.charAt(0)}
-              </div>
-              <div>
-                <h6 className="fw-bold mb-1 text-dark fs-5">{product.farmer}</h6>
-                <p className="text-muted small mb-0">
-                  <i className="bi bi-geo-alt-fill text-danger me-1"></i>
-                  {product.farmAddress || `${product.location}, Tamil Nadu`}
-                </p>
-              </div>
-            </div>
-
-            <div className="d-flex flex-wrap gap-2 pt-2 border-top">
-              <a
-                href={`tel:${product.farmerPhone || '+919842177234'}`}
-                className="bd-btn bd-btn-outline bd-btn-sm"
-              >
-                <i className="bi bi-telephone-fill text-success"></i>
-                <span>{product.farmerPhone || '+91 98421 77234'}</span>
-              </a>
-              <button
-                type="button"
-                className="bd-btn bd-btn-outline bd-btn-sm"
-                onClick={() => setShowQuoteModal(true)}
-              >
-                <i className="bi bi-chat-text-fill text-primary"></i>
-                <span>Send Quote / Counter Offer</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ================================================================
-            RIGHT COLUMN: DYNAMIC CALCULATOR & BOOKING CTA
-           ================================================================ */}
-        <div className="col-12 col-lg-5">
-          <div className="bd-card p-4 sticky-top" style={{ top: '88px', zIndex: 10 }}>
-            {/* Price Banner */}
-            <div className="d-flex justify-content-between align-items-baseline pb-3 border-bottom mb-4">
-              <div>
-                <span className="text-muted small text-uppercase fw-bold">Direct Farm Rate</span>
-                <div className="d-flex align-items-baseline gap-1">
-                  <span className="fs-1 fw-bold text-success font-monospace">₹{product.price}</span>
-                  <span className="text-muted">/ kg</span>
-                </div>
-              </div>
-              <div className="text-end">
-                <span className="badge bg-success-subtle text-success border border-success-subtle mb-1">
-                  In Stock
-                </span>
-                <div className="small text-muted font-monospace">{product.quantity} kg available</div>
-              </div>
-            </div>
-
-            {/* Interactive Quantity Selection */}
-            <div className="mb-4">
-              <label className="form-label fw-bold text-dark d-flex justify-content-between small">
-                <span>Select Procurement Volume</span>
-                <span className="text-success font-monospace fw-bold">{orderQty} kg</span>
-              </label>
-
-              <input
-                type="range"
-                className="form-range"
-                min={minQty}
-                max={maxQty}
-                step={25}
-                value={orderQty}
-                onChange={(e) => setOrderQty(Number(e.target.value))}
-              />
-
-              <div className="d-flex justify-content-between text-muted small mb-3">
-                <span>Min: {minQty} kg</span>
-                <span>Max: {maxQty} kg</span>
-              </div>
-
-              {/* Quick preset buttons */}
-              <div className="d-flex gap-2 flex-wrap mb-3">
-                {[50, 100, 200, maxQty]
-                  .filter((p, i, a) => p <= maxQty && a.indexOf(p) === i)
-                  .map((preset) => (
+              {/* Thumbnails if multiple images exist */}
+              {images.length > 1 && (
+                <div className="d-flex gap-2 overflow-x-auto pb-1">
+                  {images.map((img, idx) => (
                     <button
-                      key={preset}
+                      key={idx}
                       type="button"
-                      className={`btn btn-sm ${orderQty === preset ? 'btn-success fw-bold' : 'btn-outline-secondary'}`}
-                      onClick={() => setOrderQty(preset)}
+                      className={`btn p-0 rounded-3 overflow-hidden border-2 transition ${
+                        selectedImg === idx ? 'border-primary shadow-xs' : 'border-light opacity-75'
+                      }`}
+                      style={{ width: '64px', height: '64px', flexShrink: 0 }}
+                      onClick={() => setSelectedImg(idx)}
                     >
-                      {preset === maxQty ? `Full Lot (${preset}kg)` : `${preset} kg`}
+                      <img src={img} alt={`Thumb ${idx + 1}`} className="w-100 h-100 object-fit-cover" />
                     </button>
                   ))}
-              </div>
-            </div>
+                </div>
+              )}
 
-            {/* Commercial Breakdown */}
-            <div className="bg-light p-3 rounded-4 mb-4 small">
-              <div className="d-flex justify-content-between py-2 border-bottom">
-                <span className="text-muted">Crop Lot Subtotal ({orderQty} kg × ₹{product.price}):</span>
-                <span className="fw-bold font-monospace text-dark">₹{subtotal.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="d-flex justify-content-between py-2 border-bottom">
-                <span className="text-muted">Prevailing Mandi Estimate:</span>
-                <span className="text-secondary font-monospace text-decoration-line-through">
-                  ₹{mandiCost.toLocaleString('en-IN')}
+              {/* Quality & Freshness Guarantee Notes */}
+              <div className="p-3 bg-light rounded-3 mt-3 small">
+                <strong className="d-block text-dark mb-1">
+                  <i className="bi bi-shield-check text-success me-1"></i>
+                  {language === 'ta' ? 'தர உத்தரவாதம்' : 'Quality Verification'}:
+                </strong>
+                <span className="text-muted d-block" style={{ fontSize: '0.78rem' }}>
+                  {product.description || 'Freshly sorted country produce harvested at optimal maturity for institutional retail & culinary supply.'}
                 </span>
               </div>
-              <div className="d-flex justify-content-between py-2 border-bottom">
-                <span className="text-success fw-bold">
-                  <i className="bi bi-piggy-bank-fill me-1"></i> Net Buyer Savings:
-                </span>
-                <span className="fw-bold font-monospace text-success">
-                  + ₹{buyerSavings.toLocaleString('en-IN')} ({savingsPct}%)
-                </span>
-              </div>
-              <div className="d-flex justify-content-between py-2 border-bottom">
-                <span className="text-muted">Farmer Direct Escrow:</span>
-                <span className="fw-bold text-dark">100% Direct Payout</span>
-              </div>
-              <div className="d-flex justify-content-between py-2">
-                <span className="text-muted">Estimated Transit:</span>
-                <span className="fw-semibold text-dark">Within 24 - 48 Hours</span>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="d-flex flex-column gap-2">
-              <button
-                type="button"
-                className="bd-btn bd-btn-primary w-100 py-3 justify-content-center fs-6"
-                onClick={() => setShowOrderModal(true)}
-              >
-                <i className="bi bi-check2-circle fs-5"></i>
-                <span>Confirm & Place Order (₹{subtotal.toLocaleString('en-IN')})</span>
-              </button>
-
-              <button
-                type="button"
-                className="bd-btn bd-btn-outline w-100 justify-content-center"
-                onClick={handleAddToRequirement}
-              >
-                <i className="bi bi-plus-circle"></i>
-                <span>Add to Bulk Requirement Aggregator</span>
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-sm btn-link text-muted text-decoration-none"
-                onClick={() => setShowQuoteModal(true)}
-              >
-                Negotiate / Send Custom Quote Offer →
-              </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ================================================================
-          CONFIRM ORDER MODAL
-         ================================================================ */}
-      {showOrderModal &&
-        createPortal(
-          <div className="bd-modal-backdrop" onClick={() => !confirmedOrder && setShowOrderModal(false)}>
-            <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
-            {!confirmedOrder ? (
-              <>
-                <div className="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-                  <h5 className="fw-bold mb-0">Confirm Procurement Order</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setShowOrderModal(false)}
-                  ></button>
+          {/* ===================================================================
+              RIGHT: SPECIFICATIONS & SEND REQUEST CARD
+              =================================================================== */}
+          <div className="col-12 col-md-6">
+            <div className="bg-white rounded-4 border shadow-xs p-4 d-flex flex-column h-100">
+              {/* Header Title & Badges */}
+              <div className="mb-3 pb-3 border-bottom">
+                <div className="d-flex align-items-center justify-content-between mb-1">
+                  <h1 className="fs-3 fw-black text-dark mb-0">{product.crop}</h1>
+                  <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-bold small">
+                    ✓ {t('verifiedLotBadge')}
+                  </span>
+                </div>
+                <span className="text-muted fs-6 d-block mb-2">
+                  {product.tamilName ? product.tamilName : 'நாட்டு விளைபொருள்'}
+                </span>
+
+                {/* Direct Farmgate Pricing Box (Mandi Reference completely removed) */}
+                <div
+                  className="rounded-3 p-3 mb-2 bg-slate-50 border border-slate-200/80 d-flex justify-content-between align-items-center"
+                  style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px' }}
+                >
+                  <span className="text-slate-600 small fw-semibold" style={{ fontSize: '0.85rem', color: '#475569' }}>
+                    {language === 'ta' ? 'பண்ணை விலை' : 'Listing Price'}:
+                  </span>
+                  <div className="d-flex align-items-baseline text-end">
+                    <strong className="fs-3 font-monospace fw-bold text-dark" style={{ color: '#0f172a' }}>
+                      ₹{unitPrice}
+                    </strong>
+                    <span className="text-muted small ms-1 font-medium"> / kg</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ===================================================================
+                  FARMER & HARVEST INFORMATION SECTION
+                  =================================================================== */}
+              <div className="border rounded-4 p-3.5 p-sm-4 mb-3 bg-light bg-opacity-50 shadow-2xs">
+                <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                  <span className="text-muted small fw-bold text-uppercase d-flex align-items-center gap-1.5" style={{ fontSize: '0.72rem', letterSpacing: '0.04em' }}>
+                    <span aria-hidden="true">🌾</span>
+                    <span>{language === 'ta' ? 'உழவர் மற்றும் அறுவடை விவரங்கள்' : 'Farmer & Harvest Information'}</span>
+                  </span>
+                  <span className="badge bg-success-subtle text-success border border-success border-opacity-25 rounded-pill px-2.5 py-1 small fw-bold d-inline-flex align-items-center gap-1">
+                    <i className="bi bi-patch-check-fill text-success"></i>
+                    <span>{language === 'ta' ? 'சரிபார்க்கப்பட்டது' : 'Verified Listing'}</span>
+                  </span>
                 </div>
 
-                <div className="d-flex align-items-center gap-3 p-3 bg-light rounded-3 mb-3">
-                  <img
-                    src={product.image || FALLBACK_IMAGE}
-                    alt={product.crop}
-                    className="rounded-3"
-                    style={{ width: '64px', height: '64px', objectFit: 'cover' }}
-                  />
+                {/* 1. Farmer / Farm Name with green ✓ Verified badge */}
+                <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2.5 border-bottom">
+                  <div className="d-flex align-items-center gap-2.5">
+                    <div
+                      className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold shadow-2xs flex-shrink-0"
+                      style={{ width: '40px', height: '40px', fontSize: '1.1rem' }}
+                    >
+                      <i className="bi bi-person-fill"></i>
+                    </div>
+                    <div>
+                      <strong className="text-dark d-block fs-6 mb-0">
+                        {product.farmer || 'Ravi Farms (R. Ravi)'}
+                      </strong>
+                      <span className="text-muted small" style={{ fontSize: '0.72rem' }}>
+                        {product.fpo || 'Dindigul Smallholder Producer Cluster'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span
+                    className="badge bg-success text-white rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 shadow-2xs fw-bold"
+                    style={{ fontSize: '0.75rem', backgroundColor: '#10b981' }}
+                  >
+                    <span>✓</span>
+                    <span>{language === 'ta' ? 'சரிபார்க்கப்பட்டது' : 'Verified'}</span>
+                  </span>
+                </div>
+
+                {/* 2. Full Farm Location with map pin icon (📍) */}
+                <div className="d-flex align-items-start gap-2 mb-3 pb-2.5 border-bottom">
+                  <span className="fs-5 flex-shrink-0 mt-0.5" aria-hidden="true">📍</span>
                   <div>
-                    <h6 className="fw-bold mb-0 text-dark">{product.crop}</h6>
-                    <span className="text-muted small">
-                      {product.farmer} • {product.location}, Tamil Nadu
+                    <span className="text-muted small fw-semibold text-uppercase d-block mb-0.5" style={{ fontSize: '0.7rem' }}>
+                      {language === 'ta' ? 'பண்ணை முழு முகவரி' : 'Full Farm Location'}:
                     </span>
-                    <div className="text-success fw-bold font-monospace mt-1">
-                      {orderQty} kg @ ₹{product.price}/kg
+                    <strong className="text-dark small fs-6 d-block" style={{ lineHeight: '1.45' }}>
+                      {product.farmAddress || `${product.location || 'South Street, Reddiarchatram, Dindigul - 624622'}`}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* 3. Contact Number with Active Call Trigger & WhatsApp Chat Option */}
+                <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2.5 border-bottom">
+                  <div>
+                    <span className="text-muted small fw-semibold text-uppercase d-block mb-0.5" style={{ fontSize: '0.7rem' }}>
+                      {language === 'ta' ? 'நேரடி தொடர்பு எண்' : 'Contact Number'}:
+                    </span>
+                    <strong className="text-dark font-monospace fs-6">
+                      {product.farmerPhone || '+91 98421 77234'}
+                    </strong>
+                  </div>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <a
+                      href={`tel:${(product.farmerPhone || '+919842177234').replace(/\s+/g, '')}`}
+                      className="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5 fw-bold d-inline-flex align-items-center gap-1.5 text-decoration-none shadow-2xs transition hover-scale"
+                      style={{ fontSize: '0.8rem' }}
+                    >
+                      <i className="bi bi-telephone-outbound-fill"></i>
+                      <span>{language === 'ta' ? 'அழைக்க' : 'Call Farmer'}</span>
+                    </a>
+                    <a
+                      href={`https://wa.me/${(product.farmerPhone || '+919842177234').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${product.farmer || 'Farmer'}, I am inquiring about your ${product.crop} listed on Naam Uzhavar (Lot #${product.id}).`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold d-inline-flex align-items-center gap-1.5 text-decoration-none shadow-2xs transition hover-scale"
+                      style={{ backgroundColor: '#25D366', borderColor: '#25D366', fontSize: '0.8rem' }}
+                    >
+                      <i className="bi bi-whatsapp"></i>
+                      <span>WhatsApp</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* 4. Harvest Specifications (4 tiles: Available Qty, Grade, Harvest Window, Price / kg) */}
+                <div>
+                  <span className="text-muted small fw-bold text-uppercase d-block mb-2" style={{ fontSize: '0.7rem' }}>
+                    {language === 'ta' ? 'அறுவடை விவரக்குறிப்புகள்' : 'Harvest Specifications'}
+                  </span>
+                  <div className="row g-2 text-center">
+                    <div className="col-6 col-sm-3">
+                      <div className="p-2.5 bg-white rounded-3 border h-100 d-flex flex-column justify-content-center shadow-2xs">
+                        <span className="text-muted small d-block mb-1" style={{ fontSize: '0.68rem', textTransform: 'uppercase' }}>
+                          {language === 'ta' ? 'இருப்பு' : 'Available Qty'}
+                        </span>
+                        <strong className="text-success font-monospace small fw-bold fs-6">
+                          {product.quantity || maxAvailable} kg
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="col-6 col-sm-3">
+                      <div className="p-2.5 bg-white rounded-3 border h-100 d-flex flex-column justify-content-center shadow-2xs">
+                        <span className="text-muted small d-block mb-1" style={{ fontSize: '0.68rem', textTransform: 'uppercase' }}>
+                          {language === 'ta' ? 'தரம்' : 'Quality Grade'}
+                        </span>
+                        <strong className="text-dark small fw-bold text-truncate">
+                          {product.grade || 'Grade A Premium'}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="col-6 col-sm-3">
+                      <div className="p-2.5 bg-white rounded-3 border h-100 d-flex flex-column justify-content-center shadow-2xs">
+                        <span className="text-muted small d-block mb-1" style={{ fontSize: '0.68rem', textTransform: 'uppercase' }}>
+                          {language === 'ta' ? 'அறுவடை காலம்' : 'Harvest Window'}
+                        </span>
+                        <strong className="text-dark small fw-bold font-monospace">
+                          {product.shelfLife || '8 - 10 Days'}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="col-6 col-sm-3">
+                      <div className="p-2.5 bg-white rounded-3 border h-100 d-flex flex-column justify-content-center shadow-2xs">
+                        <span className="text-muted small d-block mb-1" style={{ fontSize: '0.68rem', textTransform: 'uppercase' }}>
+                          {language === 'ta' ? 'கிலோ விலை' : 'Price / kg'}
+                        </span>
+                        <strong className="text-dark small fw-bold font-monospace">
+                          ₹{unitPrice} / kg
+                        </strong>
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="p-3 border rounded-3 mb-4 small">
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="text-muted">Total Payable Amount:</span>
-                    <strong className="fs-5 text-success font-monospace">₹{subtotal.toLocaleString('en-IN')}</strong>
-                  </div>
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="text-muted">Disbursement Channel:</span>
-                    <span className="fw-semibold">FarmDirect Escrow Protected</span>
-                  </div>
-                  <div className="d-flex justify-content-between">
-                    <span className="text-muted">Estimated Delivery:</span>
-                    <span className="fw-semibold">Within 48 hours of dispatch</span>
-                  </div>
-                </div>
+              {/* Quantity Stepper & Price Calculation */}
+              <div className="p-3 bg-primary-subtle bg-opacity-25 rounded-3 border border-primary-subtle mb-3">
+                <label className="form-label small fw-bold text-dark d-flex justify-content-between mb-1.5">
+                  <span>{language === 'ta' ? 'தேவைப்படும் அளவு' : 'Purchase Quantity'}:</span>
+                  <span className="text-muted fw-normal" style={{ fontSize: '0.75rem' }}>
+                    Max: {maxAvailable} kg
+                  </span>
+                </label>
 
-                <div className="d-flex justify-content-end gap-2">
+                {/* Stepper Input */}
+                <div className="d-flex align-items-center gap-2 mb-2">
                   <button
                     type="button"
-                    className="bd-btn bd-btn-outline bd-btn-sm"
-                    onClick={() => setShowOrderModal(false)}
+                    className="btn btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center"
+                    style={{ width: '38px', height: '38px' }}
+                    onClick={() => handleStepQty(-25)}
+                    disabled={requestedQty <= 10}
                   >
-                    Cancel
+                    <i className="bi bi-dash fs-5"></i>
                   </button>
+
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="form-control text-center font-monospace fw-bold fs-5 rounded-3"
+                      value={requestedQty}
+                      min="1"
+                      max={maxAvailable}
+                      onChange={(e) => handleQuantityChange(e.target.value)}
+                    />
+                    <span className="input-group-text bg-white text-muted fw-bold">kg</span>
+                  </div>
+
                   <button
                     type="button"
-                    className="bd-btn bd-btn-primary bd-btn-sm"
-                    onClick={handleExecuteDirectOrder}
+                    className="btn btn-outline-secondary rounded-circle p-0 d-flex align-items-center justify-content-center"
+                    style={{ width: '38px', height: '38px' }}
+                    onClick={() => handleStepQty(25)}
+                    disabled={requestedQty >= maxAvailable}
                   >
-                    <i className="bi bi-shield-check"></i>
-                    <span>Confirm Order Now</span>
+                    <i className="bi bi-plus fs-5"></i>
                   </button>
                 </div>
-              </>
-            ) : (
-              /* Celebratory Confirmed State */
-              <div className="text-center py-4">
-                <div className="celebrate-badge mb-3">
-                  <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '4.5rem' }}></i>
-                </div>
-                <h4 className="fw-bold text-dark mb-2">Order Confirmed!</h4>
-                <p className="text-muted mb-3">
-                  Your purchase order <strong>{confirmedOrder.id}</strong> for {orderQty} kg of {product.crop} has been registered and dispatched to {product.farmer}.
-                </p>
 
-                <div className="bg-success-subtle text-success p-3 rounded-3 mb-4 font-monospace small">
-                  Escrow Lock ID: ESC-{Math.floor(100000 + Math.random() * 900000)} • ₹{subtotal.toLocaleString('en-IN')}
-                </div>
+                {requestError && (
+                  <span className="text-danger small d-block mb-2" style={{ fontSize: '0.76rem' }}>
+                    {requestError}
+                  </span>
+                )}
 
-                <div className="d-flex justify-content-center gap-2">
+                {/* Live Total Calculation */}
+                <div className="d-flex justify-content-between align-items-center pt-2 border-top">
+                  <span className="text-dark small fw-semibold">
+                    {t('calculatedTotal')}:
+                  </span>
+                  <div>
+                    <span className="text-muted small me-1">({requestedQty} kg × ₹{unitPrice}) =</span>
+                    <strong className="fs-5 text-primary font-monospace">
+                      ₹{calculatedTotal.toLocaleString('en-IN')}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Direct Buyer CTAs: "Buy Now", "Add Bulk Requirement", and "Place Request" */}
+              <div className="mt-auto pt-2 d-flex flex-column gap-2">
+                <div className="d-flex flex-column flex-sm-row gap-2">
                   <button
                     type="button"
-                    className="bd-btn bd-btn-outline bd-btn-sm"
-                    onClick={() => {
-                      setShowOrderModal(false);
-                      setConfirmedOrder(null);
-                    }}
+                    className="btn btn-success fw-bold py-2.5 px-3 rounded-pill shadow-xs d-flex align-items-center justify-content-center gap-2 flex-grow-1 transition hover-scale"
+                    style={{ fontSize: '0.9rem', backgroundColor: '#16a34a', borderColor: '#16a34a' }}
+                    onClick={() => setShowDirectBuyModal(true)}
                   >
-                    Stay on Product
+                    <i className="bi bi-lightning-charge-fill"></i>
+                    <span>{language === 'ta' ? 'உடனடி வாங்குதல்' : 'Buy Now'} ({product.quantity} kg)</span>
                   </button>
+
                   <button
                     type="button"
-                    className="bd-btn bd-btn-primary bd-btn-sm"
-                    onClick={() => navigate('/buyer/orders')}
+                    className="btn btn-outline-primary fw-bold py-2.5 px-3 rounded-pill shadow-xs d-flex align-items-center justify-content-center gap-2 flex-grow-1 transition hover-scale"
+                    style={{ fontSize: '0.9rem' }}
+                    onClick={() => setShowBulkModal(true)}
                   >
-                    <i className="bi bi-receipt-cutoff"></i>
-                    <span>Go to Orders Tracking</span>
+                    <i className="bi bi-boxes"></i>
+                    <span>{language === 'ta' ? 'மொத்த தேவை சேர்க்க' : 'Add Bulk Requirement'}</span>
+                  </button>
+                </div>
+
+                <div className="d-flex flex-column flex-sm-row gap-2">
+                  <a
+                    href={`tel:${(product.farmerPhone || '+919842177234').replace(/\s+/g, '')}`}
+                    className="btn btn-outline-secondary fw-bold py-2 px-3 rounded-pill d-flex align-items-center justify-content-center gap-1.5 flex-grow-1 text-decoration-none"
+                    style={{ fontSize: '0.84rem' }}
+                  >
+                    <i className="bi bi-telephone-fill"></i>
+                    <span>{language === 'ta' ? 'விவசாயிக்கு அழைக்க' : 'Call Farmer'}</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    className="btn btn-light border fw-bold py-2 px-3 rounded-pill d-flex align-items-center justify-content-center gap-1.5 flex-grow-1 text-secondary"
+                    style={{ fontSize: '0.84rem' }}
+                    onClick={() => setShowRequestModal(true)}
+                  >
+                    <i className="bi bi-chat-left-text-fill"></i>
+                    <span>{language === 'ta' ? 'தனிப்பயன் கோரிக்கை' : 'Custom Request'}</span>
                   </button>
                 </div>
               </div>
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ================================================================
-          CUSTOM QUOTE MODAL
-         ================================================================ */}
-      {showQuoteModal &&
-        createPortal(
-          <div className="bd-modal-backdrop" onClick={() => setShowQuoteModal(false)}>
-            <div className="bd-modal-box p-4" onClick={(e) => e.stopPropagation()}>
-            <div className="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
-              <h5 className="fw-bold mb-0">Send Custom Quote Offer</h5>
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => setShowQuoteModal(false)}
-              ></button>
             </div>
+          </div>
+        </div>
 
-            <form onSubmit={handleSendCustomQuote}>
-              <div className="mb-3">
-                <label className="form-label small fw-bold text-muted">Crop Lot</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={`${product.crop} (${product.farmer})`}
-                  disabled
-                />
-              </div>
-
-              <div className="row g-2 mb-3">
-                <div className="col-6">
-                  <label className="form-label small fw-bold text-muted">Volume (kg)</label>
-                  <input
-                    type="number"
-                    className="form-control font-monospace fw-bold"
-                    value={orderQty}
-                    onChange={(e) => setOrderQty(Number(e.target.value))}
-                    min={minQty}
-                    max={maxQty}
-                  />
-                </div>
-                <div className="col-6">
-                  <label className="form-label small fw-bold text-muted">Offered Price (₹/kg)</label>
-                  <input
-                    type="number"
-                    className="form-control font-monospace fw-bold text-success"
-                    value={quotePrice}
-                    onChange={(e) => setQuotePrice(e.target.value)}
-                    min={10}
-                    max={100}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="form-label small fw-bold text-muted">Buyer Note to Farmer</label>
-                <textarea
-                  className="form-control"
-                  rows={3}
-                  placeholder="Specify delivery destination or payment preference..."
-                  value={quoteMessage}
-                  onChange={(e) => setQuoteMessage(e.target.value)}
-                ></textarea>
-              </div>
-
-              <div className="d-flex justify-content-end gap-2">
+        {/* ===================================================================
+            PLACE PURCHASE REQUEST MODAL
+            =================================================================== */}
+        {showRequestModal && (
+          <div
+            className="position-fixed inset-0 bg-dark bg-opacity-65 d-flex align-items-center justify-content-center p-3 farm-animate-fade"
+            style={{ zIndex: 1250, top: 0, left: 0, right: 0, bottom: 0 }}
+          >
+            <div className="bg-white rounded-4 p-4 max-w-lg w-100 shadow-xl" style={{ maxWidth: '520px' }}>
+              <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <strong className="fs-5 fw-bold text-dark d-flex align-items-center gap-2">
+                  <span>📩 {language === 'ta' ? 'கொள்முதல் கோரிக்கை வைக்க' : 'Place Purchase Request'}</span>
+                </strong>
                 <button
                   type="button"
-                  className="bd-btn bd-btn-outline bd-btn-sm"
-                  onClick={() => setShowQuoteModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bd-btn bd-btn-primary bd-btn-sm"
-                >
-                  <i className="bi bi-send-fill"></i>
-                  <span>Submit Sourcing Request</span>
-                </button>
+                  className="btn-close btn-sm"
+                  onClick={() => setShowRequestModal(false)}
+                ></button>
               </div>
-            </form>
+
+              <form onSubmit={handleSendRequest}>
+                {/* Summary Recap */}
+                <div className="p-3 bg-light rounded-3 mb-3 small">
+                  <div className="d-flex justify-content-between mb-1.5">
+                    <span className="text-muted">{language === 'ta' ? 'விளைபொருள்' : 'Product'}:</span>
+                    <strong className="text-dark">{product.crop}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-1.5">
+                    <span className="text-muted">{language === 'ta' ? 'விவசாயி' : 'Farmer'}:</span>
+                    <strong className="text-dark">{product.farmer || 'Ravi Farms (R. Ravi)'}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-1.5">
+                    <span className="text-muted">{language === 'ta' ? 'பண்ணை அமைவிடம்' : 'Farm Location'}:</span>
+                    <strong className="text-dark text-truncate ms-2" style={{ maxWidth: '260px' }}>
+                      {product.farmAddress || `${product.location || 'Dindigul'}, Tamil Nadu`}
+                    </strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-1.5">
+                    <span className="text-muted">{language === 'ta' ? 'அளவு' : 'Quantity'}:</span>
+                    <strong className="text-success font-monospace">{requestedQty} kg</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-1.5">
+                    <span className="text-muted">{language === 'ta' ? 'பண்ணை விலை' : 'Listing Price'}:</span>
+                    <strong className="text-dark font-monospace">₹{unitPrice} / kg</strong>
+                  </div>
+                  <div className="d-flex justify-content-between pt-1 border-top">
+                    <span className="text-dark fw-bold">{language === 'ta' ? 'மொத்த தொகை' : 'Total Amount'}:</span>
+                    <strong className="text-primary font-monospace fs-6">₹{calculatedTotal.toLocaleString('en-IN')}</strong>
+                  </div>
+                </div>
+
+                {/* Delivery Preference */}
+                <div className="mb-3">
+                  <label className="form-label small fw-bold text-dark mb-1">
+                    {t('deliveryPreferenceLabel')}
+                  </label>
+                  <select
+                    className="form-select rounded-3 text-dark small"
+                    value={deliveryPreference}
+                    onChange={(e) => setDeliveryPreference(e.target.value)}
+                  >
+                    <option value="hub">{t('regionalHubDispatch')}</option>
+                    <option value="farmgate">{t('directFarmgatePickup')}</option>
+                  </select>
+                </div>
+
+                {/* Optional Message to Farmer */}
+                <div className="mb-4">
+                  <label className="form-label small fw-bold text-dark mb-1">
+                    {t('messageToFarmerOptional')}
+                  </label>
+                  <textarea
+                    className="form-control rounded-3 small"
+                    rows="2"
+                    placeholder={language === 'ta' ? 'வாகன வருகை நேரம், பேக்கிங் தேவைகள் போன்ற கூடுதல் குறிப்புகள்...' : 'e.g. Need morning delivery at our retail distribution point.'}
+                    value={buyerMessage}
+                    onChange={(e) => setBuyerMessage(e.target.value)}
+                  ></textarea>
+                </div>
+
+                {/* Modal Buttons */}
+                <div className="d-flex justify-content-end gap-2 pt-2 border-top">
+                  <button
+                    type="button"
+                    className="btn btn-light rounded-pill px-3 fw-semibold"
+                    onClick={() => setShowRequestModal(false)}
+                    disabled={isSubmitting}
+                  >
+                    {language === 'ta' ? 'ரத்துசெய்' : 'Cancel'}
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <span>{t('sendingRequestText')}</span>
+                    ) : (
+                      <span>{language === 'ta' ? 'கொள்முதல் கோரிக்கை வைக்க' : 'Place Purchase Request'}</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>,
-        document.body
-      )}
+        )}
+        {/* Bulk Procurement Multi-Farmer Matching Modal */}
+        {showBulkModal && (
+          <BulkProcurementModal
+            product={product}
+            onClose={() => setShowBulkModal(false)}
+          />
+        )}
+
+        {/* Standard Direct Buy Now Modal */}
+        {showDirectBuyModal && (
+          <DirectBuyModal
+            product={product}
+            onClose={() => setShowDirectBuyModal(false)}
+          />
+        )}
+      </div>
     </BuyerLayout>
   );
 }

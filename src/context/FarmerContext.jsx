@@ -352,28 +352,52 @@ export const INITIAL_MESSAGES = [
 
 export function FarmerProvider({ children }) {
   const [farmerProfile, setFarmerProfile] = useState(() => {
-    const saved = localStorage.getItem('naam_uzhavar_farmer_profile_v3');
-    return saved ? JSON.parse(saved) : DEFAULT_FARMER_PROFILE;
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_farmer_profile_v3');
+      return saved ? JSON.parse(saved) : DEFAULT_FARMER_PROFILE;
+    } catch {
+      return DEFAULT_FARMER_PROFILE;
+    }
   });
 
   const [harvests, setHarvests] = useState(() => {
-    const saved = localStorage.getItem('naam_uzhavar_harvests_v3');
-    return saved ? JSON.parse(saved) : INITIAL_HARVESTS;
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_harvests_v3');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : INITIAL_HARVESTS;
+    } catch {
+      return INITIAL_HARVESTS;
+    }
   });
 
   const [buyerRequests, setBuyerRequests] = useState(() => {
-    const saved = localStorage.getItem('naam_uzhavar_buyer_requests_v3');
-    return saved ? JSON.parse(saved) : INITIAL_BUYER_REQUESTS;
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_buyer_requests_v3');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : INITIAL_BUYER_REQUESTS;
+    } catch {
+      return INITIAL_BUYER_REQUESTS;
+    }
   });
 
   const [deliveries, setDeliveries] = useState(() => {
-    const saved = localStorage.getItem('naam_uzhavar_deliveries_v3');
-    return saved ? JSON.parse(saved) : INITIAL_DELIVERIES;
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_deliveries_v3');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : INITIAL_DELIVERIES;
+    } catch {
+      return INITIAL_DELIVERIES;
+    }
   });
 
   const [conversations, setConversations] = useState(() => {
-    const saved = localStorage.getItem('naam_uzhavar_conversations_v3');
-    return saved ? JSON.parse(saved) : INITIAL_MESSAGES;
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_conversations_v3');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : INITIAL_MESSAGES;
+    } catch {
+      return INITIAL_MESSAGES;
+    }
   });
 
   const [toast, setToast] = useState(null);
@@ -440,10 +464,39 @@ export function FarmerProvider({ children }) {
 
   // Buyer Requests Operations
   const acceptRequest = (requestId) => {
+    const req = buyerRequests.find((r) => r.id === requestId);
     setBuyerRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, status: 'Accepted' } : r))
     );
-    const req = buyerRequests.find((r) => r.id === requestId);
+
+    if (req) {
+      // Ensure an active order is reflected in deliveries
+      setDeliveries((prev) => {
+        const alreadyExists = prev.some((d) => d.buyerName === req.buyerName && d.crop?.includes(req.cropRequested?.split(' ')[0] || ''));
+        if (alreadyExists) return prev;
+
+        const newOrder = {
+          id: `ORD-${Date.now().toString().slice(-4)}`,
+          trackingNumber: `TRK-TN-2026-${Date.now().toString().slice(-4)}`,
+          buyerName: req.buyerName,
+          crop: req.cropRequested || req.productName || 'Harvest Produce',
+          quantity: req.quantity || '100 kg',
+          pricePerKg: req.offerPrice || req.price ? `₹${req.price || 28} / kg` : '₹28 / kg',
+          driverName: 'Raj Kumar',
+          driverPhone: '+91 98421 44550',
+          vehicleNumber: 'TN-57-AB-4029 (Tata Ace)',
+          pickupLocation: `${farmerProfile?.name || 'Arun Kumar'} Farm, ${farmerProfile?.taluk || 'Nilakottai'}`,
+          dropLocation: req.location || req.deliveryLocation || 'Dindigul Regional Hub',
+          estimatedArrival: 'Today, 03:00 PM',
+          currentStage: 'Order Accepted',
+          stages: ['Order Accepted', 'Driver Assigned', 'Pickup', 'In Transit', 'Delivered'],
+          stageIndex: 0,
+          statusText: 'Consignment confirmed by farmer. Logistics dispatch assigned.'
+        };
+        return [newOrder, ...prev];
+      });
+    }
+
     showToast(
       'Order Accepted! 🎉',
       `You accepted the request from ${req?.buyerName || 'the buyer'} for ${req?.quantity || 'produce'}.`,
@@ -457,6 +510,45 @@ export function FarmerProvider({ children }) {
     );
     const req = buyerRequests.find((r) => r.id === requestId);
     showToast('Request Declined', `Declined request from ${req?.buyerName || 'the buyer'}.`, 'info');
+  };
+
+  // Bridge request to conversation
+  const getOrCreateConversationForBuyer = (buyerName, buyerType, cropName) => {
+    const existing = conversations.find((c) =>
+      (c.buyerName && buyerName && c.buyerName.toLowerCase().includes(buyerName.toLowerCase())) ||
+      (c.buyerName && buyerName && buyerName.toLowerCase().includes(c.buyerName.toLowerCase()))
+    );
+    if (existing) return existing.id;
+
+    const newConvId = `CONV-${Date.now().toString().slice(-4)}`;
+    const newConv = {
+      id: newConvId,
+      buyerId: `B-${Date.now().toString().slice(-3)}`,
+      buyerName: buyerName || 'Wholesale Buyer',
+      buyerType: buyerType || 'Supermarket / Bulk Buyer',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+      unreadCount: 0,
+      lastMessage: `Request accepted for ${cropName || 'produce'}. You can now coordinate dispatch details.`,
+      timestamp: 'Just now',
+      phone: '+91 94432 10987',
+      messages: [
+        {
+          id: `M-${Date.now()}-1`,
+          sender: 'farmer',
+          text: `Vanakkam! I have accepted your purchase request for ${cropName || 'harvest produce'}. The produce is sorted and ready at our farm gate.`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]
+    };
+
+    setConversations((prev) => [newConv, ...prev]);
+    return newConvId;
+  };
+
+  const markConversationAsRead = (convId) => {
+    setConversations((prev) =>
+      prev.map((c) => (c.id === convId ? { ...c, unreadCount: 0 } : c))
+    );
   };
 
   // Messaging Operations
@@ -486,17 +578,19 @@ export function FarmerProvider({ children }) {
   };
 
   // Stats
-  const activeHarvestsCount = harvests.filter((h) => h.status === 'Available' || h.status === 'Buyer Request').length;
-  const pendingRequestsCount = buyerRequests.filter((r) => r.status === 'Pending').length;
-  const acceptedOrdersCount = buyerRequests.filter((r) => r.status === 'Accepted').length;
-  const activeDeliveriesCount = deliveries.filter((d) => d.currentStage !== 'Delivered').length;
+  const activeHarvestsCount = (Array.isArray(harvests) ? harvests : []).filter((h) => h?.status === 'Available' || h?.status === 'Buyer Request').length;
+  const pendingRequestsCount = (Array.isArray(buyerRequests) ? buyerRequests : []).filter((r) => r?.status === 'Pending').length;
+  const acceptedOrdersCount = (Array.isArray(buyerRequests) ? buyerRequests : []).filter((r) => r?.status === 'Accepted').length;
+  const activeDeliveriesCount = (Array.isArray(deliveries) ? deliveries : []).filter((d) => d?.currentStage !== 'Delivered').length;
+  const unreadMessagesCount = (Array.isArray(conversations) ? conversations : []).reduce((acc, c) => acc + (c?.unreadCount || 0), 0);
 
   const stats = {
-    myHarvest: activeHarvestsCount || 8,
-    buyerRequests: pendingRequestsCount || 3,
-    accepted: acceptedOrdersCount || 5,
-    deliveries: activeDeliveriesCount || 2,
-    activeProducts: activeHarvestsCount
+    myHarvest: activeHarvestsCount || (Array.isArray(harvests) ? harvests.length : 0),
+    buyerRequests: pendingRequestsCount,
+    accepted: acceptedOrdersCount,
+    deliveries: activeDeliveriesCount || (Array.isArray(deliveries) ? deliveries.length : 0),
+    activeProducts: activeHarvestsCount || (Array.isArray(harvests) ? harvests.length : 0),
+    unreadMessages: unreadMessagesCount
   };
 
   return (
@@ -509,6 +603,7 @@ export function FarmerProvider({ children }) {
         buyerRequests,
         requests: buyerRequests, // alias
         deliveries,
+        orders: deliveries, // alias
         conversations,
         stats,
         toast,
@@ -520,6 +615,8 @@ export function FarmerProvider({ children }) {
         acceptRequest,
         declineRequest,
         sendMessage,
+        markConversationAsRead,
+        getOrCreateConversationForBuyer,
         showToast
       }}
     >
