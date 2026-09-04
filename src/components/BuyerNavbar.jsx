@@ -151,14 +151,12 @@ export default function BuyerNavbar({
     }
   ];
 
-  // Helper to determine active state
+  // Helper to determine active state (Dashboard is not selected by default; color applies on hover)
   const isTabActive = (tab) => {
     if (tab.isModalTrigger) return false;
+    if (tab.id === 'dashboard') return false; // Remove default dashboard selection as requested
     const pathname = location.pathname;
     return tab.matchPatterns.some((pattern) => {
-      if (pattern === '/buyer/dashboard') {
-        return pathname === '/buyer/dashboard' || pathname === '/buyer' || pathname === '/consumer';
-      }
       return pathname === pattern || pathname.startsWith(`${pattern}/`);
     });
   };
@@ -381,9 +379,9 @@ export default function BuyerNavbar({
                     key={tab.id}
                     type="button"
                     onClick={() => setShowProfileModal(true)}
-                    className="whitespace-nowrap border-0 bg-transparent cursor-pointer flex items-center gap-2 text-slate-600 hover:text-[#2563EB] hover:bg-slate-50 rounded-full px-4 py-2 font-medium transition-colors"
+                    className="group whitespace-nowrap border-0 bg-transparent cursor-pointer flex items-center gap-2 text-slate-600 hover:bg-[#2563EB] hover:text-white hover:font-semibold hover:shadow-xs rounded-full px-4 py-2 font-medium transition-all duration-200"
                   >
-                    <IconComponent className="w-4 h-4 flex-shrink-0 text-slate-500" />
+                    <IconComponent className="w-4 h-4 flex-shrink-0 text-slate-500 group-hover:text-white transition-colors" />
                     <span className="text-xs sm:text-sm">{tab.label}</span>
                   </button>
                 );
@@ -395,13 +393,17 @@ export default function BuyerNavbar({
                 <NavLink
                   key={tab.id}
                   to={tab.path}
-                  className={`whitespace-nowrap no-underline transition-all cursor-pointer flex items-center gap-2 ${
+                  className={`group whitespace-nowrap no-underline cursor-pointer flex items-center gap-2 transition-all duration-200 ${
                     active
                       ? 'bg-[#2563EB] text-white font-semibold rounded-full px-5 py-2 shadow-xs'
-                      : 'text-slate-600 hover:text-[#2563EB] hover:bg-slate-50 rounded-full px-4 py-2 font-medium transition-colors'
+                      : 'text-slate-600 hover:bg-[#2563EB] hover:text-white hover:font-semibold hover:shadow-xs rounded-full px-4 py-2 font-medium'
                   }`}
                 >
-                  <IconComponent className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-slate-500'}`} />
+                  <IconComponent
+                    className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                      active ? 'text-white' : 'text-slate-500 group-hover:text-white'
+                    }`}
+                  />
                   <span className="text-xs sm:text-sm">{tab.label}</span>
 
                   {/* Badges inside tabs */}
@@ -410,7 +412,7 @@ export default function BuyerNavbar({
                       className={`transition-colors ${
                         active
                           ? 'bg-white text-[#2563EB] font-black text-xs px-2 py-0.5 rounded-full ml-1.5'
-                          : `${tab.badgeInactiveClass} text-xs px-2.5 py-0.5 rounded-full ml-1.5`
+                          : `${tab.badgeInactiveClass} group-hover:bg-white group-hover:text-[#2563EB] group-hover:font-black text-xs px-2.5 py-0.5 rounded-full ml-1.5`
                       }`}
                     >
                       {tab.badgeText}
