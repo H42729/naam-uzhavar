@@ -35,7 +35,7 @@ export default function BuyerLayout({ children }) {
 
       {/* 2. FULL-WIDTH MAIN CONTENT BODY */}
       <main
-        className="flex-1 w-full min-w-0 pb-5 pb-lg-4"
+        className="flex-1 w-full min-w-0 pb-24 lg:pb-8"
         style={{ flex: '1 1 0%', width: '100%', minWidth: 0 }}
       >
         {/* Toast Notification Alert */}
