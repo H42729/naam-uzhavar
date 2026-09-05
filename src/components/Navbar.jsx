@@ -17,9 +17,8 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
   const effectiveUser = currentUser || user;
   const effectiveIsLoggedIn = isLoggedIn !== undefined ? isLoggedIn : isAuthenticated;
 
-  const isBookVehicleActive = location.pathname === '/book-vehicle' || activeTab === 'book-vehicle';
-  const isMarketplaceActive = !isBookVehicleActive && (activeTab === 'marketplace' || location.pathname.startsWith('/buyer/browse'));
-  const isHomeActive = !isBookVehicleActive && !isMarketplaceActive && (activeTab === 'home' || location.pathname === '/');
+  const isMarketplaceActive = activeTab === 'marketplace' || location.pathname.startsWith('/buyer/browse');
+  const isHomeActive = !isMarketplaceActive && (activeTab === 'home' || location.pathname === '/');
 
   const handleNavClick = (sectionId, tabName) => {
     if (setActiveTab) setActiveTab(tabName);
@@ -94,34 +93,6 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                 >
                   <i className="bi bi-shop"></i>
                   <span>{t('navMarketplace')}</span>
-                </button>
-              </li>
-
-              {/* 3. Book Vehicle (Active Blue Pill with Soft Slate Badge) */}
-              <li>
-                <button
-                  type="button"
-                  className={`px-4 py-2 text-sm font-semibold rounded-full transition-all border-0 cursor-pointer flex items-center gap-2 ${
-                    isBookVehicleActive
-                      ? 'bg-[#2563EB] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 bg-transparent'
-                  }`}
-                  onClick={() => {
-                    if (setActiveTab) setActiveTab('book-vehicle');
-                    navigate('/book-vehicle');
-                  }}
-                >
-                  <i className="bi bi-truck"></i>
-                  <span>Book Vehicle</span>
-                  <span
-                    className={`text-xs font-bold px-2 py-0.5 rounded-full transition-colors ${
-                      isBookVehicleActive
-                        ? 'bg-white/20 text-white'
-                        : 'bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    [ 4 ]
-                  </span>
                 </button>
               </li>
             </ul>
@@ -230,30 +201,6 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                   <span>Marketplace</span>
                 </span>
                 <i className="bi bi-chevron-right text-xs opacity-60"></i>
-              </button>
-
-              {/* Book Vehicle (Accessible Touch Target >= 44px) */}
-              <button
-                type="button"
-                className={`min-h-[44px] h-[48px] w-full text-start px-3.5 rounded-xl font-bold flex items-center justify-between border-0 transition-all cursor-pointer ${
-                  isBookVehicleActive ? 'bg-[#2563EB] text-white shadow-xs' : 'bg-slate-50 text-slate-800 hover:bg-slate-100'
-                }`}
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigate('/book-vehicle');
-                }}
-              >
-                <span className="flex items-center gap-2">
-                  <i className="bi bi-truck"></i>
-                  <span>Book Vehicle</span>
-                </span>
-                <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    isBookVehicleActive ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  [ 4 ]
-                </span>
               </button>
               {!isLoggedIn ? (
                 <div className="pt-2 border-top d-flex flex-column gap-2">

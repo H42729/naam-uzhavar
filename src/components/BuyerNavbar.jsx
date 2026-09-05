@@ -53,7 +53,7 @@ export default function BuyerNavbar({
         { id: 'requests', patterns: ['/buyer/requests', '/buyer/request-status'] },
         { id: 'orders', patterns: ['/buyer/orders', '/buyer/deliveries', '/my-orders'] },
         { id: 'requirement', patterns: ['/buyer/requirement', '/buyer/requirements', '/buyer/aggregate-details', '/buyer/matched-supply', '/bulk-requirement'] },
-        { id: 'logistics', patterns: ['/book-vehicle', '/farmer/logistics'] },
+        { id: 'logistics', patterns: ['/buyer/book-vehicle', '/book-vehicle', '/farmer/logistics'] },
         { id: 'profile', patterns: ['/buyer/profile'] }
       ].find(item => item.patterns.some(p => pathname === p || pathname.startsWith(`${p}/`)));
       return matched ? matched.id : null;
@@ -168,9 +168,9 @@ export default function BuyerNavbar({
     {
       id: 'logistics',
       label: language === 'ta' ? 'வாகனம் பதிவு' : 'Book Vehicle',
-      path: '/book-vehicle',
+      path: '/buyer/book-vehicle',
       icon: Truck,
-      matchPatterns: ['/book-vehicle', '/farmer/logistics']
+      matchPatterns: ['/buyer/book-vehicle', '/book-vehicle', '/farmer/logistics']
     },
     {
       id: 'profile',

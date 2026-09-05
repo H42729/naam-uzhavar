@@ -7,6 +7,7 @@
 import React from 'react';
 import LogisticsTopNav from './LogisticsTopNav';
 import DriverMobileNav from './DriverMobileNav';
+import DriverFloatingBuyerRequests from './DriverFloatingBuyerRequests';
 import '../../styles/driver-route.css';
 
 export default function DriverLayout({
@@ -17,7 +18,7 @@ export default function DriverLayout({
   onToggleOnline
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans relative">
       {/* 1. Sticky Two-Tier Horizontal Top Navigation */}
       <LogisticsTopNav
         activeDeliveryId={activeDeliveryId}
@@ -30,7 +31,10 @@ export default function DriverLayout({
         {children}
       </main>
 
-      {/* 3. Responsive 1-Thumb Mobile Bottom Navigation (< lg) */}
+      {/* 3. Floating Buyer Requests Shortcut (Bottom-Right) */}
+      <DriverFloatingBuyerRequests />
+
+      {/* 4. Responsive 1-Thumb Mobile Bottom Navigation (< lg) */}
       <DriverMobileNav />
     </div>
   );

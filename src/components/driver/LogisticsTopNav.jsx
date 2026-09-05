@@ -247,28 +247,28 @@ export default function LogisticsTopNav({
               {/* Vertical Hairline Divider */}
               <div className="h-7 sm:h-8 w-px bg-slate-200 mx-0.5 sm:mx-2 hidden sm:block flex-shrink-0" aria-hidden="true" />
 
-              {/* Driver Profile Capsule: Soft cream background with amber avatar border matching template */}
+              {/* Driver Profile Capsule: Compact, sleek soft cream background with amber avatar border */}
               <Link
                 to="/driver/profile"
                 onClick={() => setClickedTabId('profile')}
-                className="bg-[#FFFDF5] border border-[#FDE68A] rounded-2xl px-2 py-1 sm:px-3.5 sm:py-1.5 shadow-2xs flex items-center gap-2 sm:gap-2.5 no-underline hover:bg-amber-50/80 transition-colors min-w-0 cursor-pointer text-inherit"
+                className="bg-[#FFFDF5] border border-[#FDE68A] rounded-xl sm:rounded-2xl px-2 py-0.5 sm:px-2.5 sm:py-1 shadow-2xs flex items-center gap-1.5 sm:gap-2 no-underline hover:bg-amber-50/80 transition-all min-w-0 cursor-pointer text-inherit"
                 title={language === 'ta' ? 'ஓட்டுநர் சுயவிவரத்தைக் காண்க' : 'View Driver Profile'}
               >
                 <img
                   src={driverAvatar}
                   alt={displayDriverName}
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-amber-400 object-cover flex-shrink-0"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-[1.5px] border-amber-400 object-cover flex-shrink-0 shadow-2xs"
                 />
                 <div className="flex flex-col text-left leading-tight justify-center min-w-0">
-                  <span className="font-bold text-slate-900 text-xs sm:text-base leading-tight block truncate max-w-[100px] xs:max-w-[130px] sm:max-w-[200px]">
+                  <span className="font-bold text-slate-900 text-[11px] sm:text-[13px] leading-snug block truncate max-w-[95px] xs:max-w-[120px] sm:max-w-[175px]">
                     {displayDriverName}
                   </span>
-                  <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs mt-0.5 min-w-0">
-                    <span className="text-[#D97706] font-semibold truncate block max-w-[95px] xs:max-w-[125px] sm:max-w-none">
+                  <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[11px] mt-0.5 min-w-0">
+                    <span className="text-[#D97706] font-semibold truncate block max-w-[85px] xs:max-w-[115px] sm:max-w-none">
                       ✔ {language === 'ta' ? 'சரிபார்க்கப்பட்ட ஓட்டுநர்' : 'Verified Driver'}
                     </span>
                     <span className="text-slate-400 hidden lg:inline">•</span>
-                    <span className="text-slate-500 text-xs font-medium hidden lg:inline">
+                    <span className="text-slate-500 text-[10px] font-medium hidden lg:inline">
                       📍 {language === 'ta' ? 'திண்டுக்கல் மையம்' : 'Dindigul Hub'}
                     </span>
                   </div>

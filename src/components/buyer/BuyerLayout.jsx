@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useBuyer } from '../../context/BuyerContext';
 import BuyerNavbar from '../BuyerNavbar';
 import BuyerMobileNav from './BuyerMobileNav';
+import BuyerFloatingActions from './BuyerFloatingActions';
 import '../../styles/buyer-dashboard.css';
 
 export default function BuyerLayout({ children }) {
@@ -18,7 +19,7 @@ export default function BuyerLayout({ children }) {
 
   return (
     <div
-      className="flex flex-col min-h-screen w-full bg-slate-50 text-slate-900"
+      className="flex flex-col min-h-screen w-full bg-slate-50 text-slate-900 relative"
       style={{
         minHeight: '100vh',
         width: '100%',
@@ -59,7 +60,10 @@ export default function BuyerLayout({ children }) {
         {children}
       </main>
 
-      {/* 3. MOBILE BOTTOM NAVIGATION */}
+      {/* 3. FLOATING ACTION BUTTONS (Book Vehicle & Profile, stacked one by one in right down) */}
+      <BuyerFloatingActions />
+
+      {/* 4. MOBILE BOTTOM NAVIGATION */}
       <BuyerMobileNav />
     </div>
   );

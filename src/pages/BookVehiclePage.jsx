@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import BuyerLayout from '../components/buyer/BuyerLayout';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -173,25 +172,25 @@ export default function BookVehiclePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-      {/* 1. Consistent Platform Navigation Bar */}
-      <Navbar activeTab="book-vehicle" />
-
-      {/* 2. Main Content Body */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+    <BuyerLayout>
+      <div className="w-full">
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
-              Nearby Transport Vehicles
+              {language === 'ta' ? 'அருகிலுள்ள சரக்கு வாகனங்கள்' : 'Nearby Transport Vehicles'}
             </h1>
             <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-              <span>{filteredVehicles.length} Vehicles Active in Cluster</span>
+              <span>
+                {filteredVehicles.length} {language === 'ta' ? 'செயலில் உள்ள வாகனங்கள்' : 'Vehicles Active in Cluster'}
+              </span>
             </span>
           </div>
           <p className="text-sm sm:text-base text-slate-600 max-w-2xl">
-            Connect directly with local agricultural drivers for farmgate pickups. Real-time rates, verified drivers, and transparent in-card tracking.
+            {language === 'ta'
+              ? 'விவசாயிகளிடமிருந்து வாங்கிய விளைபொருட்களை ஏற்றிச் செல்ல உள்ளூர் சரக்கு வாகனங்களை நேரடியாக பதிவு செய்யுங்கள்.'
+              : 'Connect directly with local agricultural drivers for farmgate pickups. Real-time rates, verified drivers, and transparent in-card tracking.'}
           </p>
         </div>
 
@@ -435,12 +434,9 @@ export default function BookVehiclePage() {
                 </div>
               </div>
             );
-          })}
-        </div>
-      </main>
-
-      {/* 3. Footer */}
-      <Footer />
+        })}
+      </div>
     </div>
+  </BuyerLayout>
   );
 }

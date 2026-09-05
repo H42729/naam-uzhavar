@@ -15,6 +15,81 @@ import {
   User
 } from 'lucide-react';
 
+// Subcomponent to measure text and smoothly scroll long Tamil words without truncation
+function DriverNavLabel({ label, to, isActive, language }) {
+  const containerRef = React.useRef(null);
+  const textRef = React.useRef(null);
+  const isKnownLong = label === 'சுயவிவரம்' || label.length > 8;
+  const [shouldScroll, setShouldScroll] = React.useState(isKnownLong);
+  const [scrollDistance, setScrollDistance] = React.useState(isKnownLong ? 20 : 0);
+
+  React.useLayoutEffect(() => {
+    const measure = () => {
+      if (textRef.current && containerRef.current) {
+        const textWidth = textRef.current.scrollWidth;
+        const containerWidth = containerRef.current.clientWidth;
+        if (textWidth > containerWidth + 2) {
+          setShouldScroll(true);
+          setScrollDistance(Math.ceil(textWidth - containerWidth + 6));
+        } else {
+          setShouldScroll(false);
+          setScrollDistance(0);
+        }
+      }
+    };
+
+    measure();
+    const timer = setTimeout(measure, 40);
+    window.addEventListener('resize', measure);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', measure);
+    };
+  }, [label, language]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="drv-nav-label-container mt-0.5"
+      style={{
+        overflow: 'hidden',
+        position: 'relative',
+        width: '100%',
+        maxWidth: '72px',
+        minHeight: '16px'
+      }}
+    >
+      <div
+        key={`anim-${to}-${language}`}
+        className="drv-lang-shift w-full flex items-center"
+        style={{
+          justifyContent: shouldScroll ? 'flex-start' : 'center',
+          width: '100%'
+        }}
+      >
+        <span
+          ref={textRef}
+          className={`text-[10px] sm:text-xs leading-tight whitespace-nowrap inline-block ${
+            isActive ? 'text-[#2563EB] font-bold' : 'text-slate-500 font-medium'
+          } ${shouldScroll ? 'drv-marquee-scroll' : ''}`}
+          style={
+            shouldScroll
+              ? {
+                  '--scroll-dist': `-${scrollDistance}px`,
+                  paddingLeft: '1px',
+                  paddingRight: '1px'
+                }
+              : undefined
+          }
+          title={label}
+        >
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function DriverMobileNav() {
   const { language } = useLanguage();
   const location = useLocation();
@@ -88,10 +163,10 @@ export default function DriverMobileNav() {
             >
               {/* Active top indicator pill */}
               {isActive && (
-                <span className="absolute top-0.5 w-6 h-0.5 bg-[#2563EB] rounded-full" />
+                <span className="absolute top-0.5 w-6 h-0.5 bg-[#2563EB] rounded-full transition-all duration-300" />
               )}
-              <div className="relative inline-flex items-center justify-center mt-0.5">
-                <Icon className={`w-5 h-5 ${isActive ? 'text-[#2563EB]' : 'text-slate-500'}`} />
+              <div className="relative inline-flex items-center justify-center mt-0.5 transition-transform duration-200">
+                <Icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? 'text-[#2563EB]' : 'text-slate-500'}`} />
                 {item.badge && (
                   <span
                     className={`absolute -top-1.5 -right-2.5 text-[10px] font-black rounded-full px-1.5 py-0.2 leading-tight shadow-xs ${item.badgeColor}`}
@@ -100,9 +175,13 @@ export default function DriverMobileNav() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] sm:text-xs mt-0.5 leading-none block font-medium truncate max-w-[64px]">
-                {item.label}
-              </span>
+              {/* Smooth scroll animation label ensuring all Tamil letters are visible */}
+              <DriverNavLabel
+                label={item.label}
+                to={item.to}
+                isActive={isActive}
+                language={language}
+              />
             </NavLink>
           );
         })}
