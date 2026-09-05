@@ -68,7 +68,7 @@ export default function BuyerDeliveriesPage() {
           <div className="card-body p-4">
             <div className="row g-4 align-items-center">
               {/* Driver & Vehicle Details */}
-              <div className="col-12 col-md-5 border-end">
+              <div className="col-12 col-md-5 border-bottom border-md-bottom-0 border-md-end pb-4 pb-md-0 mb-3 mb-md-0">
                 <div className="d-flex align-items-center gap-3 mb-3">
                   <img
                     src={latestBooking.driver.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'}

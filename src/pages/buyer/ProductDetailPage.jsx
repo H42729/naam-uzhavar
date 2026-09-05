@@ -198,7 +198,7 @@ export default function ProductDetailPage() {
               LEFT: PRODUCT IMAGE GALLERY
               =================================================================== */}
           <div className="col-12 col-md-6">
-            <div className="bg-white rounded-4 border shadow-xs p-3 sticky-top" style={{ top: '80px' }}>
+            <div className="bg-white rounded-4 border shadow-xs p-3 sticky-md-top" style={{ top: '80px' }}>
               {/* Large Image Preview */}
               <div className="rounded-3 overflow-hidden position-relative mb-2.5" style={{ height: '320px', backgroundColor: '#f8fafc' }}>
                 <img

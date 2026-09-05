@@ -616,24 +616,39 @@
 
 /* ==========================================================================
    Universal Production Sticky Sub-Header Component
+   On mobile (< 768px), subheaders scroll naturally to maximize screen area.
+   On desktop (>= 768px), they stick cleanly below the 74px navbar.
    ========================================================================== */
 .bd-sticky-sub-header,
 .sticky-sub-header,
-.bd-browse-sticky-toolbar {
-  position: sticky !important;
-  top: 0 !important;
+.bd-browse-sticky-toolbar,
+.bd-filter-tabs-container {
+  position: relative !important;
+  top: auto !important;
   z-index: 20 !important;
-  background-color: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border-bottom: 1px solid var(--bd-border, #e2e8f0) !important;
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid var(--bd-border, #e2e8f0) !important;
+  border-radius: 1rem !important;
   box-shadow: 0 4px 14px -3px rgba(15, 23, 42, 0.05) !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@media (min-width: 768px) {
+  .bd-sticky-sub-header,
+  .sticky-sub-header,
+  .bd-browse-sticky-toolbar,
+  .bd-filter-tabs-container {
+    position: sticky !important;
+    top: 74px !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .dark .bd-sticky-sub-header,
-  .dark .sticky-sub-header {
+  .dark .sticky-sub-header,
+  .dark .bd-filter-tabs-container {
     background-color: rgba(15, 23, 42, 0.88) !important;
     border-bottom-color: #1e293b !important;
   }
@@ -1317,7 +1332,6 @@
    Mobile & Tablet Responsive Refinements
    ========================================================================== */
 @media (max-width: 991.98px) {
-  .sticky-top,
   .bd-navbar {
     position: sticky !important;
     top: 0 !important;
@@ -2572,6 +2586,412 @@ body, p, span, h1, h2, h3, h4, h5, h6 {
 
 .space-y-2 > :not([hidden]) ~ :not([hidden]) {
   margin-top: 0.5rem !important;
+}
+
+/* ==========================================================================
+   Buyer Module Core Responsive Layout & Utilities
+   ========================================================================== */
+.bd-content-body {
+  padding: 24px 32px;
+  flex-grow: 1;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 991.98px) {
+  .bd-content-body {
+    padding: 16px 14px 6rem 14px !important;
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+}
+
+@media (max-width: 576px) {
+  .bd-content-body {
+    padding: 12px 10px 6rem 10px !important;
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+}
+
+@media (max-width: 380px) {
+  .bd-content-body {
+    padding: 10px 8px 6rem 8px !important;
+  }
+}
+
+/* Container & Spacing Utilities */
+.max-w-7xl { max-width: 80rem !important; }
+.max-w-5xl { max-width: 64rem !important; }
+.max-w-4xl { max-width: 56rem !important; }
+.max-w-3xl { max-width: 48rem !important; }
+.max-w-lg { max-width: 32rem !important; }
+.max-w-md { max-width: 28rem !important; }
+.mx-auto { margin-left: auto !important; margin-right: auto !important; }
+.px-3 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+.py-4 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+.py-5 { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+.py-6 { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+.pb-24 { padding-bottom: 6rem !important; }
+.pb-36 { padding-bottom: 9rem !important; }
+
+@media (min-width: 1024px) {
+  .lg\:px-8 { padding-left: 2rem !important; padding-right: 2rem !important; }
+  .lg\:py-8 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+  .lg\:pb-8 { padding-bottom: 2rem !important; }
+}
+
+/* Grid & Columns Utilities */
+.grid { display: grid !important; }
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+
+@media (min-width: 640px) {
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}
+
+@media (min-width: 1024px) {
+  .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .lg\:col-span-1 { grid-column: span 1 / span 1 !important; }
+  .lg\:col-span-2 { grid-column: span 2 / span 2 !important; }
+}
+
+/* Text Truncation */
+.truncate {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Flex & Visibility */
+.flex-wrap { flex-wrap: wrap !important; }
+.justify-around { justify-content: space-around !important; }
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+
+/* ==========================================================================
+   Verified Farmer Contact & WhatsApp Action Layout
+   - Mobile view: Phone number remains on top in place, WhatsApp button moves down below it.
+   - Tablet & Desktop view (>= 768px): Side-by-side row layout.
+   ========================================================================== */
+.bd-farmer-contact-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  padding-top: 8px !important;
+  width: 100% !important;
+}
+
+.bd-farmer-contact-actions .bd-phone-btn {
+  width: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+.bd-farmer-contact-actions .bd-whatsapp-btn {
+  width: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+@media (min-width: 768px) {
+  .bd-farmer-contact-actions {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+  .bd-farmer-contact-actions .bd-phone-btn {
+    flex: 1 1 0% !important;
+    width: auto !important;
+  }
+  .bd-farmer-contact-actions .bd-whatsapp-btn {
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* ==========================================================================
+   Responsive Filter Tabs & Separated Search Bar for Buyer Module
+   - Mobile View (< 768px):
+     * Search bar is separated into its own distinct card
+     * Filter tabs are organized into a 2-column grid (2 in one row, 2 in next row, 5th tab spanning)
+   - Tablet & Desktop View (>= 768px):
+     * Original single unified horizontal bar (tabs on left in 1 row, search on right)
+   ========================================================================== */
+
+/* Base Tab Pill styles */
+.bd-tab-pill {
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.bd-tab-pill.active,
+.bd-tab-pill-active {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2) !important;
+}
+
+.bd-tab-pill.active .bd-tab-badge,
+.bd-tab-pill-active .bd-tab-badge {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+
+.bd-tab-pill-inactive {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.bd-tab-pill-inactive:hover {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.bd-tab-pill-inactive .bd-tab-badge {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+/* Mobile-Only (< 768px) */
+@media (max-width: 767.98px) {
+  .bd-filter-tabs-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Search Bar moved to TOP (order: -1) */
+  .bd-search-wrapper {
+    order: -1 !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 8px 12px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 2px !important;
+  }
+
+  .bd-search-wrapper .bd-search-input {
+    width: 100% !important;
+    height: 40px !important;
+    border-radius: 9999px !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #f8fafc !important;
+    padding-left: 36px !important;
+    padding-right: 14px !important;
+    font-size: 0.875rem !important;
+    box-sizing: border-box !important;
+    color: #1e293b !important;
+  }
+
+  .bd-search-wrapper .bd-search-input:focus {
+    background-color: #ffffff !important;
+    border-color: #3b82f6 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+  }
+
+  .bd-search-wrapper .bd-search-icon {
+    position: absolute !important;
+    left: 24px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #94a3b8 !important;
+    font-size: 0.95rem !important;
+    pointer-events: none !important;
+  }
+
+  /* Status Tabs Card: Below the search bar, 1 in each row (stacked vertically) */
+  .bd-tabs-scroll-area {
+    order: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 12px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    overflow-x: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  .bd-tabs-scroll-area .bd-tab-pill {
+    width: 100% !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    text-align: left !important;
+    padding: 10px 14px !important;
+    border-radius: 12px !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+    line-height: 1.25 !important;
+  }
+
+  .bd-tabs-scroll-area .bd-tab-pill > span:first-child {
+    text-align: left !important;
+    font-size: 0.875rem !important;
+  }
+
+  .bd-tabs-scroll-area .bd-tab-pill .bd-tab-badge {
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    padding: 0 8px !important;
+    border-radius: 9999px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+  }
+
+  .bd-tabs-scroll-area .bd-tab-full-mobile,
+  .bd-tabs-scroll-area > button:nth-child(5) {
+    width: 100% !important;
+  }
+
+  /* BuyerRequestsPage 1 tab per row on mobile */
+  .bd-requests-tab-nav {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 12px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    width: 100% !important;
+  }
+
+  .bd-requests-tab-nav .bd-tab-btn {
+    width: 100% !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    text-align: left !important;
+    padding: 10px 14px !important;
+    font-size: 0.875rem !important;
+    border-radius: 12px !important;
+  }
+}
+
+/* Tablet & Desktop View (>= 768px) - Absolutely UNCHANGED */
+@media (min-width: 768px) {
+  .bd-filter-tabs-container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    width: 100% !important;
+    padding: 16px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .bd-tabs-scroll-area {
+    order: 1 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+    overflow-x: auto !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .bd-tabs-scroll-area .bd-tab-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 8px 16px !important;
+    border-radius: 9999px !important;
+    font-size: 0.875rem !important;
+    white-space: nowrap !important;
+    width: auto !important;
+  }
+
+  .bd-search-wrapper {
+    order: 2 !important;
+    position: relative !important;
+    flex: 1 1 0% !important;
+    max-width: 26rem !important;
+    width: auto !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    margin-bottom: 0 !important;
+  }
+
+  .bd-search-wrapper .bd-search-input {
+    width: 100% !important;
+    height: 40px !important;
+    border-radius: 9999px !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #ffffff !important;
+    padding-left: 36px !important;
+    padding-right: 16px !important;
+    font-size: 0.875rem !important;
+  }
+
+  .bd-search-wrapper .bd-search-icon {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #94a3b8 !important;
+    pointer-events: none !important;
+  }
 }
 
 

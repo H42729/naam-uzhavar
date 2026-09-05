@@ -9,8 +9,7 @@
  * - Desktop Tier 2 hidden on mobile (< lg), with dedicated mobile bottom navigation.
  */
 
-import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBuyer } from '../context/BuyerContext';
@@ -42,7 +41,26 @@ export default function BuyerNavbar({
   } = useBuyer();
   const { t, language, setLanguage } = useLanguage();
 
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  // Track explicitly clicked tab (Dashboard is unselected by default on initial page load)
+  const [clickedTabId, setClickedTabId] = useState(() => {
+    try {
+      const pathname = window.location.pathname;
+      if (pathname === '/buyer/dashboard' || pathname === '/buyer' || pathname === '/consumer') {
+        return null; // Not selected by default on dashboard load
+      }
+      const matched = [
+        { id: 'marketplace', patterns: ['/buyer/browse', '/buyer/marketplace', '/marketplace', '/buyer/products'] },
+        { id: 'requests', patterns: ['/buyer/requests', '/buyer/request-status'] },
+        { id: 'orders', patterns: ['/buyer/orders', '/buyer/deliveries', '/my-orders'] },
+        { id: 'requirement', patterns: ['/buyer/requirement', '/buyer/requirements', '/buyer/aggregate-details', '/buyer/matched-supply', '/bulk-requirement'] },
+        { id: 'logistics', patterns: ['/book-vehicle', '/farmer/logistics'] },
+        { id: 'profile', patterns: ['/buyer/profile'] }
+      ].find(item => item.patterns.some(p => pathname === p || pathname.startsWith(`${p}/`)));
+      return matched ? matched.id : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Online / Offline status with localStorage persistence
   const [isOnline, setIsOnline] = useState(() => {
@@ -77,15 +95,32 @@ export default function BuyerNavbar({
     }
   };
 
+  // Read stored buyer profile from localStorage if user updated it
+  const [storedBuyerProfile, setStoredBuyerProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_buyer_profile_data');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_buyer_profile_data');
+      if (saved) setStoredBuyerProfile(JSON.parse(saved));
+    } catch {}
+  }, [location.pathname]);
+
   // Buyer identity details
+  const effectiveBuyerName = storedBuyerProfile?.name || user?.name || buyerName || 'FreshMart Procurement';
   const displayBuyerName =
     language === 'ta'
-      ? 'ஃப்ரெஷ்மார்ட் கொள்முதல் (ஆர். குமார்)'
-      : user?.name
-      ? `${user.name} (R. Kumar)`
-      : 'FreshMart Procurement (R. Kumar)';
+      ? (storedBuyerProfile?.tamilName || 'ஃப்ரெஷ்மார்ட் கொள்முதல் (ஆர். குமார்)')
+      : `${effectiveBuyerName} (${storedBuyerProfile?.contactPerson || 'R. Kumar'})`;
 
   const buyerAvatar =
+    storedBuyerProfile?.avatar ||
     user?.avatar ||
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80';
 
@@ -103,8 +138,6 @@ export default function BuyerNavbar({
       label: language === 'ta' ? 'சந்தை' : 'Marketplace',
       path: '/buyer/browse',
       icon: ShoppingBag,
-      badgeText: language === 'ta' ? `${products?.length || 9} பட்டியல்` : `${products?.length || 9} Listed`,
-      badgeInactiveClass: 'bg-[#E2E8F0] text-[#475569] font-bold',
       matchPatterns: ['/buyer/browse', '/buyer/marketplace', '/marketplace', '/buyer/products']
     },
     {
@@ -112,8 +145,8 @@ export default function BuyerNavbar({
       label: language === 'ta' ? 'என் கோரிக்கைகள்' : 'My Requests',
       path: '/buyer/requests',
       icon: Inbox,
-      badgeText: language === 'ta' ? `${pendingRequestsCount || 3} புதியது` : `${pendingRequestsCount || 3} New`,
-      badgeInactiveClass: 'bg-[#FEF3C7] text-[#92400E] font-bold',
+      badgeText: (pendingRequestsCount || 0) > 0 ? `${pendingRequestsCount}` : null,
+      badgeInactiveClass: 'bg-amber-100 text-amber-800 font-bold',
       matchPatterns: ['/buyer/requests', '/buyer/request-status']
     },
     {
@@ -121,8 +154,8 @@ export default function BuyerNavbar({
       label: language === 'ta' ? 'என் ஆர்டர்கள்' : 'My Orders',
       path: '/buyer/orders',
       icon: PackageCheck,
-      badgeText: language === 'ta' ? `${activeOrdersCount || 6} நடப்பு` : `${activeOrdersCount || 6} Active`,
-      badgeInactiveClass: 'bg-[#D1FAE5] text-[#065F46] font-bold',
+      badgeText: (activeOrdersCount || 0) > 0 ? `${activeOrdersCount}` : null,
+      badgeInactiveClass: 'bg-emerald-100 text-emerald-800 font-bold',
       matchPatterns: ['/buyer/orders', '/buyer/deliveries', '/my-orders']
     },
     {
@@ -130,8 +163,6 @@ export default function BuyerNavbar({
       label: language === 'ta' ? 'மொத்த தேவைகள்' : 'Bulk Requirement',
       path: '/buyer/requirement',
       icon: Boxes,
-      badgeText: language === 'ta' ? `${activeRequirementsCount || 7} தேவை` : `${activeRequirementsCount || 7} Listed`,
-      badgeInactiveClass: 'bg-[#EEF2FF] text-[#4F46E5] font-semibold',
       matchPatterns: ['/buyer/requirement', '/buyer/requirements', '/buyer/aggregate-details', '/buyer/matched-supply', '/bulk-requirement']
     },
     {
@@ -139,22 +170,43 @@ export default function BuyerNavbar({
       label: language === 'ta' ? 'வாகனம் பதிவு' : 'Book Vehicle',
       path: '/book-vehicle',
       icon: Truck,
-      badgeText: language === 'ta' ? '4 உள்ளது' : '[ 4 ]',
-      badgeInactiveClass: 'bg-slate-100 text-slate-700 font-medium',
       matchPatterns: ['/book-vehicle', '/farmer/logistics']
     },
     {
       id: 'profile',
       label: language === 'ta' ? 'சுயவிவரம்' : 'Profile',
+      path: '/buyer/profile',
       icon: User,
-      isModalTrigger: true
+      matchPatterns: ['/buyer/profile']
     }
   ];
 
-  // Helper to determine active state (Dashboard is not selected by default; color applies on hover)
+  // Sync with location changes when navigating
+  useEffect(() => {
+    const pathname = location.pathname;
+    if (pathname !== '/buyer/dashboard' && pathname !== '/buyer' && pathname !== '/consumer') {
+      const matched = navTabs.find(tab => 
+        !tab.isModalTrigger && 
+        tab.id !== 'dashboard' && 
+        tab.matchPatterns?.some(p => pathname === p || pathname.startsWith(`${p}/`))
+      );
+      if (matched) {
+        setClickedTabId(matched.id);
+      }
+    }
+  }, [location.pathname]);
+
+  // Helper to determine active state:
+  // - Dashboard is active and white ONLY when user clicked it (clickedTabId === 'dashboard')
+  // - Other tabs are active when explicitly clicked or their route matches
   const isTabActive = (tab) => {
     if (tab.isModalTrigger) return false;
-    if (tab.id === 'dashboard') return false; // Remove default dashboard selection as requested
+    if (tab.id === 'dashboard') {
+      return clickedTabId === 'dashboard';
+    }
+    if (clickedTabId) {
+      return clickedTabId === tab.id;
+    }
     const pathname = location.pathname;
     return tab.matchPatterns.some((pattern) => {
       return pathname === pattern || pathname.startsWith(`${pattern}/`);
@@ -172,10 +224,11 @@ export default function BuyerNavbar({
           <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-2.5 max-w-7xl mx-auto gap-2 sm:gap-4">
             
             {/* Left Section: Brand Logo, Divider, Buyer Profile Capsule, Buyer ID tag */}
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               {/* Brand Logo */}
               <Link
                 to="/buyer/dashboard"
+                onClick={() => setClickedTabId('dashboard')}
                 className="flex items-center gap-1.5 sm:gap-2 no-underline group flex-shrink-0"
                 title="Naam Uzhavar Buyer Portal"
               >
@@ -190,30 +243,24 @@ export default function BuyerNavbar({
               <div className="h-7 sm:h-8 w-px bg-slate-200 mx-0.5 sm:mx-2 hidden sm:block flex-shrink-0" aria-hidden="true" />
 
               {/* Buyer Profile Capsule: Soft cream background with amber avatar border */}
-              <div
-                onClick={() => setShowProfileModal(true)}
-                className="bg-[#FFFDF5] border border-[#FDE68A] rounded-2xl px-2.5 py-1 sm:px-3.5 sm:py-1.5 shadow-2xs flex items-center gap-2 sm:gap-2.5 no-underline hover:bg-amber-50/80 transition-colors flex-shrink-0 cursor-pointer"
-                title={t('viewProfile', 'View Buyer Profile')}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    setShowProfileModal(true);
-                  }
-                }}
+              <Link
+                to="/buyer/profile"
+                onClick={() => setClickedTabId('profile')}
+                className="bg-[#FFFDF5] border border-[#FDE68A] rounded-2xl px-2 py-1 sm:px-3.5 sm:py-1.5 shadow-2xs flex items-center gap-2 sm:gap-2.5 no-underline hover:bg-amber-50/80 transition-colors min-w-0 cursor-pointer text-inherit"
+                title={t('viewBuyerProfile', 'View Buyer Profile')}
               >
                 <img
                   src={buyerAvatar}
                   alt={displayBuyerName}
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-amber-400 object-cover flex-shrink-0"
                 />
-                <div className="flex flex-col text-left leading-tight justify-center">
-                  <span className="font-bold text-slate-900 text-xs sm:text-base leading-tight block truncate max-w-[130px] sm:max-w-[200px]">
+                <div className="flex flex-col text-left leading-tight justify-center min-w-0">
+                  <span className="font-bold text-slate-900 text-xs sm:text-base leading-tight block truncate max-w-[100px] xs:max-w-[130px] sm:max-w-[200px]">
                     {displayBuyerName}
                   </span>
-                  <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mt-0.5 flex-wrap">
-                    <span className="text-[#D97706] font-semibold">
-                      ✔ {language === 'ta' ? 'சரிபார்க்கப்பட்ட வாங்குபவர்' : 'Verified Buyer'}
+                  <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs mt-0.5 min-w-0">
+                    <span className="text-[#D97706] font-semibold truncate block max-w-[95px] xs:max-w-[125px] sm:max-w-none">
+                      ✔ {language === 'ta' ? 'சரிபார்க்கப்பட்டவர்' : 'Verified Buyer'}
                     </span>
                     <span className="text-slate-400 hidden lg:inline">•</span>
                     <span className="text-slate-500 text-xs font-medium hidden lg:inline">
@@ -221,14 +268,7 @@ export default function BuyerNavbar({
                     </span>
                   </div>
                 </div>
-              </div>
-
-              {/* Buyer Business Info Capsule (Desktop) */}
-              <div className="hidden xl:flex items-center gap-2 bg-[#FFFDF5] border border-[#FDE68A] text-slate-700 text-xs px-3.5 py-1.5 rounded-xl font-medium shadow-2xs flex-shrink-0">
-                <span className="font-semibold text-amber-900">🏢 Buyer ID: BY-108-TN</span>
-                <span className="text-amber-300">|</span>
-                <span>Wholesale Hub: Dindigul Central</span>
-              </div>
+              </Link>
             </div>
 
             {/* Right Section: Desktop Utility Controls & Logout Button */}
@@ -372,27 +412,13 @@ export default function BuyerNavbar({
           <nav className="px-4 sm:px-6 py-2 flex items-center gap-2 max-w-7xl mx-auto overflow-x-auto no-scrollbar scroll-smooth">
             {navTabs.map((tab) => {
               const IconComponent = tab.icon;
-
-              if (tab.isModalTrigger) {
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setShowProfileModal(true)}
-                    className="group whitespace-nowrap border-0 bg-transparent cursor-pointer flex items-center gap-2 text-slate-600 hover:bg-[#2563EB] hover:text-white hover:font-semibold hover:shadow-xs rounded-full px-4 py-2 font-medium transition-all duration-200"
-                  >
-                    <IconComponent className="w-4 h-4 flex-shrink-0 text-slate-500 group-hover:text-white transition-colors" />
-                    <span className="text-xs sm:text-sm">{tab.label}</span>
-                  </button>
-                );
-              }
-
               const active = isTabActive(tab);
 
               return (
                 <NavLink
                   key={tab.id}
                   to={tab.path}
+                  onClick={() => setClickedTabId(tab.id)}
                   className={`group whitespace-nowrap no-underline cursor-pointer flex items-center gap-2 transition-all duration-200 ${
                     active
                       ? 'bg-[#2563EB] text-white font-semibold rounded-full px-5 py-2 shadow-xs'
@@ -403,6 +429,7 @@ export default function BuyerNavbar({
                     className={`w-4 h-4 flex-shrink-0 transition-colors ${
                       active ? 'text-white' : 'text-slate-500 group-hover:text-white'
                     }`}
+                    style={active ? { color: '#ffffff' } : {}}
                   />
                   <span className="text-xs sm:text-sm">{tab.label}</span>
 
@@ -424,86 +451,6 @@ export default function BuyerNavbar({
           </nav>
         </div>
       </header>
-
-      {/* =====================================================================
-          PROFILE INSPECTION MODAL (PORTAL)
-          ===================================================================== */}
-      {showProfileModal &&
-        createPortal(
-          <div
-            className="modal fade show d-block"
-            tabIndex="-1"
-            style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)', zIndex: 1200 }}
-          >
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content rounded-4 border-0 shadow-2xl overflow-hidden farm-animate-fade">
-                <div className="modal-header bg-light border-bottom p-3">
-                  <h5 className="modal-title fs-6 fw-bold text-dark d-flex align-items-center gap-2 mb-0">
-                    <Building2 className="w-5 h-5 text-primary text-[#2563EB]" />
-                    <span>{t('profile')}</span>
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setShowProfileModal(false)}
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div className="modal-body p-4 text-center">
-                  <div className="relative inline-block mb-3">
-                    <img
-                      src={buyerAvatar}
-                      alt={displayBuyerName}
-                      className="w-16 h-16 rounded-full border-3 border-[#2563EB] object-cover shadow-sm mx-auto"
-                    />
-                    <span
-                      className="absolute bottom-0 right-0 bg-[#059669] text-white rounded-full p-1 flex items-center justify-center shadow-xs"
-                      title="Verified Wholesale Buyer"
-                    >
-                      ✔
-                    </span>
-                  </div>
-                  <h4 className="fw-bold text-dark fs-5 mb-1">{displayBuyerName}</h4>
-                  <span className="badge bg-[#2563EB] text-white rounded-pill px-3 py-1 mb-3">
-                    Institutional Wholesale Mandi Trader
-                  </span>
-
-                  <div className="p-3 bg-light rounded-3 text-start small mb-3">
-                    <div className="d-flex justify-content-between mb-1.5">
-                      <span className="text-muted">Procurement Hub:</span>
-                      <strong className="text-dark">Dindigul Central Hub, TN</strong>
-                    </div>
-                    <div className="d-flex justify-content-between mb-1.5">
-                      <span className="text-muted">GSTIN / Udyam:</span>
-                      <strong className="text-dark font-monospace">33AAACH1234F1Z8</strong>
-                    </div>
-                    <div className="d-flex justify-content-between mb-1.5">
-                      <span className="text-muted">FSSAI License:</span>
-                      <strong className="text-dark font-monospace">12423005000189</strong>
-                    </div>
-                    <div className="d-flex justify-content-between">
-                      <span className="text-muted">Verification Status:</span>
-                      <strong className="text-success">✔ FPO & Mandi Verified</strong>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="btn btn-outline-danger w-100 rounded-pill fw-bold py-2"
-                    onClick={() => {
-                      setShowProfileModal(false);
-                      handleLogoutClick();
-                    }}
-                  >
-                    <LogOut className="w-4 h-4 me-1.5 inline-block" />
-                    <span>{t('logout')}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
     </>
   );
 }

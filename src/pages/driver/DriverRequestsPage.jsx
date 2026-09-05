@@ -4,17 +4,38 @@
  * Shows available farm-to-depot delivery opportunities with payouts, distance, and 1-click acceptance.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DriverLayout from '../../components/driver/DriverLayout';
 import DriverRequestsCarousel from '../../components/driver/DriverRequestsCarousel';
-import { AVAILABLE_REQUESTS, INITIAL_DELIVERIES } from '../../data/driverData';
+import { AVAILABLE_REQUESTS, INITIAL_DELIVERIES, DRIVER_PROFILE } from '../../data/driverData';
+import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function DriverRequestsPage() {
   const [requests, setRequests] = useState(AVAILABLE_REQUESTS);
   const [filter, setFilter] = useState('ALL');
   const [acceptedId, setAcceptedId] = useState(null);
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const { user } = useAuth();
+
+  // Read driver profile for personal greeting
+  const [driverProfile, setDriverProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_driver_profile_data');
+      return saved ? JSON.parse(saved) : DRIVER_PROFILE;
+    } catch {
+      return DRIVER_PROFILE;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_driver_profile_data');
+      if (saved) setDriverProfile(JSON.parse(saved));
+    } catch {}
+  }, []);
 
   const handleAcceptRequest = (req) => {
     setAcceptedId(req.id);
@@ -93,19 +114,35 @@ export default function DriverRequestsPage() {
   return (
     <DriverLayout>
       <div className="w-100">
-        {/* Header Bar */}
-        <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4 pb-2 border-bottom">
-          <div>
-            <div className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: '0.05em' }}>
-              Dispatch Opportunities
+        {/* Welcome Greeting Banner */}
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-100/30 to-emerald-500/10 border border-amber-200/80 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
+          <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-3">
+            <div>
+              <div className="d-flex align-items-center gap-2 mb-1.5 flex-wrap">
+                <span className="badge bg-amber-100 text-amber-900 border border-amber-300/80 rounded-pill px-3 py-1 text-xs font-bold d-inline-flex align-items-center gap-1.5">
+                  <span>☀️</span> {language === 'ta' ? 'இயக்க மையம்' : 'Logistics Dispatch Terminal'}
+                </span>
+                <span className="text-muted small">
+                  • {new Date().toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+              <h1 className="fw-extrabold text-dark fs-3 fs-sm-2 mb-1">
+                {language === 'ta'
+                  ? `காலை வணக்கம், ${driverProfile?.tamilName || driverProfile?.name || 'ராஜ்குமார்'}!`
+                  : `Good Morning, ${driverProfile?.name || 'Raj Kumar'}!`}
+              </h1>
+              <p className="text-muted small mb-0">
+                {language === 'ta'
+                  ? 'இன்றைய விவசாயிகளிடமிருந்து புதிய டெலிவரி கோரிக்கைகள் மற்றும் சரக்குகள் தயாராக உள்ளன.'
+                  : 'Here are your dispatch opportunities and active farm produce consignments ready for pickup.'}
+              </p>
             </div>
-            <h1 className="fw-bold text-dark fs-3 mb-0">Delivery Requests</h1>
-          </div>
 
-          <div className="d-flex align-items-center gap-2">
-            <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold">
-              <i className="bi bi-broadcast me-1"></i> {requests.length} Available Nearby
-            </span>
+            <div className="d-flex align-items-center gap-2 flex-shrink-0">
+              <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold">
+                <i className="bi bi-broadcast me-1"></i> {requests.length} {language === 'ta' ? 'அருகிலுள்ள கோரிக்கைகள்' : 'Available Nearby'}
+              </span>
+            </div>
           </div>
         </div>
 

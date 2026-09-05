@@ -33,24 +33,25 @@ export default function BuyerLayout({ children }) {
         onLogout={handleLogout}
       />
 
-      {/* 2. FULL-WIDTH MAIN CONTENT BODY */}
+      {/* 2. FULL-WIDTH MAIN CONTENT BODY WITH RESPONSIVE CONTAINER PADDING */}
       <main
-        className="flex-1 w-full min-w-0 pb-24 lg:pb-8"
+        className="flex-1 w-full bd-content-body farm-animate-fade pb-24 lg:pb-8 min-w-0"
         style={{ flex: '1 1 0%', width: '100%', minWidth: 0 }}
       >
-        {/* Toast Notification Alert */}
+        {/* Toast Notification Alert (Positioned above mobile bottom nav) */}
         {toastMessage && (
-          <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 1150 }}>
-            <div className="toast show bg-dark text-white shadow-lg p-3 rounded-4 border border-secondary farm-animate-fade">
-              <div className="d-flex align-items-center gap-3">
-                <div
-                  className="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0"
-                  style={{ width: '32px', height: '32px' }}
-                >
-                  <i className="bi bi-check-lg fw-bold"></i>
-                </div>
-                <span className="fw-semibold small">{toastMessage}</span>
+          <div
+            className="fixed bottom-20 md:bottom-6 right-3 sm:right-6 pointer-events-auto"
+            style={{ zIndex: 1150 }}
+          >
+            <div className="bg-slate-900 text-white shadow-xl px-4 py-3 rounded-2xl border border-slate-700 farm-animate-fade flex items-center gap-3">
+              <div
+                className="bg-emerald-500 text-white rounded-full p-1.5 flex items-center justify-center flex-shrink-0"
+                style={{ width: '28px', height: '28px' }}
+              >
+                <i className="bi bi-check-lg fw-bold text-sm"></i>
               </div>
+              <span className="font-semibold text-xs sm:text-sm text-slate-100">{toastMessage}</span>
             </div>
           </div>
         )}

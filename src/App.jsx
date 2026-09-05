@@ -49,6 +49,7 @@ import BulkRequirementPage from './pages/buyer/BulkRequirementPage';
 import BookVehiclePage from './pages/BookVehiclePage';
 import BuyerDeliveriesPage from './pages/buyer/BuyerDeliveriesPage';
 import BuyerMessagesPage from './pages/buyer/BuyerMessagesPage';
+import BuyerProfilePage from './pages/buyer/BuyerProfilePage';
 import DriverRoutePage from './pages/driver/DriverRoutePage';
 import DriverRequestsPage from './pages/driver/DriverRequestsPage';
 import DriverMessagesPage from './pages/driver/DriverMessagesPage';
@@ -56,6 +57,7 @@ import DriverHistoryPage from './pages/driver/DriverHistoryPage';
 import DriverTripSummaryPage from './pages/driver/DriverTripSummaryPage';
 import DriverNotificationsPage from './pages/driver/DriverNotificationsPage';
 import DriverProfilePage from './pages/driver/DriverProfilePage';
+import DriverBuyerRequestsPage from './pages/driver/DriverBuyerRequestsPage';
 import { LanguageProvider } from './context/LanguageContext';
 
 export default function App() {
@@ -124,6 +126,7 @@ export default function App() {
                 <Route path="/buyer/messages" element={<BuyerMessagesPage />} />
                 <Route path="/buyer/orders" element={<BuyerOrdersPage />} />
                 <Route path="/buyer/deliveries" element={<BuyerDeliveriesPage />} />
+                <Route path="/buyer/profile" element={<BuyerProfilePage />} />
 
                 {/* Standalone Bulk Requirement & My Orders Routes */}
                 <Route path="/bulk-requirement/:productId" element={<BulkRequirementPage />} />
@@ -160,6 +163,8 @@ export default function App() {
                 <Route path="/driver/history" element={<DriverHistoryPage />} />
                 <Route path="/driver/trips" element={<DriverTripSummaryPage />} />
                 <Route path="/driver/summary" element={<DriverTripSummaryPage />} />
+                <Route path="/driver/buyer-requests" element={<DriverBuyerRequestsPage />} />
+                <Route path="/driver/buyer-request" element={<DriverBuyerRequestsPage />} />
                 <Route path="/driver/notifications" element={<Navigate to="/driver/requests" replace />} />
                 <Route path="/driver/profile" element={<DriverProfilePage />} />
 

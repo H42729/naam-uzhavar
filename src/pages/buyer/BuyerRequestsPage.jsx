@@ -177,19 +177,9 @@ export default function BuyerRequestsPage() {
         </div>
       </div>
 
-      {/* Filter Navigation Tabs (Sticky Header) */}
+      {/* Filter Navigation Tabs (Sub-Header) */}
       <div
-        className="bd-sticky-sub-header sticky top-0 z-20 d-flex gap-2 border-bottom py-2.5 px-3 rounded-4 mb-4 overflow-auto"
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 20,
-          backgroundColor: 'rgba(255, 255, 255, 0.88)',
-          backdropFilter: 'blur(14px)',
-          WebkitBackdropFilter: 'blur(14px)',
-          borderBottom: '1px solid #e2e8f0',
-          boxShadow: '0 4px 14px -3px rgba(15, 23, 42, 0.05)'
-        }}
+        className="bd-sticky-sub-header bd-requests-tab-nav d-flex gap-2 border-bottom py-2.5 px-3 rounded-4 mb-4 overflow-auto"
       >
         <button
           type="button"

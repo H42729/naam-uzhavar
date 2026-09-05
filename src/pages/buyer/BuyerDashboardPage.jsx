@@ -66,7 +66,7 @@ export default function BuyerDashboardPage() {
             1. WELCOME HEADER & SEARCH BAR (REFACTORED HERO BANNER)
             =================================================================== */}
         <div
-          className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 mb-4"
+          className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 mb-4"
           style={{
             backgroundColor: '#ffffff',
             borderRadius: '1rem',
@@ -84,9 +84,9 @@ export default function BuyerDashboardPage() {
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-snug">
               {t('welcomeBackBuyer')},{' '}
-              <span className="whitespace-nowrap">{user?.name || 'FreshMart Procurement'} 👋</span>
+              <span>{user?.name || 'FreshMart Procurement'} 👋</span>
             </h1>
-            <p className="text-sm text-slate-500 mt-1 mb-5">
+            <p className="text-sm text-slate-500 mt-1 mb-4">
               {t('findFreshProduceSubtitle')}
             </p>
 
@@ -102,7 +102,7 @@ export default function BuyerDashboardPage() {
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center justify-center"
                   style={{
                     position: 'absolute',
-                    left: '16px',
+                    left: '14px',
                     top: '50%',
                     transform: 'translateY(-50%)',
                     pointerEvents: 'none',
@@ -132,12 +132,12 @@ export default function BuyerDashboardPage() {
                 {/* Search Input */}
                 <input
                   type="text"
-                  className="h-12 w-full pl-11 pr-32 rounded-full border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-sm text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs"
+                  className="h-12 w-full pl-10 pr-24 sm:pr-32 rounded-full border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-sm text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs"
                   style={{
                     height: '48px',
                     width: '100%',
-                    paddingLeft: '44px',
-                    paddingRight: '125px',
+                    paddingLeft: '40px',
+                    paddingRight: '95px',
                     borderRadius: '9999px',
                     border: '1px solid #e2e8f0',
                     backgroundColor: 'rgba(248, 250, 252, 0.5)',
@@ -153,14 +153,14 @@ export default function BuyerDashboardPage() {
                 {/* Nested Search Button Aligned Right with Search -> */}
                 <button
                   type="submit"
-                  className="absolute right-1.5 top-1.5 bottom-1.5 px-5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors border-0 cursor-pointer"
+                  className="absolute right-1.5 top-1.5 bottom-1.5 px-3.5 sm:px-5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors border-0 cursor-pointer"
                   style={{
                     position: 'absolute',
                     right: '6px',
                     top: '6px',
                     bottom: '6px',
-                    paddingLeft: '20px',
-                    paddingRight: '20px',
+                    paddingLeft: '14px',
+                    paddingRight: '14px',
                     borderRadius: '9999px',
                     backgroundColor: '#2563eb',
                     color: '#ffffff',

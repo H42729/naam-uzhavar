@@ -157,24 +157,10 @@ const CROP_TAMIL_MAP = {
         {/* ===================================================================
             2. FILTER TABS & SEARCH (STICKY SUB-HEADER)
             =================================================================== */}
-        <div
-          className="bd-filter-tabs-container sticky top-0 z-20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full p-4 bg-white rounded-2xl border border-slate-200 mb-4"
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 20,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(14px)',
-            WebkitBackdropFilter: 'blur(14px)',
-            border: '1px solid #e2e8f0',
-            borderRadius: '1rem',
-            padding: '1rem',
-            boxShadow: '0 4px 14px -3px rgba(15, 23, 42, 0.05)'
-          }}
-        >
-          {/* Scroll-free Status Tabs */}
-          <div className="bd-tabs-scroll-area flex items-center gap-2 overflow-x-auto scrollbar-none">
-            {filterTabs.map((tab) => {
+        <div className="bd-filter-tabs-container">
+          {/* Scroll-free Status Tabs: 2 in one row, another two in next row on mobile */}
+          <div className="bd-tabs-scroll-area">
+            {filterTabs.map((tab, idx) => {
               const count =
                 tab === 'All'
                   ? requests.length
@@ -187,11 +173,9 @@ const CROP_TAMIL_MAP = {
                 <button
                   key={tab}
                   type="button"
-                  className={
-                    isActive
-                      ? 'bd-tab-pill-active inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium'
-                      : 'bd-tab-pill-inactive inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50'
-                  }
+                  className={`bd-tab-pill ${
+                    isActive ? 'bd-tab-pill-active active' : 'bd-tab-pill-inactive'
+                  } ${idx === 4 ? 'bd-tab-full-mobile' : ''}`}
                   onClick={() => setActiveFilter(tab)}
                 >
                   <span>
@@ -205,13 +189,7 @@ const CROP_TAMIL_MAP = {
                       ? (language === 'ta' ? 'உறுதியானது' : 'Confirmed')
                       : (language === 'ta' ? 'நிராகரிக்கப்பட்டது' : 'Declined by Farmer')}
                   </span>
-                  <span
-                    className={
-                      isActive
-                        ? 'bd-tab-badge inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full'
-                        : 'bd-tab-badge inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700'
-                    }
-                  >
+                  <span className="bd-tab-badge">
                     {count}
                   </span>
                 </button>
@@ -219,16 +197,15 @@ const CROP_TAMIL_MAP = {
             })}
           </div>
 
-          {/* Quick Search */}
-          <div className="bd-search-wrapper relative flex-1 max-w-md">
+          {/* Quick Search: Separated into its own block on mobile, side-by-side on desktop/tablet */}
+          <div className="bd-search-wrapper">
             <i
-              className="bd-search-icon bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', position: 'absolute' }}
+              className="bd-search-icon bi bi-search"
               aria-hidden="true"
             ></i>
             <input
               type="text"
-              className="bd-search-input w-full h-10 pl-9 pr-4 rounded-full border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="bd-search-input"
               placeholder={language === 'ta' ? 'கோரிக்கை எண் அல்லது பயிர்...' : 'Search request or crop...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -408,12 +385,11 @@ const CROP_TAMIL_MAP = {
                         </div>
 
                         {/* Direct Contact Phone & Call Button & WhatsApp Trigger */}
-                        <div className="pt-2 border-t border-emerald-200/60 flex items-center gap-2" style={{ display: 'flex', gap: '8px', paddingTop: '8px' }}>
+                        <div className="bd-farmer-contact-actions border-t border-emerald-200/60">
                           <a
                             href={`tel:${farmerPhone}`}
-                            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold text-decoration-none shadow-2xs transition-colors"
+                            className="bd-phone-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold text-decoration-none shadow-2xs transition-colors"
                             style={{
-                              flex: '1 1 0%',
                               backgroundColor: '#059669',
                               color: '#ffffff',
                               textDecoration: 'none',
@@ -421,9 +397,6 @@ const CROP_TAMIL_MAP = {
                               borderRadius: '8px',
                               fontSize: '0.75rem',
                               fontWeight: 700,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
                               gap: '6px'
                             }}
                             title={`Call ${farmerName}: ${farmerPhone}`}
@@ -435,7 +408,7 @@ const CROP_TAMIL_MAP = {
                             href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello ${farmerName}, regarding our approved order #${req.id} for ${cropName}...`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-white text-xs font-bold text-decoration-none shadow-2xs transition-colors"
+                            className="bd-whatsapp-btn inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-white text-xs font-bold text-decoration-none shadow-2xs transition-colors"
                             style={{
                               backgroundColor: '#25D366',
                               color: '#ffffff',
@@ -444,9 +417,6 @@ const CROP_TAMIL_MAP = {
                               borderRadius: '8px',
                               fontSize: '0.75rem',
                               fontWeight: 700,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
                               gap: '6px'
                             }}
                             title="Chat on WhatsApp"
@@ -841,10 +811,10 @@ const CROP_TAMIL_MAP = {
                         </div>
 
                         {/* Direct Contact Links */}
-                        <div className="d-flex align-items-center gap-2 pt-2 border-top border-emerald-100">
+                        <div className="bd-farmer-contact-actions border-top border-emerald-100">
                           <a
                             href={`tel:${modalFarmerPhone}`}
-                            className="btn btn-success btn-sm flex-fill d-flex align-items-center justify-center gap-1.5 fw-bold text-decoration-none shadow-xs"
+                            className="bd-phone-btn btn btn-success btn-sm d-flex align-items-center justify-center gap-1.5 fw-bold text-decoration-none shadow-xs"
                             style={{ backgroundColor: '#059669', borderColor: '#059669' }}
                           >
                             <i className="bi bi-telephone-fill small"></i>
@@ -854,7 +824,7 @@ const CROP_TAMIL_MAP = {
                             href={`https://wa.me/${modalCleanPhone}?text=${encodeURIComponent(`Hello ${selectedRequest.farmerName || selectedRequest.farmer}, regarding our approved order #${selectedRequest.id} for ${modalCropName}...`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="btn btn-sm d-flex align-items-center justify-center gap-1.5 fw-bold text-white text-decoration-none shadow-xs"
+                            className="bd-whatsapp-btn btn btn-sm d-flex align-items-center justify-center gap-1.5 fw-bold text-white text-decoration-none shadow-xs"
                             style={{ backgroundColor: '#25D366', borderColor: '#25D366' }}
                           >
                             <i className="bi bi-whatsapp small"></i>

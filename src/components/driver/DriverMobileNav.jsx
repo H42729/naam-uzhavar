@@ -1,60 +1,58 @@
 /**
- * BuyerMobileNav Component
- * Responsive, 1-thumb mobile bottom navigation bar for Buyer Module (< lg).
- * Matches the exact styling, Cobalt Blue (#2563EB) active indicator, and tokens of the Farmer Module.
+ * DriverMobileNav Component
+ * Responsive, 1-thumb mobile bottom navigation bar for Logistics / Driver Module (< lg).
+ * Matches the exact styling, Cobalt Blue (#2563EB) active indicator, and tokens of the Buyer and Farmer Modules.
  */
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useBuyer } from '../../context/BuyerContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
   LayoutDashboard,
-  ShoppingBag,
-  Inbox,
-  Boxes,
-  PackageCheck
+  MapPin,
+  Clock,
+  TrendingUp,
+  User
 } from 'lucide-react';
 
-export default function BuyerMobileNav() {
-  const { pendingRequestsCount, activeOrdersCount } = useBuyer();
+export default function DriverMobileNav() {
   const { language } = useLanguage();
   const location = useLocation();
 
   const navItems = [
     {
-      to: '/buyer/dashboard',
+      to: '/driver/requests',
       label: language === 'ta' ? 'முகப்பு' : 'Dashboard',
       icon: LayoutDashboard,
-      matchPatterns: ['/buyer/dashboard', '/buyer', '/consumer']
-    },
-    {
-      to: '/buyer/browse',
-      label: language === 'ta' ? 'சந்தை' : 'Marketplace',
-      icon: ShoppingBag,
-      matchPatterns: ['/buyer/browse', '/buyer/marketplace', '/marketplace', '/buyer/products']
-    },
-    {
-      to: '/buyer/requests',
-      label: language === 'ta' ? 'கோரிக்கைகள்' : 'Requests',
-      icon: Inbox,
-      badge: (pendingRequestsCount || 0) > 0 ? pendingRequestsCount : null,
+      badge: '3',
       badgeColor: 'bg-amber-500 text-white',
-      matchPatterns: ['/buyer/requests', '/buyer/request-status']
+      matchPatterns: ['/driver/requests', '/driver/dashboard', '/driver']
     },
     {
-      to: '/buyer/requirement',
-      label: language === 'ta' ? 'தேவைகள்' : 'Bulk',
-      icon: Boxes,
-      matchPatterns: ['/buyer/requirement', '/buyer/requirements', '/bulk-requirement']
-    },
-    {
-      to: '/buyer/orders',
-      label: language === 'ta' ? 'ஆர்டர்கள்' : 'Orders',
-      icon: PackageCheck,
-      badge: (activeOrdersCount || 0) > 0 ? activeOrdersCount : null,
+      to: '/driver/active',
+      label: language === 'ta' ? 'நடப்பு' : 'Active',
+      icon: MapPin,
+      badge: 'ORD-1030',
       badgeColor: 'bg-emerald-600 text-white',
-      matchPatterns: ['/buyer/orders', '/buyer/deliveries', '/my-orders']
+      matchPatterns: ['/driver/active', '/driver/routes', '/driver/route', '/routes', '/route']
+    },
+    {
+      to: '/driver/history',
+      label: language === 'ta' ? 'வரலாறு' : 'History',
+      icon: Clock,
+      matchPatterns: ['/driver/history']
+    },
+    {
+      to: '/driver/summary',
+      label: language === 'ta' ? 'சுருக்கம்' : 'Summary',
+      icon: TrendingUp,
+      matchPatterns: ['/driver/summary', '/driver/trips']
+    },
+    {
+      to: '/driver/profile',
+      label: language === 'ta' ? 'சுயவிவரம்' : 'Profile',
+      icon: User,
+      matchPatterns: ['/driver/profile']
     }
   ];
 
@@ -62,14 +60,18 @@ export default function BuyerMobileNav() {
     <nav
       className="d-lg-none lg:hidden fixed bottom-0 start-0 end-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-lg z-50 farm-mobile-nav"
       style={{ minHeight: '60px', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      aria-label="Buyer Mobile Bottom Navigation"
+      aria-label="Driver Mobile Bottom Navigation"
     >
       <div className="flex items-center justify-around h-full py-1 px-1 max-w-lg mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.matchPatterns.some((pattern) => {
-            if (pattern === '/buyer/dashboard') {
-              return location.pathname === '/buyer/dashboard' || location.pathname === '/buyer' || location.pathname === '/consumer';
+            if (pattern === '/driver/requests') {
+              return (
+                location.pathname === '/driver/requests' ||
+                location.pathname === '/driver/dashboard' ||
+                location.pathname === '/driver'
+              );
             }
             return location.pathname === pattern || location.pathname.startsWith(`${pattern}/`);
           });
@@ -98,7 +100,7 @@ export default function BuyerMobileNav() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] sm:text-[11px] leading-tight mt-1 truncate max-w-[62px]">
+              <span className="text-[10px] sm:text-xs mt-0.5 leading-none block font-medium truncate max-w-[64px]">
                 {item.label}
               </span>
             </NavLink>

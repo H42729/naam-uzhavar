@@ -204,8 +204,8 @@ export default function BulkRequirementPage() {
 
   return (
     <BuyerLayout>
-      <div className="min-h-[calc(100vh-140px)] bg-slate-50 py-6 sm:py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-[calc(100vh-140px)] bg-slate-50 py-6 sm:py-8 pb-36 md:pb-8">
+        <div className="max-w-6xl mx-auto px-2 sm:px-6 lg:px-8">
           {/* Breadcrumb & Navigation */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <Link
@@ -840,8 +840,9 @@ export default function BulkRequirementPage() {
 
         {/* ===================================================================
             MOBILE (< 768px) STICKY BOTTOM SUMMARY & ACTION BAR
+            Positions directly above BuyerMobileNav (60px high)
             =================================================================== */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 sm:p-4 shadow-xl">
+        <div className="md:hidden fixed bottom-[60px] left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 sm:p-4 shadow-xl">
           <div className="flex items-center justify-between gap-3">
             <div>
               <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 block">

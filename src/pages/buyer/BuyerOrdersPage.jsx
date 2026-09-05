@@ -81,23 +81,9 @@ export default function BuyerOrdersPage() {
         {/* ===================================================================
             2. TABS & SEARCH (STICKY SUB-HEADER)
             =================================================================== */}
-        <div
-          className="bd-sticky-sub-header bd-filter-tabs-container sticky top-0 z-20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full p-4 bg-white rounded-2xl border border-slate-200 mb-4"
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 20,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(14px)',
-            WebkitBackdropFilter: 'blur(14px)',
-            border: '1px solid #e2e8f0',
-            borderRadius: '1rem',
-            padding: '1rem',
-            boxShadow: '0 4px 14px -3px rgba(15, 23, 42, 0.05)'
-          }}
-        >
-          {/* Scroll-free tabs container */}
-          <div className="bd-tabs-scroll-area flex items-center gap-2 overflow-x-auto scrollbar-none">
+        <div className="bd-filter-tabs-container">
+          {/* Scroll-free tabs container: 2 in one row, another two in next row on mobile */}
+          <div className="bd-tabs-scroll-area">
             {filterTabs.map((tab) => {
               const count =
                 tab === 'All'
@@ -109,21 +95,13 @@ export default function BuyerOrdersPage() {
                 <button
                   key={tab}
                   type="button"
-                  className={
-                    isActive
-                      ? 'bd-tab-pill-active inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium'
-                      : 'bd-tab-pill-inactive inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50'
-                  }
+                  className={`bd-tab-pill ${
+                    isActive ? 'bd-tab-pill-active active' : 'bd-tab-pill-inactive'
+                  }`}
                   onClick={() => setActiveTab(tab)}
                 >
                   <span>{tab}</span>
-                  <span
-                    className={
-                      isActive
-                        ? 'bd-tab-badge inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full'
-                        : 'bd-tab-badge inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700'
-                    }
-                  >
+                  <span className="bd-tab-badge">
                     {count}
                   </span>
                 </button>
@@ -131,16 +109,15 @@ export default function BuyerOrdersPage() {
             })}
           </div>
 
-          {/* Vertically centered search input */}
-          <div className="bd-search-wrapper relative flex-1 max-w-md">
+          {/* Search bar: Separated on mobile, side-by-side on desktop/tablet */}
+          <div className="bd-search-wrapper">
             <i
-              className="bd-search-icon bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', position: 'absolute' }}
+              className="bd-search-icon bi bi-search"
               aria-hidden="true"
             ></i>
             <input
               type="text"
-              className="bd-search-input w-full h-10 pl-9 pr-4 rounded-full border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="bd-search-input"
               placeholder={language === 'ta' ? 'ஆர்டர் எண் அல்லது பயிர்...' : 'Search order # or crop...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

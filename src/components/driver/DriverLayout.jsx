@@ -6,6 +6,7 @@
 
 import React from 'react';
 import LogisticsTopNav from './LogisticsTopNav';
+import DriverMobileNav from './DriverMobileNav';
 import '../../styles/driver-route.css';
 
 export default function DriverLayout({
@@ -25,9 +26,12 @@ export default function DriverLayout({
       />
 
       {/* 2. Main Content Canvas */}
-      <main className="drv-main flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 drv-page-fade">
+      <main className="drv-main flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-8 drv-page-fade">
         {children}
       </main>
+
+      {/* 3. Responsive 1-Thumb Mobile Bottom Navigation (< lg) */}
+      <DriverMobileNav />
     </div>
   );
 }

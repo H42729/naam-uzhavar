@@ -1,38 +1,62 @@
 /**
  * LogisticsTopNav Component
- * Ergonomic, High-Usability Two-Tier Navigation Header for Logistics / Driver Module.
- * Strictly designed for field workers and drivers: generous touch targets (≥44px),
- * high contrast outdoors under direct sunlight, warm amber-orange active pill (#D97706),
- * and unambiguous status feedback without decorative clutter.
+ * Two-Tier Navigation Header for Logistics / Driver Module.
+ * Matches the exact template, design tokens, styling, and behavior of the Buyer and Farmer Modules:
+ * - Tier 1: Brand Logo, Soft Cream Profile Capsule (Driver firm & verified badge),
+ *   Online/Offline status toggle, Language Switcher, and Logout button.
+ * - Tier 2: Horizontal Navigation Tabs with Cobalt Blue active pill (#2563EB) & nested badges.
+ * - Responsive 2-Row Mobile Header (Zero overlap between driver capsule and utility controls).
+ * - Desktop Tier 2 hidden on mobile (< lg), with dedicated mobile bottom navigation (DriverMobileNav).
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { DRIVER_PROFILE } from '../../data/driverData';
 import {
-  PackageCheck,
+  LayoutDashboard,
   MapPin,
   Clock,
   TrendingUp,
+  Truck,
   User,
-  Bell,
   LogOut,
-  Truck
+  ShoppingBag
 } from 'lucide-react';
 
 export default function LogisticsTopNav({
   activeDeliveryId = 'ORD-1030',
   isOnline = true,
-  onToggleOnline
+  onToggleOnline,
+  onLogout
 }) {
-  const { user, logout } = useAuth();
-  const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
 
-  // Internal online status with localStorage fallback
+  // Track explicitly clicked tab (Dashboard is unselected by default on initial page load)
+  const [clickedTabId, setClickedTabId] = useState(() => {
+    try {
+      const pathname = window.location.pathname;
+      if (pathname === '/driver/requests' || pathname === '/driver/dashboard' || pathname === '/driver') {
+        return null; // Not selected by default on initial load
+      }
+      const matched = [
+        { id: 'active', patterns: ['/driver/active', '/driver/routes', '/driver/route', '/routes', '/route'] },
+        { id: 'buyer-requests', patterns: ['/driver/buyer-requests', '/driver/buyer-request'] },
+        { id: 'history', patterns: ['/driver/history'] },
+        { id: 'summary', patterns: ['/driver/summary', '/driver/trips'] },
+        { id: 'profile', patterns: ['/driver/profile'] }
+      ].find(item => item.patterns.some(p => pathname === p || pathname.startsWith(`${p}/`)));
+      return matched ? matched.id : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Online / Offline status with localStorage persistence
   const [internalOnline, setInternalOnline] = useState(() => {
     try {
       const saved = localStorage.getItem('naam_uzhavar_driver_online_status');
@@ -42,7 +66,7 @@ export default function LogisticsTopNav({
     }
   });
 
-  const isCurrentOnline = onToggleOnline ? isOnline : internalOnline;
+  const effectiveOnline = onToggleOnline ? isOnline : internalOnline;
 
   const handleToggleOnline = () => {
     if (onToggleOnline) {
@@ -58,31 +82,60 @@ export default function LogisticsTopNav({
     }
   };
 
-  const handleLogout = (e) => {
+  const handleLogoutClick = (e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    if (logout) logout();
-    navigate('/login');
+    if (onLogout) {
+      onLogout();
+    } else {
+      if (logout) logout();
+      navigate('/login');
+    }
   };
 
-  // Driver identity info
-  const driverFirm = 'Murugan Logistics';
+  // Read stored driver profile from localStorage if user updated it
+  const [storedDriverProfile, setStoredDriverProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_driver_profile_data');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_driver_profile_data');
+      if (saved) setStoredDriverProfile(JSON.parse(saved));
+    } catch {}
+  }, [location.pathname]);
+
+  // Driver identity details
+  const effectiveDriverName = storedDriverProfile?.name || user?.name || DRIVER_PROFILE.name || 'Raj Kumar';
+  const effectiveFirm = 'Murugan Logistics';
+  const displayDriverName =
+    language === 'ta'
+      ? `${effectiveFirm} (${storedDriverProfile?.tamilName || DRIVER_PROFILE.tamilName || 'ராஜ்குமார்'})`
+      : `${effectiveFirm} (${effectiveDriverName})`;
+
   const driverAvatar =
+    storedDriverProfile?.avatar ||
     user?.avatar ||
     DRIVER_PROFILE.avatar ||
     'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80';
 
-  // Tier 2 Navigation Tabs Definition
+  // Tier 2 Navigation Items definition matching Buyer template
   const navTabs = [
     {
-      id: 'requests',
-      label: language === 'ta' ? 'டெலிவரி கோரிக்கைகள்' : 'Delivery Requests',
+      id: 'dashboard',
+      label: language === 'ta' ? 'முகப்பு' : 'Dashboard',
       path: '/driver/requests',
-      icon: PackageCheck,
-      badgeText: language === 'ta' ? '3 புதியது' : '3 New',
-      matchPatterns: ['/driver/requests', '/driver/dashboard']
+      icon: LayoutDashboard,
+      badgeText: '3',
+      badgeInactiveClass: 'bg-amber-100 text-amber-800 font-bold',
+      matchPatterns: ['/driver/requests', '/driver/dashboard', '/driver']
     },
     {
       id: 'active',
@@ -90,6 +143,7 @@ export default function LogisticsTopNav({
       path: '/driver/active',
       icon: MapPin,
       badgeText: activeDeliveryId || 'ORD-1030',
+      badgeInactiveClass: 'bg-emerald-100 text-emerald-800 font-bold',
       matchPatterns: ['/driver/active', '/driver/routes', '/driver/route', '/routes', '/route']
     },
     {
@@ -107,6 +161,15 @@ export default function LogisticsTopNav({
       matchPatterns: ['/driver/summary', '/driver/trips']
     },
     {
+      id: 'buyer-requests',
+      label: language === 'ta' ? 'வாங்குபவர் கோரிக்கைகள்' : 'Buyer Requests',
+      path: '/driver/buyer-requests',
+      icon: ShoppingBag,
+      badgeText: '4 New',
+      badgeInactiveClass: 'bg-emerald-100 text-emerald-800 font-bold',
+      matchPatterns: ['/driver/buyer-requests', '/driver/buyer-request']
+    },
+    {
       id: 'profile',
       label: language === 'ta' ? 'சுயவிவரம்' : 'Profile',
       path: '/driver/profile',
@@ -115,8 +178,30 @@ export default function LogisticsTopNav({
     }
   ];
 
-  // Helper to determine active state across base paths and subroutes
+  // Sync with location changes when navigating
+  useEffect(() => {
+    const pathname = location.pathname;
+    if (pathname !== '/driver/requests' && pathname !== '/driver/dashboard' && pathname !== '/driver') {
+      const matched = navTabs.find(tab => 
+        tab.id !== 'dashboard' && 
+        tab.matchPatterns?.some(p => pathname === p || pathname.startsWith(`${p}/`))
+      );
+      if (matched) {
+        setClickedTabId(matched.id);
+      }
+    }
+  }, [location.pathname]);
+
+  // Helper to determine active state:
+  // - Dashboard is active ONLY when user clicked it (clickedTabId === 'dashboard')
+  // - Other tabs are active when explicitly clicked or their route matches
   const isTabActive = (tab) => {
+    if (tab.id === 'dashboard') {
+      return clickedTabId === 'dashboard';
+    }
+    if (clickedTabId) {
+      return clickedTabId === tab.id;
+    }
     const pathname = location.pathname;
     return tab.matchPatterns.some((pattern) => {
       if (pattern === '/driver/active' || pattern === '/driver/routes' || pattern === '/driver/route') {
@@ -134,189 +219,243 @@ export default function LogisticsTopNav({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
-      {/* =====================================================================
-          TIER 1: IDENTITY & KEY OPERATIONAL CONTROLS
-          ===================================================================== */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-          
-          {/* Left Side: Clear Identity */}
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Brand Logo */}
-            <Link
-              to="/driver/requests"
-              className="flex items-center gap-2 no-underline group flex-shrink-0 min-h-[44px]"
-              title="Naam Uzhavar Logistics"
-            >
-              <img
-                src="/naam-uzhavar-logo-transparent.png"
-                alt="Naam Uzhavar"
-                className="h-10 sm:h-11 w-auto object-contain"
-              />
-            </Link>
+    <>
+      <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200/90 shadow-2xs">
+        {/* =====================================================================
+            TIER 1: IDENTITY, DRIVER PROFILE & KEY UTILITY CONTROLS
+            ===================================================================== */}
+        <div className="w-full bg-white">
+          {/* Top Row: Brand Logo, Driver Profile on Left, Desktop Controls & Logout on Right */}
+          <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-2.5 max-w-7xl mx-auto gap-2 sm:gap-4">
+            
+            {/* Left Section: Brand Logo, Divider, Driver Profile Capsule */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              {/* Brand Logo */}
+              <Link
+                to="/driver/requests"
+                onClick={() => setClickedTabId('dashboard')}
+                className="flex items-center gap-1.5 sm:gap-2 no-underline group flex-shrink-0"
+                title="Naam Uzhavar Logistics"
+              >
+                <img
+                  src="/naam-uzhavar-logo-transparent.png"
+                  alt="Naam Uzhavar"
+                  className="h-8 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105"
+                />
+              </Link>
 
-            {/* Clean vertical divider */}
-            <div className="h-8 w-px bg-slate-200 mx-1 sm:mx-2 hidden sm:block flex-shrink-0" />
+              {/* Vertical Hairline Divider */}
+              <div className="h-7 sm:h-8 w-px bg-slate-200 mx-0.5 sm:mx-2 hidden sm:block flex-shrink-0" aria-hidden="true" />
 
-            {/* Driver Profile Block */}
-            <Link
-              to="/driver/profile"
-              className="flex items-center gap-3 p-1 rounded-2xl hover:bg-amber-50/50 transition-colors no-underline flex-shrink-0 min-h-[44px]"
-              title="View Driver Profile"
-            >
-              <img
-                src={driverAvatar}
-                alt={driverFirm}
-                className="w-11 h-11 rounded-full border-2 border-amber-500 object-cover flex-shrink-0"
-              />
-              <div className="text-left leading-tight">
-                <span className="font-bold text-slate-900 text-base leading-tight block truncate max-w-[140px] sm:max-w-[200px]">
-                  {driverFirm}
-                </span>
-                <div className="flex items-center gap-1.5 text-xs mt-0.5 flex-wrap">
-                  <span className="text-[#D97706] font-bold text-xs">
-                    ✔ {language === 'ta' ? 'சரிபார்க்கப்பட்ட ஓட்டுநர்' : 'Verified Driver'}
+              {/* Driver Profile Capsule: Soft cream background with amber avatar border matching template */}
+              <Link
+                to="/driver/profile"
+                onClick={() => setClickedTabId('profile')}
+                className="bg-[#FFFDF5] border border-[#FDE68A] rounded-2xl px-2 py-1 sm:px-3.5 sm:py-1.5 shadow-2xs flex items-center gap-2 sm:gap-2.5 no-underline hover:bg-amber-50/80 transition-colors min-w-0 cursor-pointer text-inherit"
+                title={language === 'ta' ? 'ஓட்டுநர் சுயவிவரத்தைக் காண்க' : 'View Driver Profile'}
+              >
+                <img
+                  src={driverAvatar}
+                  alt={displayDriverName}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-amber-400 object-cover flex-shrink-0"
+                />
+                <div className="flex flex-col text-left leading-tight justify-center min-w-0">
+                  <span className="font-bold text-slate-900 text-xs sm:text-base leading-tight block truncate max-w-[100px] xs:max-w-[130px] sm:max-w-[200px]">
+                    {displayDriverName}
                   </span>
-                  <span className="text-slate-300 hidden md:inline">•</span>
-                  <span className="text-slate-500 text-xs font-medium hidden md:inline">
-                    📍 {language === 'ta' ? 'திண்டுக்கல் மையம்' : 'Dindigul Hub'}
-                  </span>
+                  <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs mt-0.5 min-w-0">
+                    <span className="text-[#D97706] font-semibold truncate block max-w-[95px] xs:max-w-[125px] sm:max-w-none">
+                      ✔ {language === 'ta' ? 'சரிபார்க்கப்பட்ட ஓட்டுநர்' : 'Verified Driver'}
+                    </span>
+                    <span className="text-slate-400 hidden lg:inline">•</span>
+                    <span className="text-slate-500 text-xs font-medium hidden lg:inline">
+                      📍 {language === 'ta' ? 'திண்டுக்கல் மையம்' : 'Dindigul Hub'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
 
-            {/* Vehicle Quick Info (Visible pill on desktop) */}
-            <div className="hidden lg:flex items-center gap-2 bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0">
-              <Truck className="w-4 h-4 text-amber-600 flex-shrink-0" />
-              <span>TN-57-AB-4029</span>
-              <span className="text-amber-300">|</span>
-              <span>Max: 750 kg</span>
+            {/* Right Section: Desktop Utility Controls & Logout Button */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              {/* Desktop Only: Online / Offline Status Toggle */}
+              <button
+                type="button"
+                onClick={handleToggleOnline}
+                className={`hidden md:flex px-3.5 py-1.5 rounded-full text-xs font-bold items-center gap-2 transition-all cursor-pointer select-none border shadow-2xs min-h-[38px] ${
+                  effectiveOnline
+                    ? 'bg-emerald-100/80 border-emerald-300 text-emerald-800 hover:bg-emerald-200/80'
+                    : 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200/80'
+                }`}
+                title={effectiveOnline ? 'Status: Online (Accepting Direct Logistics Trips)' : 'Status: Offline'}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                    effectiveOnline ? 'bg-[#059669] animate-pulse' : 'bg-slate-400'
+                  }`}
+                />
+                <span>
+                  {effectiveOnline
+                    ? language === 'ta'
+                      ? 'ஆன்லைன்'
+                      : 'Online'
+                    : language === 'ta'
+                    ? 'ஆஃப்லைன்'
+                    : 'Offline'}
+                </span>
+              </button>
+
+              {/* Desktop Only: Language Switcher */}
+              <div
+                className="hidden md:flex bg-slate-50 border border-slate-200 rounded-full px-3.5 py-1 text-xs font-bold text-slate-700 items-center gap-1.5 min-h-[38px] shadow-2xs"
+                role="group"
+                aria-label="Language selector"
+              >
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  className={`border-0 bg-transparent cursor-pointer font-bold transition-colors ${
+                    language === 'en' ? 'text-[#2563EB] font-black' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title="Switch to English"
+                >
+                  English
+                </button>
+                <span className="text-slate-300 font-normal">|</span>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('ta')}
+                  className={`border-0 bg-transparent cursor-pointer font-bold transition-colors ${
+                    language === 'ta' ? 'text-[#2563EB] font-black' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title="தமிழுக்கு மாறவும்"
+                >
+                  தமிழ்
+                </button>
+              </div>
+
+              {/* Logout Button (Always on top row right side) */}
+              <button
+                type="button"
+                onClick={handleLogoutClick}
+                className="border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-[#E11D48] text-xs font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer flex-shrink-0 min-h-[34px] sm:min-h-[38px]"
+                title="Logout from Naam Uzhavar Logistics"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{language === 'ta' ? 'வெளியேறு' : 'Logout'}</span>
+              </button>
             </div>
           </div>
 
-          {/* Right Side: Daily Actions */}
-          <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
-            {/* 1. Online / Offline Work Switch */}
-            <button
-              type="button"
-              onClick={handleToggleOnline}
-              className={`min-h-[44px] font-bold text-xs px-4 py-2 rounded-full flex items-center gap-2 transition-colors cursor-pointer select-none border ${
-                isCurrentOnline
-                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
-                  : 'bg-slate-200 text-slate-700 border-slate-300 hover:bg-slate-300'
-              }`}
-              title={isCurrentOnline ? 'Online - Accepting Trips' : 'Offline'}
-            >
-              <span>
-                {isCurrentOnline
-                  ? language === 'ta'
-                    ? '● ஆன்லைன் (பயணங்கள் ஏற்கப்படுகின்றன)'
-                    : '● Online (Accepting Trips)'
-                  : language === 'ta'
-                  ? '○ ஆஃப்லைன்'
-                  : '○ Offline'}
-              </span>
-            </button>
+          {/* Mobile Row 2: Online/Offline Button and Language Switcher on dedicated next line (md:hidden) */}
+          <div className="md:hidden border-t border-slate-100 bg-slate-50/70 px-3 py-1.5">
+            <div className="flex items-center justify-between gap-2 max-w-7xl mx-auto">
+              {/* Mobile Online / Offline Toggle */}
+              <button
+                type="button"
+                onClick={handleToggleOnline}
+                className={`flex-1 justify-center px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all cursor-pointer select-none border shadow-2xs min-h-[36px] ${
+                  effectiveOnline
+                    ? 'bg-emerald-100/90 border-emerald-300 text-emerald-800 hover:bg-emerald-200'
+                    : 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200'
+                }`}
+                title={effectiveOnline ? 'Status: Online' : 'Status: Offline'}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                    effectiveOnline ? 'bg-[#059669] animate-pulse' : 'bg-slate-400'
+                  }`}
+                />
+                <span>
+                  {effectiveOnline
+                    ? language === 'ta'
+                      ? 'ஆன்லைன்'
+                      : 'Online'
+                    : language === 'ta'
+                    ? 'ஆஃப்லைன்'
+                    : 'Offline'}
+                </span>
+              </button>
 
-            {/* 2. Language Switcher */}
-            <div
-              className="bg-slate-100 border border-slate-200 rounded-xl p-1 flex items-center gap-1 min-h-[44px]"
-              role="group"
-              aria-label="Language selector"
-            >
-              <button
-                type="button"
-                onClick={() => setLanguage('en')}
-                className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all border-0 cursor-pointer ${
-                  language === 'en'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 bg-transparent'
-                }`}
-                title="Switch to English"
+              {/* Mobile Language Switcher */}
+              <div
+                className="flex-1 justify-center bg-white border border-slate-200 rounded-full px-3 py-1 text-xs font-bold text-slate-700 flex items-center gap-2 min-h-[36px] shadow-2xs"
+                role="group"
+                aria-label="Language selector"
               >
-                English
-              </button>
-              <span className="text-slate-300 text-xs font-bold">|</span>
-              <button
-                type="button"
-                onClick={() => setLanguage('ta')}
-                className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all border-0 cursor-pointer ${
-                  language === 'ta'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 bg-transparent'
-                }`}
-                title="தமிழுக்கு மாறவும்"
-              >
-                தமிழ்
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  className={`border-0 bg-transparent cursor-pointer font-bold transition-colors ${
+                    language === 'en' ? 'text-[#2563EB] font-black' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title="Switch to English"
+                >
+                  English
+                </button>
+                <span className="text-slate-300 font-normal">|</span>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('ta')}
+                  className={`border-0 bg-transparent cursor-pointer font-bold transition-colors ${
+                    language === 'ta' ? 'text-[#2563EB] font-black' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title="தமிழுக்கு மாறவும்"
+                >
+                  தமிழ்
+                </button>
+              </div>
             </div>
-
-            {/* 3. Notification Bell */}
-            <Link
-              to="/driver/requests"
-              className="relative w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-slate-100 hover:bg-amber-50 border border-slate-200 text-slate-700 hover:text-[#D97706] flex items-center justify-center transition-colors no-underline flex-shrink-0"
-              title="Notifications (2)"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 text-white rounded-full text-xs font-extrabold flex items-center justify-center shadow-xs">
-                2
-              </span>
-            </Link>
-
-            {/* 4. Logout Button */}
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="min-h-[44px] text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer flex-shrink-0"
-              title="Log out of driver terminal"
-            >
-              <LogOut className="w-4 h-4 flex-shrink-0" />
-              <span className="hidden sm:inline">{language === 'ta' ? 'வெளியேறு' : 'Logout'}</span>
-            </button>
           </div>
         </div>
-      </div>
 
-      {/* =====================================================================
-          TIER 2: INTUITIVE HORIZONTAL NAVIGATION BAR
-          ===================================================================== */}
-      <div className="bg-slate-50/50 border-t border-slate-100">
-        <nav className="max-w-7xl mx-auto flex items-center gap-2.5 px-4 sm:px-6 py-2.5 overflow-x-auto no-scrollbar scroll-smooth">
-          {navTabs.map((tab) => {
-            const IconComponent = tab.icon;
-            const active = isTabActive(tab);
+        {/* =====================================================================
+            TIER 2: HORIZONTAL LOGISTICS NAVIGATION TABS (COBALT BLUE ACTIVE PILL)
+            Desktop only (hidden on mobile < lg to avoid duplicate navbars)
+            ===================================================================== */}
+        <div className="border-t border-slate-100 bg-white hidden lg:block">
+          <nav className="px-4 sm:px-6 py-2 flex items-center gap-2 max-w-7xl mx-auto overflow-x-auto no-scrollbar scroll-smooth">
+            {navTabs.map((tab) => {
+              const IconComponent = tab.icon;
+              const active = isTabActive(tab);
 
-            return (
-              <NavLink
-                key={tab.id}
-                to={tab.path}
-                className={`whitespace-nowrap no-underline transition-colors cursor-pointer min-h-[44px] flex items-center gap-2 ${
-                  active
-                    ? 'bg-[#D97706] text-white font-bold px-5 py-2.5 rounded-xl shadow-xs'
-                    : 'text-[#0F172A] hover:text-[#D97706] hover:bg-amber-50/70 font-semibold px-4 py-2.5 rounded-xl'
-                }`}
-              >
-                <IconComponent className={`w-5 h-5 flex-shrink-0 ${active ? 'text-white' : 'text-slate-600'}`} />
-                <span className="text-sm sm:text-base">{tab.label}</span>
-
-                {/* Badges inside tabs */}
-                {tab.badgeText && (
-                  <span
-                    className={`rounded-full transition-colors ${
-                      active
-                        ? 'bg-white text-[#D97706] font-extrabold text-xs px-2.5 py-0.5'
-                        : 'bg-amber-100 text-[#92400E] font-bold text-xs px-2 py-0.5 rounded-full'
+              return (
+                <NavLink
+                  key={tab.id}
+                  to={tab.path}
+                  onClick={() => setClickedTabId(tab.id)}
+                  className={`group whitespace-nowrap no-underline cursor-pointer flex items-center gap-2 transition-all duration-200 ${
+                    active
+                      ? 'bg-[#2563EB] text-white font-semibold rounded-full px-5 py-2 shadow-xs'
+                      : 'text-slate-600 hover:bg-[#2563EB] hover:text-white hover:font-semibold hover:shadow-xs rounded-full px-4 py-2 font-medium'
+                  }`}
+                >
+                  <IconComponent
+                    className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                      active ? 'text-white' : 'text-slate-500 group-hover:text-white'
                     }`}
-                  >
-                    {tab.badgeText}
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
-      </div>
-    </header>
+                    style={active ? { color: '#ffffff' } : {}}
+                  />
+                  <span className="text-xs sm:text-sm">{tab.label}</span>
+
+                  {/* Badges inside tabs */}
+                  {tab.badgeText && (
+                    <span
+                      className={`transition-colors ${
+                        active
+                          ? 'bg-white text-[#2563EB] font-black text-xs px-2 py-0.5 rounded-full ml-1.5'
+                          : `${tab.badgeInactiveClass} group-hover:bg-white group-hover:text-[#2563EB] group-hover:font-black text-xs px-2.5 py-0.5 rounded-full ml-1.5`
+                      }`}
+                    >
+                      {tab.badgeText}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
+          </nav>
+        </div>
+      </header>
+    </>
   );
 }

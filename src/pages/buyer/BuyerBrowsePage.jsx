@@ -98,17 +98,7 @@ export default function BuyerBrowsePage() {
             2. SEARCH & FILTER TOOLBAR (STICKY SUB-HEADER)
             =================================================================== */}
         <div
-          className="bd-sticky-sub-header sticky top-0 z-20 rounded-4 border p-3 mb-4"
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 20,
-            backgroundColor: 'rgba(255, 255, 255, 0.88)',
-            backdropFilter: 'blur(14px)',
-            WebkitBackdropFilter: 'blur(14px)',
-            borderBottom: '1px solid #e2e8f0',
-            boxShadow: '0 4px 14px -3px rgba(15, 23, 42, 0.05)'
-          }}
+          className="bd-sticky-sub-header rounded-4 border p-3 mb-4"
         >
           <div className="row g-2 align-items-center">
             {/* Search Input */}
