@@ -56,9 +56,9 @@ export default function DriverFloatingBuyerRequests() {
 
   return (
     <aside
-      className="fixed z-40 transition-all duration-300"
+      className="driver-floating-requests d-md-none fixed z-40 transition-all duration-300"
       style={{
-        /* Positioned above mobile bottom bar (60px) on mobile, and standard floating corner on desktop */
+        /* Positioned above mobile bottom bar (60px) on mobile, hidden on desktop and laptop (>= 768px) */
         bottom: 'calc(env(safe-area-inset-bottom, 0px) + 76px)',
         right: '16px'
       }}

@@ -219,16 +219,32 @@ export default function DriverRegisterPage() {
           <div className="d-flex align-items-center gap-2">
             <Link
               to="/register"
-              className="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
+              className="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center p-0 transition-all"
+              style={{
+                width: '32px',
+                height: '32px',
+                minWidth: '32px',
+                minHeight: '32px',
+                fontSize: '0.85rem'
+              }}
+              title="Switch Role"
+              aria-label="Switch Role"
             >
               <i className="bi bi-arrow-left"></i>
-              <span className="d-none d-sm-inline">Switch Role</span>
             </Link>
             <Link
               to="/login"
-              className="btn btn-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 text-dark"
+              className="btn btn-warning rounded-pill fw-bold d-flex align-items-center gap-1 text-dark transition-all"
+              style={{
+                padding: '4px 12px',
+                fontSize: '0.78rem',
+                height: '32px',
+                minHeight: '32px',
+                lineHeight: 1
+              }}
+              title="Sign In"
             >
-              <i className="bi bi-box-arrow-in-right"></i>
+              <i className="bi bi-box-arrow-in-right" style={{ fontSize: '0.85rem' }}></i>
               <span>Sign In</span>
             </Link>
           </div>

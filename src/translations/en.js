@@ -493,7 +493,80 @@ const en = {
   newFarmerMatchNotif: 'New farmer match',
   newFarmerMatchDesc: 'Additional farmers have matched your bulk requirement.',
   orderConfirmedNotif: 'Order confirmed',
-  orderConfirmedDesc: 'Your order has been confirmed and logistics dispatch scheduled.'
+  orderConfirmedDesc: 'Your order has been confirmed and logistics dispatch scheduled.',
+
+  // Home Page / Landing Page
+  heroTrustChip: 'Direct Farm-to-Buyer Ecosystem',
+  heroHeadline1: 'Connect Directly.',
+  heroHeadline2: 'Earn Better.',
+  heroHeadline3: 'Buy Smarter.',
+  heroParagraph: 'Empowering farmers & FPOs to sell fresh harvest directly to consumers and businesses. Zero middleman cuts, transparent ₹ INR pricing, and same-day delivery.',
+  startSellingFarmer: 'Start Selling as Farmer',
+  exploreMandi: 'Explore Mandi',
+  zeroCommission: '0% Commission',
+  sameDayDispatch: 'Same-Day Dispatch',
+  iotVerifiedQuality: 'IoT Verified Quality',
+  seedToSaleTelemetry: 'Seed-to-Sale IoT Telemetry',
+  liveBatch: 'Live Batch ↗',
+  viewSeedToSale: 'Click to view Seed-to-Sale Traceability',
+
+  // Stats
+  statFarmersLabel: 'Farmers Connected',
+  statFarmersSub: 'Across 14 States',
+  statCropsLabel: 'Crops & Grains',
+  statCropsSub: 'Direct from Mandi',
+  statOrdersLabel: 'Orders Delivered',
+  statOrdersSub: 'Zero Delay Fleet',
+  statSavingsLabel: 'Direct Kisan Share',
+  statSavingsSub: '+43% vs Middlemen',
+
+  // Footer
+  footerDesc: 'Empowering farmers & FPOs with transparent digital agricultural supply chains, cold-chain logistics, and zero-middleman direct consumer pricing.',
+  footerPlatform: 'Platform',
+  footerHowItWorks: 'How It Works',
+  footerMarketplace: 'Marketplace',
+  footerFarmerEconomics: 'Farmer Economics',
+  footerTraceability: 'IoT Traceability',
+  footerJoinUs: 'Join Us',
+  footerForFarmers: 'For Farmers & FPOs',
+  footerForConsumers: 'For Consumers',
+  footerB2BWholesale: 'B2B Wholesale',
+  footerLogisticsPartners: 'Logistics Partners',
+  footerAgriUpdates: 'Agricultural Updates',
+  footerSubscribeHint: 'Subscribe for harvest alerts and market price insights.',
+  footerEmailPlaceholder: 'Your email...',
+  footerJoinBtn: 'Join',
+  footerCopyright: '© 2026 FarmDirect Inc. All rights reserved.',
+  footerPrivacy: 'Privacy Policy',
+  footerTerms: 'Terms of Service',
+  footerSecurity: 'Security & Compliance',
+
+  // Traceability Modal
+  traceabilityTitle: 'FarmDirect IoT Traceability Engine',
+  traceabilityBatch: 'Batch #FD-89241-IN-ORG',
+  traceabilityProduce: 'Hydroponic Cherry Tomatoes (Organic)',
+  traceabilityOrigin: 'Harvest Origin: Unit 4B, Sahyadri Agro Cluster, Nashik, Maharashtra',
+  traceabilityBlockchain: 'Blockchain Verified',
+  traceabilityGrade: '✓ Grade A+ Export Quality',
+  traceabilityTimelineTitle: 'Live Journey from Seed to Sale:',
+  traceabilityStep1Title: '1. Non-GMO Certified Seed Sowing & Organic Nutrition',
+  traceabilityStep1Desc: '14 May • 100% Organic Soil Enrichment • Zero Synthetic Chemicals',
+  traceabilityStep1Loc: 'Geo-Location: Nashik Agro Cluster (Lat 19.9975° N, Long 73.7898° E)',
+  traceabilityStep2Title: '2. AI Spectral Quality & Ripeness Scan',
+  traceabilityStep2Desc: 'Today at 05:30 AM • Optical Sugar Brix Index: 8.5 (Optimal Sweetness)',
+  traceabilityStep2Loc: 'Automated Grading: Grade A+ (0 Bruises Detected)',
+  traceabilityStep3Title: '3. IoT Cold-Chain Transport Dispatch',
+  traceabilityStep3Desc: 'Smart Reefer Van TN-57-AB-4029 • Temp Maintained: 4.2°C • Humidity: 88%',
+  traceabilityStep3Loc: 'Live GPS: Salem-Dindigul Highway • Est. Hub Arrival: 2 Hrs',
+  traceabilityStep4Title: '4. Direct Doorstep / Retail Delivery',
+  traceabilityStep4Desc: 'Estimated: Within 2 Hours • Middleman Bypassed: 100%',
+  traceabilityFarmerPayout: 'Direct Farmer Payout:',
+  closeInspector: 'Close Inspector',
+
+  // Additional Navbar Keys
+  loginToPortal: 'Login to Portal',
+  registerNewAccount: 'Register New Account',
+  goToDashboard: 'Go to Dashboard'
 };
 
 export default en;

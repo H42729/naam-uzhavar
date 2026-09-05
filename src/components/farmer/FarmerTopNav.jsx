@@ -149,7 +149,7 @@ export default function FarmerTopNav() {
         <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-2.5 max-w-7xl mx-auto gap-2 sm:gap-4">
           
           {/* Left Section: Brand Identity, Divider, Farmer Profile Capsule */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             {/* Brand Identity */}
             <Link
               to="/farmer/dashboard"
@@ -166,10 +166,10 @@ export default function FarmerTopNav() {
             {/* Vertical Hairline Divider */}
             <div className="h-7 sm:h-8 w-px bg-slate-200 mx-0.5 sm:mx-2 hidden sm:block flex-shrink-0" aria-hidden="true" />
 
-            {/* Farmer Profile Capsule: Remains in place on both mobile & desktop */}
+            {/* Farmer Profile Capsule: Standardized 42px height on mobile with 32px avatar */}
             <Link
               to="/farmer/profile"
-              className="bg-[#FFFDF5] border border-[#FDE68A] rounded-2xl px-2.5 py-1 sm:px-3.5 sm:py-1.5 shadow-2xs flex items-center gap-2 sm:gap-2.5 no-underline hover:bg-amber-50/80 transition-colors flex-shrink-0"
+              className="bg-[#FFFDF5] border border-[#FDE68A] rounded-2xl px-2.5 py-1 sm:px-3.5 sm:py-1.5 shadow-2xs flex items-center gap-2 sm:gap-2.5 no-underline hover:bg-amber-50/80 transition-colors min-w-0 cursor-pointer text-inherit"
               title={farmerName}
             >
               <img
@@ -177,12 +177,12 @@ export default function FarmerTopNav() {
                 alt={farmerName}
                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-amber-400 object-cover flex-shrink-0"
               />
-              <div className="flex flex-col text-left leading-tight justify-center">
-                <span className="font-bold text-slate-900 text-xs sm:text-base leading-tight block truncate max-w-[125px] sm:max-w-[200px]">
+              <div className="flex flex-col text-left leading-tight justify-center min-w-0">
+                <span className="font-bold text-slate-900 text-xs sm:text-base leading-tight block truncate max-w-[110px] xs:max-w-[140px] sm:max-w-[200px]">
                   {farmerName}
                 </span>
-                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mt-0.5 flex-wrap">
-                  <span className="text-[#D97706] font-semibold">
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mt-0.5 flex-wrap min-w-0">
+                  <span className="text-[#D97706] font-semibold truncate max-w-[110px] xs:max-w-[140px] sm:max-w-none">
                     ✔ {language === 'ta' ? 'சரிபார்க்கப்பட்ட விவசாயி' : 'Verified Farmer'}
                   </span>
                   <span className="text-slate-400 hidden lg:inline">•</span>

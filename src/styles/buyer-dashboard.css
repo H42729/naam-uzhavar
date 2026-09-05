@@ -3045,4 +3045,16 @@ body, p, span, h1, h2, h3, h4, h5, h6 {
   max-width: 72px;
 }
 
+/* Floating Action Buttons - Mobile Only (< 768px), Hidden on Desktop, Laptop, and Tablet (>= 768px) */
+.buyer-floating-actions {
+  display: flex !important;
+}
+
+@media (min-width: 768px) {
+  .buyer-floating-actions,
+  aside[aria-label="Buyer Quick Floating Actions"] {
+    display: none !important;
+  }
+}
+
 

@@ -1,8 +1,11 @@
 import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 const HERO_ILLUSTRATION_URL = '/naam-uzhavar-hero-illustration.jpg';
 
 export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTraceability }) {
+  const { t } = useLanguage();
+
   return (
     <section className="fd-hero-section" aria-label="Hero Introduction">
       <div className="fd-wrapper">
@@ -11,17 +14,17 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
           <div className="fd-hero-text-card">
             <div className="fd-trust-chip">
               <span className="fd-pulse-dot" aria-hidden="true"></span>
-              <span>Direct Farm-to-Buyer Ecosystem</span>
+              <span>{t('heroTrustChip')}</span>
             </div>
 
             <h1 className="fd-hero-headline">
-              Connect Directly.<br />
-              Earn Better.<br />
-              <span className="highlight-text">Buy Smarter.</span>
+              {t('heroHeadline1')}<br />
+              {t('heroHeadline2')}<br />
+              <span className="highlight-text">{t('heroHeadline3')}</span>
             </h1>
 
             <p className="fd-hero-paragraph">
-              Empowering farmers & FPOs to sell fresh harvest directly to consumers and businesses. Zero middleman cuts, transparent ₹ INR pricing, and same-day delivery.
+              {t('heroParagraph')}
             </p>
 
             <div className="fd-hero-btn-row">
@@ -30,7 +33,7 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
                 className="fd-btn-start-selling"
                 onClick={onStartSelling}
               >
-                <span>Start Selling as Farmer</span>
+                <span>{t('startSellingFarmer')}</span>
                 <i className="bi bi-arrow-right"></i>
               </button>
 
@@ -40,7 +43,7 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
                 onClick={onExploreMarketplace}
               >
                 <i className="bi bi-shop"></i>
-                <span>Explore Mandi</span>
+                <span>{t('exploreMandi')}</span>
               </button>
             </div>
 
@@ -48,15 +51,15 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
             <div className="fd-hero-badges-row">
               <div className="fd-badge-item">
                 <i className="bi bi-check2-circle"></i>
-                <span>0% Commission</span>
+                <span>{t('zeroCommission')}</span>
               </div>
               <div className="fd-badge-item">
                 <i className="bi bi-lightning-charge"></i>
-                <span>Same-Day Dispatch</span>
+                <span>{t('sameDayDispatch')}</span>
               </div>
               <div className="fd-badge-item">
                 <i className="bi bi-shield-check"></i>
-                <span>IoT Verified Quality</span>
+                <span>{t('iotVerifiedQuality')}</span>
               </div>
             </div>
           </div>
@@ -65,7 +68,7 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
           <div
             className="fd-hero-visual-bento"
             onClick={onOpenTraceability}
-            title="Click to view Seed-to-Sale Traceability"
+            title={t('viewSeedToSale')}
           >
             <div
               className="fd-hero-bg-cover"
@@ -77,7 +80,7 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
             <div className="fd-hero-bottom-overlay">
               <div className="fd-tracking-caption">
                 <span className="fd-pulse-dot"></span>
-                <span>Seed-to-Sale IoT Telemetry</span>
+                <span>{t('seedToSaleTelemetry')}</span>
               </div>
 
               <button
@@ -88,7 +91,7 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
                   onOpenTraceability();
                 }}
               >
-                <span>Live Batch ↗</span>
+                <span>{t('liveBatch')}</span>
               </button>
             </div>
           </div>

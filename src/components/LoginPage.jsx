@@ -45,10 +45,37 @@ export default function LoginPage({ onBackToHome, onLoginSuccess, initialMode = 
       <div className="fd-wrapper py-4 py-md-5">
         {/* Back to Home & Language Switcher */}
         <div className="d-flex justify-content-between align-items-center mb-3">
+          {/* Mobile View: 32px Circular Arrow Button */}
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-pill px-3"
+            className="btn btn-outline-secondary rounded-circle d-flex d-sm-none align-items-center justify-content-center p-0 transition-all"
+            style={{
+              width: '32px',
+              height: '32px',
+              minWidth: '32px',
+              minHeight: '32px',
+              fontSize: '0.85rem'
+            }}
             onClick={onBackToHome}
+            title={t('backToHome')}
+            aria-label={t('backToHome')}
+          >
+            <i className="bi bi-arrow-left"></i>
+          </button>
+
+          {/* Tablet & Desktop View: Pill with Icon and Text */}
+          <button
+            type="button"
+            className="btn btn-outline-secondary rounded-pill fw-bold d-none d-sm-inline-flex align-items-center gap-1.5 transition-all text-nowrap"
+            style={{
+              padding: '4px 14px',
+              fontSize: '0.82rem',
+              height: '32px',
+              minHeight: '32px',
+              lineHeight: 1
+            }}
+            onClick={onBackToHome}
+            title={t('backToHome')}
           >
             <i className="bi bi-arrow-left"></i>
             <span>{t('backToHome')}</span>

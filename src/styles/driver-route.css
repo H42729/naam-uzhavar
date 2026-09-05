@@ -1050,3 +1050,16 @@
   min-height: 15px;
   max-width: 72px;
 }
+
+/* Floating Action Button - Mobile Only (< 768px), Hidden on Desktop, Laptop, and Tablet (>= 768px) */
+.driver-floating-requests {
+  display: flex !important;
+}
+
+@media (min-width: 768px) {
+  .driver-floating-requests,
+  aside[aria-label="Buyer Logistics Requests Quick Access"] {
+    display: none !important;
+  }
+}
+

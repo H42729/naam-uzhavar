@@ -1,38 +1,41 @@
 import React from 'react';
-
-const statsData = [
-  {
-    id: 'farmers',
-    value: '50,000+',
-    label: 'Farmers Connected',
-    sub: 'Across 14 States',
-    icon: 'bi-people',
-  },
-  {
-    id: 'products',
-    value: '200+',
-    label: 'Crops & Grains',
-    sub: 'Direct from Mandi',
-    icon: 'bi-box-seam',
-  },
-  {
-    id: 'orders',
-    value: '1,000,000+',
-    label: 'Orders Delivered',
-    sub: 'Zero Delay Fleet',
-    icon: 'bi-truck',
-  },
-  {
-    id: 'savings',
-    value: '88%',
-    label: 'Direct Kisan Share',
-    sub: '+43% vs Middlemen',
-    icon: 'bi-graph-up-arrow',
-    isGreen: true,
-  },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Stats({ onSelectStat }) {
+  const { t } = useLanguage();
+
+  const statsData = [
+    {
+      id: 'farmers',
+      value: '50,000+',
+      label: t('statFarmersLabel'),
+      sub: t('statFarmersSub'),
+      icon: 'bi-people',
+    },
+    {
+      id: 'products',
+      value: '200+',
+      label: t('statCropsLabel'),
+      sub: t('statCropsSub'),
+      icon: 'bi-box-seam',
+    },
+    {
+      id: 'orders',
+      value: '1,000,000+',
+      label: t('statOrdersLabel'),
+      sub: t('statOrdersSub'),
+      icon: 'bi-truck',
+    },
+    {
+      id: 'savings',
+      value: '88%',
+      label: t('statSavingsLabel'),
+      sub: t('statSavingsSub'),
+      icon: 'bi-graph-up-arrow',
+      isGreen: true,
+    },
+  ];
+
   return (
     <section className="fd-stats-section" aria-label="Key Platform Metrics">
       <div className="fd-wrapper">

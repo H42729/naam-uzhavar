@@ -51,11 +51,12 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
       <div className="fd-wrapper">
         <div className="fd-nav-content flex items-center justify-between py-2.5">
           {/* Brand Logo */}
-          <div className="fd-logo cursor-pointer" onClick={() => handleNavClick('top', 'home')}>
+          <div className="fd-logo cursor-pointer flex-shrink-0" onClick={() => handleNavClick('top', 'home')}>
             <img
               src="/naam-uzhavar-logo-transparent.png"
               alt="Naam Uzhavar"
-              style={{ height: '44px', width: 'auto', objectFit: 'contain' }}
+              className="h-8 sm:h-11 w-auto max-w-[125px] sm:max-w-none object-contain"
+              style={{ maxHeight: '42px', width: 'auto', objectFit: 'contain' }}
             />
           </div>
 
@@ -138,13 +139,14 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                   type="button"
                   className="fd-btn-login d-inline-flex align-items-center gap-1"
                   onClick={() => navigate('/login')}
+                  title={t('signIn')}
                 >
                   <i className="bi bi-box-arrow-in-right"></i>
-                  <span>{t('signIn')}</span>
+                  <span className="d-none d-sm-inline">{t('signIn')}</span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn-success btn-sm rounded-pill px-3 fw-bold d-none d-lg-inline-flex align-items-center gap-1"
+                  className="btn btn-success btn-sm rounded-pill px-3 fw-bold d-none d-md-inline-flex align-items-center gap-1"
                   onClick={() => navigate('/register')}
                 >
                   <i className="bi bi-person-plus"></i>
@@ -179,7 +181,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
               >
                 <span className="flex items-center gap-2">
                   <i className="bi bi-house-door"></i>
-                  <span>Home</span>
+                  <span>{t('navHome')}</span>
                 </span>
                 <i className="bi bi-chevron-right text-xs opacity-60"></i>
               </button>
@@ -198,7 +200,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
               >
                 <span className="flex items-center gap-2">
                   <i className="bi bi-shop"></i>
-                  <span>Marketplace</span>
+                  <span>{t('navMarketplace')}</span>
                 </span>
                 <i className="bi bi-chevron-right text-xs opacity-60"></i>
               </button>
@@ -211,7 +213,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                       navigate('/login');
                     }}
                   >
-                    Login to Portal
+                    {t('loginToPortal')}
                   </button>
                   <button
                     className="btn btn-outline-success w-100 fw-bold"
@@ -221,7 +223,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                     }}
                   >
                     <i className="bi bi-person-plus me-1"></i>
-                    Register New Account
+                    {t('registerNewAccount')}
                   </button>
                 </div>
               ) : (
@@ -233,7 +235,7 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                       handleUserDashboardRedirect();
                     }}
                   >
-                    Go to Dashboard ({currentUser?.role || 'Farmer'})
+                    {t('goToDashboard')} ({currentUser?.role || 'Farmer'})
                   </button>
                 </div>
               )}

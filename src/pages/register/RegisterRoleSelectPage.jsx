@@ -70,9 +70,16 @@ export default function RegisterRoleSelectPage() {
               <span className="text-muted small d-none d-sm-inline">{t('alreadyHaveAccount')}</span>
               <Link
                 to="/login"
-                className="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
+                className="btn btn-outline-success rounded-pill fw-bold d-flex align-items-center gap-1 transition-all"
+                style={{
+                  padding: '4px 12px',
+                  fontSize: '0.78rem',
+                  height: '32px',
+                  minHeight: '32px',
+                  lineHeight: 1
+                }}
               >
-                <i className="bi bi-box-arrow-in-right"></i>
+                <i className="bi bi-box-arrow-in-right" style={{ fontSize: '0.85rem' }}></i>
                 <span>{t('signIn')}</span>
               </Link>
             </div>

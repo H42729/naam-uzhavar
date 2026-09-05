@@ -493,7 +493,80 @@ const ta = {
   newFarmerMatchNotif: 'புதிய விவசாயி பொருத்தம்',
   newFarmerMatchDesc: 'கூடுதல் விவசாயிகள் உங்கள் மொத்த தேவைக்கு பொருந்தியுள்ளனர்.',
   orderConfirmedNotif: 'ஆர்டர் உறுதி செய்யப்பட்டது',
-  orderConfirmedDesc: 'உங்கள் கொள்முதல் ஆர்டர் உறுதி செய்யப்பட்டு சரக்கு ஏற்றுமதி திட்டமிடப்பட்டுள்ளது.'
+  orderConfirmedDesc: 'உங்கள் கொள்முதல் ஆர்டர் உறுதி செய்யப்பட்டு சரக்கு ஏற்றுமதி திட்டமிடப்பட்டுள்ளது.',
+
+  // Home Page / Landing Page
+  heroTrustChip: 'நேரடி பண்ணை-வாங்குபவர் கட்டமைப்பு',
+  heroHeadline1: 'நேரடியாக இணையுங்கள்.',
+  heroHeadline2: 'அதிகம் சம்பாதியுங்கள்.',
+  heroHeadline3: 'புத்திசாலித்தனமாக வாங்குங்கள்.',
+  heroParagraph: 'விவசாயிகள் மற்றும் உழவர் அமைப்புகள் தங்கள் புதிய விளைச்சலை நுகர்வோர் மற்றும் வணிகங்களுக்கு நேரடியாக விற்க அதிகாரம் அளிக்கிறது. இடைத்தரகர் கமிஷன் இல்லை, வெளிப்படையான ₹ INR விலை நிர்ணயம் மற்றும் ஒரே நாளில் டெலிவரி.',
+  startSellingFarmer: 'விவசாயியாக விற்பனையைத் தொடங்குங்கள்',
+  exploreMandi: 'மண்டியை உலாவுங்கள்',
+  zeroCommission: '0% கமிஷன்',
+  sameDayDispatch: 'ஒரே நாளில் சரக்கு அனுப்புதல்',
+  iotVerifiedQuality: 'IoT சரிபார்க்கப்பட்ட தரம்',
+  seedToSaleTelemetry: 'விதை முதல் விற்பனை வரை IoT தொலைக்கண்காணிப்பு',
+  liveBatch: 'நேரடி தொகுதி ↗',
+  viewSeedToSale: 'விதை முதல் விற்பனை வரை கண்காணிப்பைப் பார்க்க கிளிக் செய்க',
+
+  // Stats
+  statFarmersLabel: 'இணைக்கப்பட்ட விவசாயிகள்',
+  statFarmersSub: '14 மாநிலங்களில்',
+  statCropsLabel: 'பயிர்கள் & தானியங்கள்',
+  statCropsSub: 'மண்டியிலிருந்து நேரடியாக',
+  statOrdersLabel: 'டெலிவரி செய்யப்பட்ட ஆர்டர்கள்',
+  statOrdersSub: 'தாமதமில்லா வாகனங்கள்',
+  statSavingsLabel: 'நேரடி உழவர் பங்கு',
+  statSavingsSub: 'இடைத்தரகர்களை விட +43%',
+
+  // Footer
+  footerDesc: 'வெளிப்படையான டிஜிட்டல் விவசாய விநியோகச் சங்கிலி, குளிர்பதன தளவாடங்கள் மற்றும் இடைத்தரகர்கள் அற்ற நேரடி நுகர்வோர் விலையுடன் விவசாயிகள் மற்றும் எஃப்பிஓ-க்களை மேம்படுத்துகிறது.',
+  footerPlatform: 'தளம்',
+  footerHowItWorks: 'இது எப்படி வேலை செய்கிறது',
+  footerMarketplace: 'சந்தை',
+  footerFarmerEconomics: 'விவசாயி பொருளாதாரம்',
+  footerTraceability: 'IoT தடமறிதல்',
+  footerJoinUs: 'எங்களுடன் இணையுங்கள்',
+  footerForFarmers: 'விவசாயிகள் & உழவர் அமைப்புகளுக்கு',
+  footerForConsumers: 'நுகர்வோருக்கு',
+  footerB2BWholesale: 'B2B மொத்த கொள்முதல்',
+  footerLogisticsPartners: 'போக்குவரத்து கூட்டாளர்கள்',
+  footerAgriUpdates: 'விவசாய அறிவிப்புகள்',
+  footerSubscribeHint: 'அறுவடை எச்சரிக்கைகள் மற்றும் சந்தை விலை நுண்ணறிவுகளுக்குப் பதிவு செய்யவும்.',
+  footerEmailPlaceholder: 'உங்கள் மின்னஞ்சல்...',
+  footerJoinBtn: 'இணை',
+  footerCopyright: '© 2026 நாம் உழவர். அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.',
+  footerPrivacy: 'தனியுரிமைக் கொள்கை',
+  footerTerms: 'சேவை விதிமுறைகள்',
+  footerSecurity: 'பாதுகாப்பு & இணக்கம்',
+
+  // Traceability Modal
+  traceabilityTitle: 'நாம் உழவர் IoT தடமறிதல் தளம்',
+  traceabilityBatch: 'தொகுதி #FD-89241-IN-ORG',
+  traceabilityProduce: 'ஹைட்ரோபோனிக் செர்ரி தக்காளி (இயற்கை)',
+  traceabilityOrigin: 'அறுவடை இடம்: பிரிவு 4B, சஹ்யாத்ரி அக்ரோ கிளஸ்டர், நாசிக், மகாராஷ்டிரா',
+  traceabilityBlockchain: 'பிளாக்செயின் சரிபார்க்கப்பட்டது',
+  traceabilityGrade: '✓ கிரேடு A+ ஏற்றுமதி தரம்',
+  traceabilityTimelineTitle: 'விதை முதல் விற்பனை வரையிலான நேரடிப் பயணம்:',
+  traceabilityStep1Title: '1. மரபணு மாற்றப்படாத விதைப்பு & இயற்கை உர ஊட்டச்சத்து',
+  traceabilityStep1Desc: '14 மே • 100% இயற்கை மண் வளம் • செயற்கை இரசாயனங்கள் இல்லை',
+  traceabilityStep1Loc: 'புவி இருப்பிடம்: நாசிக் அக்ரோ கிளஸ்டர் (அட்சரேகை 19.9975° N, தீர்க்கரேகை 73.7898° E)',
+  traceabilityStep2Title: '2. AI நிறமாலை தர ஆய்வு & முதிர்ச்சி ஸ்கேன்',
+  traceabilityStep2Desc: 'இன்று காலை 05:30 மணிக்கு • ஒளியியல் சர்க்கரை ப்ரிக்ஸ் குறியீடு: 8.5 (உகந்த இனிப்பு)',
+  traceabilityStep2Loc: 'தானியங்கி தரம் பிரித்தல்: கிரேடு A+ (0 காயங்கள்)',
+  traceabilityStep3Title: '3. IoT குளிர்பதன போக்குவரத்து சரக்கு அனுப்புதல்',
+  traceabilityStep3Desc: 'ஸ்மார்ட் குளிர்சாதன வேன் TN-57-AB-4029 • வெப்பநிலை: 4.2°C • ஈரப்பதம்: 88%',
+  traceabilityStep3Loc: 'நேரடி ஜிபிஎஸ்: சேலம்-திண்டுக்கல் நெடுஞ்சாலை • மையம் வந்து சேரும் நேரம்: 2 மணிநேரம்',
+  traceabilityStep4Title: '4. நேரடி வாசல் / சில்லறை டெலிவரி',
+  traceabilityStep4Desc: 'மதிப்பிடப்பட்ட நேரம்: 2 மணி நேரத்திற்குள் • இடைத்தரகர் தவிர்ப்பு: 100%',
+  traceabilityFarmerPayout: 'நேரடி விவசாயி வருமானம்:',
+  closeInspector: 'ஆய்வை மூடு',
+
+  // Additional Navbar Keys
+  loginToPortal: 'போர்ட்டலில் உள்நுழைக',
+  registerNewAccount: 'புதிய கணக்கை பதிவு செய்க',
+  goToDashboard: 'டாஷ்போர்டுக்குச் செல்'
 };
 
 export default ta;

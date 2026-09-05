@@ -82,20 +82,52 @@ export default function RoleLoginPage({ defaultRole }) {
   return (
     <div className="min-vh-100 bg-light d-flex flex-column">
       {/* Header */}
-      <header className="bg-white border-bottom py-3 shadow-xs">
+      <header className="bg-white border-bottom py-2.5 shadow-xs sticky-top">
         <div className="container d-flex align-items-center justify-content-between">
-          <Link to="/" className="d-flex align-items-center text-decoration-none">
+          <Link to="/" className="d-flex align-items-center text-decoration-none flex-shrink-0">
             <img
               src="/naam-uzhavar-logo-transparent.png"
               alt="Naam Uzhavar"
-              style={{ height: '42px', width: 'auto', objectFit: 'contain' }}
+              className="h-8 sm:h-10 w-auto max-w-[125px] sm:max-w-none object-contain"
+              style={{ maxHeight: '38px', width: 'auto', objectFit: 'contain' }}
             />
           </Link>
 
-          <div className="d-flex align-items-center gap-3">
+          <div className="d-flex align-items-center gap-2 gap-sm-3 flex-shrink-0">
             <LanguageSwitcher />
-            <Link to="/login" className="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
-              <i className="bi bi-arrow-left me-1"></i> {t('switchRole')}
+
+            {/* Mobile View: Clean 32px Circular Arrow Button */}
+            <Link
+              to="/login"
+              className="btn btn-outline-secondary rounded-circle d-flex d-sm-none align-items-center justify-content-center p-0 transition-all"
+              style={{
+                width: '32px',
+                height: '32px',
+                minWidth: '32px',
+                minHeight: '32px',
+                fontSize: '0.85rem'
+              }}
+              title={t('switchRole')}
+              aria-label={t('switchRole')}
+            >
+              <i className="bi bi-arrow-left"></i>
+            </Link>
+
+            {/* Tablet & Desktop View: Pill with Icon and Text */}
+            <Link
+              to="/login"
+              className="btn btn-outline-secondary rounded-pill fw-bold d-none d-sm-inline-flex align-items-center gap-1.5 transition-all text-nowrap"
+              style={{
+                padding: '4px 14px',
+                fontSize: '0.82rem',
+                height: '32px',
+                minHeight: '32px',
+                lineHeight: 1
+              }}
+              title={t('switchRole')}
+            >
+              <i className="bi bi-arrow-left"></i>
+              <span>{t('switchRole')}</span>
             </Link>
           </div>
         </div>

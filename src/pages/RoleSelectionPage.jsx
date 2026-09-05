@@ -52,26 +52,54 @@ export default function RoleSelectionPage() {
   return (
     <div className="min-vh-100 bg-light d-flex flex-column">
       {/* Top Navbar Bar */}
-      <header className="bg-white border-bottom py-3 shadow-xs sticky-top">
+      <header className="bg-white border-bottom py-2.5 shadow-xs sticky-top">
         <div className="container d-flex align-items-center justify-content-between">
           <div
-            className="d-flex align-items-center cursor-pointer"
+            className="d-flex align-items-center cursor-pointer flex-shrink-0"
             onClick={() => navigate('/')}
             style={{ cursor: 'pointer' }}
           >
             <img
               src="/naam-uzhavar-logo-transparent.png"
               alt="Naam Uzhavar"
-              style={{ height: '42px', width: 'auto', objectFit: 'contain' }}
+              className="h-8 sm:h-10 w-auto max-w-[125px] sm:max-w-none object-contain"
+              style={{ maxHeight: '38px', width: 'auto', objectFit: 'contain' }}
             />
           </div>
 
-          <div className="d-flex align-items-center gap-3">
+          <div className="d-flex align-items-center gap-2 gap-sm-3 flex-shrink-0">
             <LanguageSwitcher />
+            {/* Mobile View: Clean 32px Circular Arrow Button */}
             <button
               type="button"
-              className="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
+              className="btn btn-outline-secondary rounded-circle d-flex d-sm-none align-items-center justify-content-center p-0 transition-all"
+              style={{
+                width: '32px',
+                height: '32px',
+                minWidth: '32px',
+                minHeight: '32px',
+                fontSize: '0.85rem'
+              }}
               onClick={() => navigate('/')}
+              title={t('backToHome')}
+              aria-label={t('backToHome')}
+            >
+              <i className="bi bi-arrow-left"></i>
+            </button>
+
+            {/* Tablet & Desktop View: Pill with Icon and Text */}
+            <button
+              type="button"
+              className="btn btn-outline-secondary rounded-pill fw-bold d-none d-sm-inline-flex align-items-center gap-1.5 transition-all text-nowrap"
+              style={{
+                padding: '4px 14px',
+                fontSize: '0.82rem',
+                height: '32px',
+                minHeight: '32px',
+                lineHeight: 1
+              }}
+              onClick={() => navigate('/')}
+              title={t('backToHome')}
             >
               <i className="bi bi-arrow-left"></i>
               <span>{t('backToHome')}</span>

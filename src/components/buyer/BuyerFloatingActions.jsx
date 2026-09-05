@@ -27,9 +27,9 @@ export default function BuyerFloatingActions() {
 
   return (
     <aside
-      className="fixed z-40 transition-all duration-300 flex flex-col items-end gap-2.5 pointer-events-auto select-none"
+      className="buyer-floating-actions d-md-none fixed z-40 transition-all duration-300 flex flex-col items-end gap-2.5 pointer-events-auto select-none"
       style={{
-        /* Positioned above mobile bottom bar (60px) on mobile, and floating bottom-right on desktop */
+        /* Positioned above mobile bottom bar (60px) on mobile, hidden on desktop and laptop (>= 768px) */
         bottom: 'calc(env(safe-area-inset-bottom, 0px) + 76px)',
         right: '16px'
       }}

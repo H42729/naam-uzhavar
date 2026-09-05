@@ -1054,19 +1054,57 @@ h1, h2, h3, h4, h5, h6, p, span, strong, label, button, a {
   box-shadow: 0 4px 14px -3px rgba(15, 23, 42, 0.06) !important;
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
   .farm-sticky-sub-header {
-    top: 64px !important;
-  }
-}
-
-@media (max-width: 575.98px) {
-  .farm-sticky-sub-header {
-    top: 60px !important;
+    position: relative !important;
+    top: auto !important;
+    z-index: 10 !important;
   }
   .farm-btn-mobile-full {
     width: 100% !important;
     display: flex !important;
+  }
+}
+
+/* Farmer Status Filter Tabs: Stacked 1 per row on mobile, horizontal pills on desktop */
+.farm-tabs-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.farm-tab-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+@media (max-width: 767.98px) {
+  .farm-tabs-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    overflow-x: visible !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .farm-tab-pill {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 16px !important;
+    border-radius: 14px !important;
+    white-space: normal !important;
   }
 }
 

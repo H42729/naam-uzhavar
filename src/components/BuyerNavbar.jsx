@@ -242,11 +242,11 @@ export default function BuyerNavbar({
               {/* Vertical Hairline Divider */}
               <div className="h-7 sm:h-8 w-px bg-slate-200 mx-0.5 sm:mx-2 hidden sm:block flex-shrink-0" aria-hidden="true" />
 
-              {/* Buyer Profile Capsule: Soft cream background with amber avatar border */}
+              {/* Buyer Profile Capsule: Standardized 42px height on mobile with 32px avatar */}
               <Link
                 to="/buyer/profile"
                 onClick={() => setClickedTabId('profile')}
-                className="bg-[#FFFDF5] border border-[#FDE68A] rounded-2xl px-2 py-1 sm:px-3.5 sm:py-1.5 shadow-2xs flex items-center gap-2 sm:gap-2.5 no-underline hover:bg-amber-50/80 transition-colors min-w-0 cursor-pointer text-inherit"
+                className="bg-[#FFFDF5] border border-[#FDE68A] rounded-2xl px-2.5 py-1 sm:px-3.5 sm:py-1.5 shadow-2xs flex items-center gap-2 sm:gap-2.5 no-underline hover:bg-amber-50/80 transition-colors min-w-0 cursor-pointer text-inherit"
                 title={t('viewBuyerProfile', 'View Buyer Profile')}
               >
                 <img
@@ -255,11 +255,11 @@ export default function BuyerNavbar({
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-amber-400 object-cover flex-shrink-0"
                 />
                 <div className="flex flex-col text-left leading-tight justify-center min-w-0">
-                  <span className="font-bold text-slate-900 text-xs sm:text-base leading-tight block truncate max-w-[100px] xs:max-w-[130px] sm:max-w-[200px]">
+                  <span className="font-bold text-slate-900 text-xs sm:text-base leading-tight block truncate max-w-[110px] xs:max-w-[140px] sm:max-w-[200px]">
                     {displayBuyerName}
                   </span>
                   <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs mt-0.5 min-w-0">
-                    <span className="text-[#D97706] font-semibold truncate block max-w-[95px] xs:max-w-[125px] sm:max-w-none">
+                    <span className="text-[#D97706] font-semibold truncate block max-w-[110px] xs:max-w-[140px] sm:max-w-none">
                       ✔ {language === 'ta' ? 'சரிபார்க்கப்பட்டவர்' : 'Verified Buyer'}
                     </span>
                     <span className="text-slate-400 hidden lg:inline">•</span>
