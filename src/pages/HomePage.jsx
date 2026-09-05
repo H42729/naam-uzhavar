@@ -4,6 +4,7 @@ import Hero from '../components/Hero';
 import Stats from '../components/Stats';
 import Footer from '../components/Footer';
 import TraceabilityModal from '../components/TraceabilityModal';
+import HomeFloatingActions from '../components/HomeFloatingActions';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -69,6 +70,9 @@ export default function HomePage() {
         {/* Modern Footer */}
         <Footer onOpenAuth={handleOpenAuth} />
       </div>
+
+      {/* Floating Action Buttons for Mobile View (Sign In & Register one by one, removed on tablet & desktop) */}
+      <HomeFloatingActions />
 
       {/* Interactive IoT Traceability Modal */}
       <TraceabilityModal

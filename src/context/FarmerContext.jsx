@@ -463,6 +463,87 @@ export function FarmerProvider({ children }) {
   };
 
   // Buyer Requests Operations
+  const addBuyerRequest = (incomingReq) => {
+    const reqId = incomingReq.id || `REQ-${Date.now().toString().slice(-4)}`;
+    const qty =
+      typeof incomingReq.quantity === 'number'
+        ? `${incomingReq.quantity} ${incomingReq.unit || 'kg'}`
+        : String(incomingReq.quantity || '100 kg');
+    const priceVal = incomingReq.price || incomingReq.offeredPrice || 28;
+    const totalVal =
+      incomingReq.totalAmount ||
+      Number(incomingReq.quantity || 100) * Number(priceVal);
+
+    const newFarmerReq = {
+      id: reqId,
+      buyerName: incomingReq.buyerName || 'FreshMart Supermarkets',
+      buyerType: incomingReq.buyerType || 'Wholesale & Retail Buyer',
+      avatar:
+        incomingReq.avatar ||
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+      cropRequested:
+        incomingReq.productName ||
+        incomingReq.crop ||
+        incomingReq.cropRequested ||
+        'Farmgate Produce',
+      harvestId: incomingReq.harvestId || incomingReq.productId,
+      quantity: qty,
+      offerPrice:
+        typeof priceVal === 'string' && priceVal.includes('₹')
+          ? priceVal
+          : `₹${priceVal} / kg`,
+      totalValue:
+        typeof totalVal === 'string' && totalVal.includes('₹')
+          ? totalVal
+          : `₹${Number(totalVal).toLocaleString('en-IN')}`,
+      location:
+        incomingReq.deliveryLocation ||
+        incomingReq.location ||
+        'Dindigul Central Hub',
+      requestDate: 'Today, Just Now',
+      message:
+        incomingReq.message ||
+        'Direct procurement request placed from Naam Uzhavar marketplace.',
+      phone: incomingReq.buyerPhone || incomingReq.phone || '+91 94432 10987',
+      status: 'Pending',
+      ...incomingReq
+    };
+
+    setBuyerRequests((prev) => [newFarmerReq, ...prev]);
+
+    // If matches a harvest, increment buyerRequestCount and set status to 'Buyer Request'
+    setHarvests((prev) =>
+      prev.map((h) => {
+        const matches =
+          (incomingReq.harvestId && h.id === incomingReq.harvestId) ||
+          (incomingReq.productId && h.id === incomingReq.productId) ||
+          (h.name &&
+            incomingReq.productName &&
+            h.name.toLowerCase().includes(incomingReq.productName.toLowerCase())) ||
+          (h.cropName &&
+            incomingReq.productName &&
+            h.cropName.toLowerCase().includes(incomingReq.productName.toLowerCase()));
+
+        if (matches) {
+          return {
+            ...h,
+            buyerRequestCount: (Number(h.buyerRequestCount) || 0) + 1,
+            status: h.status === 'Available' ? 'Buyer Request' : h.status
+          };
+        }
+        return h;
+      })
+    );
+
+    showToast(
+      'New Buyer Request! 📥',
+      `Received request from ${newFarmerReq.buyerName} for ${newFarmerReq.quantity} of ${newFarmerReq.cropRequested}.`,
+      'info'
+    );
+
+    return newFarmerReq;
+  };
+
   const acceptRequest = (requestId) => {
     const req = buyerRequests.find((r) => r.id === requestId);
     setBuyerRequests((prev) =>
@@ -614,6 +695,8 @@ export function FarmerProvider({ children }) {
         updateHarvest,
         acceptRequest,
         declineRequest,
+        addBuyerRequest,
+        setBuyerRequests,
         sendMessage,
         markConversationAsRead,
         getOrCreateConversationForBuyer,

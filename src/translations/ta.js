@@ -462,6 +462,8 @@ const ta = {
   farmersMatchedCount: 'பொருந்திய விவசாயிகள்',
   averagePriceLabel: 'சராசரி விலை',
   matchingFarmersTitle: 'பங்கேற்கும் விவசாயிகள் விவரம்',
+  viewFarmerDetails: 'விவரங்கள்',
+  farmerDetailsTitle: 'விவசாயி & ஒதுக்கீடு விவரங்கள்',
   confirmBulkOrderCTA: 'மொத்த ஆர்டரை உறுதி செய்',
   noBulkRequirementsYet: 'மொத்த தேவைகள் இல்லை',
   noBulkRequirementsDesc: 'அதிக அளவு தேவையா? பல விவசாயிகளின் விளைச்சலை ஒருங்கிணைக்க உங்கள் முதல் தேவையை உருவாக்கவும்.',

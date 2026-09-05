@@ -1564,3 +1564,24 @@ body {
     padding-right: 12px !important;
   }
 }
+
+/* ==========================================================================
+   Home Page Floating Action Buttons:
+   - VISIBLE in Mobile View (< 768px), stacked one by one
+   - REMOVED in Tablet and Desktop Mode (>= 768px)
+   ========================================================================== */
+.home-floating-actions,
+aside[aria-label="Home Quick Floating Actions"] {
+  display: flex !important;
+}
+
+@media (min-width: 768px) {
+  .home-floating-actions,
+  aside[aria-label="Home Quick Floating Actions"],
+  .d-md-none.home-floating-actions {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}

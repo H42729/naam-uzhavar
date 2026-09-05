@@ -462,6 +462,8 @@ const en = {
   farmersMatchedCount: 'Farmers Matched',
   averagePriceLabel: 'Average Price',
   matchingFarmersTitle: 'Contributing Farmers Breakdown',
+  viewFarmerDetails: 'View Details',
+  farmerDetailsTitle: 'Farmer & Lot Details',
   confirmBulkOrderCTA: 'CONFIRM BULK ORDER',
   noBulkRequirementsYet: 'No Bulk Requirements',
   noBulkRequirementsDesc: 'Need a large quantity? Create your first bulk requirement to pool harvests.',

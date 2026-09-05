@@ -139,6 +139,15 @@ export function matchSupplyLocally({
       productId: lot.id,
       crop: lot.crop || crop,
       tamilName: lot.tamilName,
+      farmer: lot.farmer || lot.farmerName || `Farmer #${idx + 1} (${lot.location || 'Cluster'})`,
+      farmerName: lot.farmer || lot.farmerName || 'Verified Regional Farmer',
+      farmerPhone: lot.farmerPhone || '+91 98421 77234',
+      farmAddress: lot.farmAddress || `${lot.location || 'Dindigul'}, Tamil Nadu`,
+      fpo: lot.fpo || 'Regional Farmers Producer Co-op',
+      image: lot.image || (lot.images && lot.images[0]) || '',
+      images: lot.images || (lot.image ? [lot.image] : []),
+      rating: lot.rating || '4.9',
+      experience: lot.experience || '12+ Years',
       anonymizedLabel: generateAnonymizedFarmerLabel(lot, idx),
       anonymizedRole: `Verified Smallholder Lot #${lot.id}`,
       _rawFarmer: {
@@ -149,7 +158,10 @@ export function matchSupplyLocally({
         location: lot.location || 'Dindigul',
         fpo: lot.fpo || 'Regional Farmers Producer Co-op',
         grade: lot.grade || 'Grade A Premium',
-        shelfLife: lot.shelfLife || '8-10 Days'
+        shelfLife: lot.shelfLife || '8-10 Days',
+        rating: lot.rating || '4.9',
+        experience: lot.experience || '12+ Years',
+        image: lot.image || (lot.images && lot.images[0]) || ''
       },
       availableKg,
       allocatedKg,
@@ -166,32 +178,48 @@ export function matchSupplyLocally({
   if (remainingNeeded > 0) {
     const REGIONAL_CLUSTERS = [
       {
-        farmer: 'Nilakottai Vegetable Producers FPO',
+        farmer: 'K. Muthuvel (Nilakottai FPO)',
         phone: '+91 98422 11980',
         location: 'Nilakottai',
         farmAddress: 'Survey 88, Nilakottai Horticultural Belt, Dindigul - 624208',
-        fpo: 'Nilakottai Farmers Collective'
+        fpo: 'Nilakottai Farmers Collective',
+        grade: 'Grade A Premium',
+        shelfLife: '8-10 Days',
+        rating: '4.9',
+        experience: '14+ Years'
       },
       {
-        farmer: 'Oddanchatram Valley Harvest Group',
+        farmer: 'S. Ramasamy (Oddanchatram Valley)',
         phone: '+91 94435 88210',
         location: 'Oddanchatram',
         farmAddress: 'Feeder Mandi Complex, Oddanchatram Cluster, Dindigul - 624619',
-        fpo: 'Oddanchatram Agro Cooperative'
+        fpo: 'Oddanchatram Agro Cooperative',
+        grade: 'Grade A Premium',
+        shelfLife: '10-12 Days',
+        rating: '4.8',
+        experience: '18+ Years'
       },
       {
-        farmer: 'Palani Basin Smallholders Collective',
+        farmer: 'V. Palanisamy (Palani Basin)',
         phone: '+91 97890 44321',
         location: 'Palani',
         farmAddress: 'River Basin Terrace Farms, Palani - 624601',
-        fpo: 'Palani Horticulture Federation'
+        fpo: 'Palani Horticulture Federation',
+        grade: 'Grade A Premium',
+        shelfLife: '7-9 Days',
+        rating: '4.9',
+        experience: '12+ Years'
       },
       {
-        farmer: 'Dindigul Central Agropool Consortium',
+        farmer: 'M. Kathirvel (Dindigul Central Agropool)',
         phone: '+91 96551 22900',
         location: 'Dindigul',
         farmAddress: 'Central Cold Storage & Logistics Hub, Dindigul - 624003',
-        fpo: 'Tamil Nadu Smallholders Consortium'
+        fpo: 'Tamil Nadu Smallholders Consortium',
+        grade: 'Grade A Premium',
+        shelfLife: '8-10 Days',
+        rating: '4.9',
+        experience: '20+ Years'
       }
     ];
 
@@ -208,11 +236,20 @@ export function matchSupplyLocally({
       const cluster = REGIONAL_CLUSTERS[(allocations.length + c) % REGIONAL_CLUSTERS.length];
       const clusterLotId = `POOL-${Date.now().toString().slice(-4)}-${c + 1}`;
       const subtotal = allocatedKg * basePrice;
+      const lotImage = matchingLots[0]?.image || '';
 
       allocations.push({
         lotId: clusterLotId,
         productId: clusterLotId,
         crop: crop,
+        farmer: cluster.farmer,
+        farmerName: cluster.farmer,
+        farmerPhone: cluster.phone,
+        farmAddress: cluster.farmAddress,
+        fpo: cluster.fpo,
+        image: lotImage,
+        rating: cluster.rating,
+        experience: cluster.experience,
         anonymizedLabel: `Farmer Lot #${allocations.length + 1} (${cluster.location} Cluster)`,
         anonymizedRole: `Pooled Cooperative Lot #${allocations.length + 1}`,
         _rawFarmer: {
@@ -223,7 +260,10 @@ export function matchSupplyLocally({
           location: cluster.location,
           fpo: cluster.fpo,
           grade: 'Grade A Premium',
-          shelfLife: '8-10 Days'
+          shelfLife: cluster.shelfLife || '8-10 Days',
+          rating: cluster.rating,
+          experience: cluster.experience,
+          image: lotImage
         },
         availableKg: allocatedKg,
         allocatedKg,
@@ -245,7 +285,12 @@ export function matchSupplyLocally({
 
   const matchedItems = allocations.map((a) => ({
     ...a,
-    farmer: a.anonymizedLabel || a.farmer || 'Verified Farmer Partner',
+    farmer: a.farmerName || a.farmer || a.anonymizedLabel || 'Verified Farmer Partner',
+    farmerName: a.farmerName || a.farmer || a._rawFarmer?.name || 'Verified Farmer Partner',
+    farmerPhone: a.farmerPhone || a._rawFarmer?.phone || '+91 98421 77234',
+    farmAddress: a.farmAddress || a._rawFarmer?.farmAddress || `${a.location || 'Dindigul'}, Tamil Nadu`,
+    fpo: a.fpo || a._rawFarmer?.fpo || 'Regional Farmers Producer Co-op',
+    image: a.image || a._rawFarmer?.image || '',
     allocatedQty: a.allocatedKg,
     price: a.pricePerKg
   }));

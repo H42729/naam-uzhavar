@@ -11,6 +11,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useBuyer } from '../../context/BuyerContext';
 import { useLanguage } from '../../context/LanguageContext';
 import BuyerLayout from '../../components/buyer/BuyerLayout';
+import FarmerMatchingDetailsModal from '../../components/buyer/FarmerMatchingDetailsModal';
 
 export default function BuyerRequirementPage() {
   const navigate = useNavigate();
@@ -55,6 +56,7 @@ export default function BuyerRequirementPage() {
   const [showCreateForm, setShowCreateForm] = useState(() => Boolean(cardData));
   const [sourceCard, setSourceCard] = useState(cardData || null);
   const [selectedReq, setSelectedReq] = useState(null);
+  const [selectedLotForDetails, setSelectedLotForDetails] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State: Pre-populated if coming from Marketplace card (+ Add Bulk)
@@ -515,36 +517,76 @@ export default function BuyerRequirementPage() {
                         <th className="text-end">{language === 'ta' ? 'ஒதுக்கப்பட்ட அளவு' : 'Allocated Qty'}</th>
                         <th className="text-end">{language === 'ta' ? 'விலை / கிலோ' : 'Rate / kg'}</th>
                         <th className="text-end">{language === 'ta' ? 'மொத்தம்' : 'Subtotal'}</th>
+                        <th className="text-center">{language === 'ta' ? 'விவரங்கள்' : 'Action'}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {matchedLots.length === 0 ? (
                         <tr>
-                          <td colSpan="5" className="text-center py-4 text-muted">
+                          <td colSpan="6" className="text-center py-4 text-muted">
                             {language === 'ta' ? 'விவசாயிகளின் பங்கீடு விவரங்கள் தயாராகிறது...' : 'Generating multi-farm lot allocation breakdown...'}
                           </td>
                         </tr>
                       ) : (
                         matchedLots.map((lot, idx) => {
-                          const farmerName = lot.farmer || lot.anonymizedLabel || lot._rawFarmer?.name || `Farmer Partner #${idx + 1}`;
+                          const farmerName = lot.farmerName || lot._rawFarmer?.name || lot.farmer || `Farmer Partner #${idx + 1}`;
                           const locationName = lot.location || lot._rawFarmer?.location || 'Tamil Nadu Cluster';
                           const allocatedKg = Number(lot.allocatedQty ?? lot.allocatedKg ?? 0);
                           const pricePerKg = Number(lot.price ?? lot.pricePerKg ?? avgPrice);
                           const subtotal = Number(lot.subtotal ?? (allocatedKg * pricePerKg));
+                          const fpoName = lot.fpo || lot._rawFarmer?.fpo || `${locationName} Farmers Producer Collective`;
 
                           return (
                             <tr key={lot.lotId || idx}>
                               <td>
-                                <strong className="text-dark d-block">{farmerName}</strong>
-                                <span className="text-muted small">✓ Verified Smallholder Lot</span>
+                                <div className="d-flex align-items-center gap-2.5">
+                                  <div
+                                    className="rounded-circle bg-success text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0 shadow-2xs"
+                                    style={{ width: '34px', height: '34px', fontSize: '0.85rem' }}
+                                  >
+                                    {farmerName.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <strong className="text-dark d-block">{farmerName}</strong>
+                                    <span className="text-muted small d-block" style={{ fontSize: '0.72rem' }}>
+                                      ✓ {fpoName}
+                                    </span>
+                                  </div>
+                                </div>
                               </td>
-                              <td>{locationName}</td>
+                              <td>
+                                <span className="badge bg-light text-dark border">
+                                  <i className="bi bi-geo-alt text-success me-1"></i>
+                                  {locationName}
+                                </span>
+                              </td>
                               <td className="text-end font-monospace fw-bold text-success">
                                 {allocatedKg.toLocaleString('en-IN')} kg
                               </td>
                               <td className="text-end font-monospace">₹{pricePerKg} / kg</td>
                               <td className="text-end font-monospace fw-bold">
                                 ₹{subtotal.toLocaleString('en-IN')}
+                              </td>
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold d-inline-flex align-items-center gap-1.5 shadow-2xs hover:bg-success hover:text-white transition-all cursor-pointer"
+                                  style={{ fontSize: '0.78rem' }}
+                                  onClick={() =>
+                                    setSelectedLotForDetails({
+                                      ...lot,
+                                      crop: selectedReq.crop,
+                                      farmerName,
+                                      pricePerKg,
+                                      allocatedKg,
+                                      subtotal
+                                    })
+                                  }
+                                  title={language === 'ta' ? 'விவசாயி விவரங்களைப் பார்' : 'View Farmer & Produce Details'}
+                                >
+                                  <i className="bi bi-eye-fill"></i>
+                                  <span>{language === 'ta' ? 'விவரங்கள்' : 'View Details'}</span>
+                                </button>
                               </td>
                             </tr>
                           );
@@ -576,6 +618,15 @@ export default function BuyerRequirementPage() {
             </div>
           );
         })()}
+
+        {/* Farmer & Lot Details Inspection Modal */}
+        {selectedLotForDetails && (
+          <FarmerMatchingDetailsModal
+            lot={selectedLotForDetails}
+            cropName={selectedReq?.crop}
+            onClose={() => setSelectedLotForDetails(null)}
+          />
+        )}
 
         {/* ===================================================================
             4. ACTIVE BULK REQUIREMENTS CARDS (Section 15)

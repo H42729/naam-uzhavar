@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import BuyerLayout from '../../components/buyer/BuyerLayout';
 import { matchSupplyLocally } from '../../services/bulkProcurementService';
+import FarmerMatchingDetailsModal from '../../components/buyer/FarmerMatchingDetailsModal';
 import brinjalImg from '../../assets/brinjal.jpg';
 
 const CROP_FALLBACK = {
@@ -64,6 +65,7 @@ export default function BulkRequirementPage() {
   const [inputError, setInputError] = useState('');
   const [isMatching, setIsMatching] = useState(false);
   const [matchResult, setMatchResult] = useState(null);
+  const [selectedLotForDetails, setSelectedLotForDetails] = useState(null);
 
   // Delivery & Checkout state for Step 3
   const [deliveryLocation, setDeliveryLocation] = useState('Central Agricultural Hub, Tamil Nadu');
@@ -525,23 +527,39 @@ export default function BulkRequirementPage() {
                           className="p-4 sm:p-5 hover:bg-slate-50/80 transition-colors"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center">
-                                {idx + 1}
-                              </span>
-                              <span className="font-extrabold text-slate-900 text-sm">
-                                {lot.anonymizedLabel || `Supplier Lot #${idx + 1}`}
-                              </span>
-                              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black flex items-center justify-center shadow-2xs flex-shrink-0">
+                                {(lot.farmerName || lot.farmer || 'F').charAt(0)}
+                              </div>
+                              <div>
+                                <span className="font-extrabold text-slate-900 text-sm block">
+                                  {lot.farmerName || lot.farmer || lot.anonymizedLabel || `Supplier Lot #${idx + 1}`}
+                                </span>
+                                <span className="text-[11px] text-slate-500 font-medium">
+                                  ✓ {lot.fpo || `${lot.location || 'Tamil Nadu'} Cluster`}
+                                </span>
+                              </div>
+                              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full ml-1">
                                 {lot.grade || 'Grade A'}
                               </span>
                             </div>
 
-                            <div className="text-left sm:text-right">
-                              <span className="text-xs text-slate-500 block">Lot Cost</span>
-                              <span className="text-base font-extrabold text-slate-900">
-                                ₹{lot.subtotal?.toLocaleString('en-IN') || (lot.allocatedKg * (lot.pricePerKg || basePricePerKg)).toLocaleString('en-IN')}
-                              </span>
+                            <div className="flex items-center gap-3">
+                              <div className="text-left sm:text-right">
+                                <span className="text-xs text-slate-500 block">Lot Cost</span>
+                                <span className="text-base font-extrabold text-slate-900">
+                                  ₹{lot.subtotal?.toLocaleString('en-IN') || (lot.allocatedKg * (lot.pricePerKg || basePricePerKg)).toLocaleString('en-IN')}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedLotForDetails({ ...lot, crop: cropName })}
+                                className="px-3 py-1.5 rounded-full text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                                title="View Farmer & Produce Details"
+                              >
+                                <i className="bi bi-eye-fill"></i>
+                                <span>{language === 'ta' ? 'விவரங்கள்' : 'View Details'}</span>
+                              </button>
                             </div>
                           </div>
 
@@ -946,6 +964,15 @@ export default function BulkRequirementPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Farmer & Produce Lot Details Modal */}
+        {selectedLotForDetails && (
+          <FarmerMatchingDetailsModal
+            lot={selectedLotForDetails}
+            cropName={cropName}
+            onClose={() => setSelectedLotForDetails(null)}
+          />
         )}
       </div>
     </BuyerLayout>

@@ -3045,15 +3045,24 @@ body, p, span, h1, h2, h3, h4, h5, h6 {
   max-width: 72px;
 }
 
-/* Floating Action Buttons - Mobile Only (< 768px), Hidden on Desktop, Laptop, and Tablet (>= 768px) */
-.buyer-floating-actions {
+/* ==========================================================================
+   Buyer Floating Action Buttons:
+   - VISIBLE in ALL mobile view (< 992px / < 1024px)
+   - REMOVED in Desktop Mode (>= 992px / >= 1024px)
+   ========================================================================== */
+.buyer-floating-actions,
+aside[aria-label="Buyer Quick Floating Actions"] {
   display: flex !important;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   .buyer-floating-actions,
-  aside[aria-label="Buyer Quick Floating Actions"] {
+  aside[aria-label="Buyer Quick Floating Actions"],
+  .d-lg-none.buyer-floating-actions {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 }
 

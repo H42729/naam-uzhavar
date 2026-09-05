@@ -12,6 +12,62 @@ import {
   createDirectBuyOrderRecord,
   deductInventoryFromProducts
 } from '../services/bulkProcurementService';
+import FarmerContext from './FarmerContext';
+
+const CROP_FALLBACK = {
+  tomato: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80',
+  onion: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600&auto=format&fit=crop&q=80',
+  banana: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600&auto=format&fit=crop&q=80',
+  brinjal: '/images/brinjal.jpg',
+  carrot: 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80',
+  cabbage: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80',
+  potato: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80',
+  chilli: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=600&auto=format&fit=crop&q=80',
+  corn: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=600&auto=format&fit=crop&q=80',
+  mango: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80'
+};
+const DEFAULT_HARVEST_IMG = 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=600&auto=format&fit=crop&q=80';
+
+export function harvestToBuyerProduct(h, farmerProfile) {
+  const crop = h.cropName || h.name || 'Produce';
+  const cropLower = crop.toLowerCase();
+  const matchedFallback = Object.keys(CROP_FALLBACK).find((k) => cropLower.includes(k));
+  const fallbackImg = matchedFallback ? CROP_FALLBACK[matchedFallback] : DEFAULT_HARVEST_IMG;
+
+  const validImg =
+    (h.images && h.images.length > 0 && h.images[0]) ||
+    h.image ||
+    fallbackImg;
+
+  const price = Number(h.pricePerKg || h.price || 28);
+  const qty = Number(h.quantity || 100);
+
+  return {
+    id: h.id,
+    crop: crop,
+    name: h.name || crop,
+    tamilName: h.tamilName || '',
+    category: h.category || 'Vegetables',
+    farmer: h.farmer || (farmerProfile?.name ? `${farmerProfile.name} (${farmerProfile.taluk || farmerProfile.district || 'Dindigul'})` : 'Arun Kumar (Nilakottai)'),
+    farmerPhone: h.farmerPhone || farmerProfile?.phone || '+91 98421 88920',
+    farmAddress: h.farmAddress || farmerProfile?.address || 'Survey No. 44/2, Batlagundu Main Road, Nilakottai, Dindigul',
+    quantity: qty,
+    unit: h.unit || 'kg',
+    price: price,
+    mandiPrice: h.mandiPrice || Math.round(price * 1.25),
+    location: h.location ? h.location.split(',')[0].trim() : (farmerProfile?.district || 'Dindigul'),
+    fullLocation: h.location || `${farmerProfile?.district || 'Dindigul'}, Tamil Nadu`,
+    harvestDate: h.harvestDate || 'Today (Fresh Harvest)',
+    grade: h.quality || h.grade || 'Grade A Premium',
+    organicStatus: h.organicStatus || 'Naturally Grown (Pesticide-Free)',
+    shelfLife: h.shelfLife || '8 - 10 Days',
+    minOrder: h.minOrder || Math.min(25, qty),
+    description: h.description || `${crop} directly harvested from farmgate. Certified organic & freshly picked.`,
+    image: validImg,
+    images: (h.images && h.images.length > 0) ? h.images : [validImg],
+    isFarmerHarvest: true
+  };
+}
 
 const BuyerContext = createContext(null);
 
@@ -65,6 +121,8 @@ export const INITIAL_BUYER_CONVERSATIONS = [
 ];
 
 export function BuyerProvider({ children }) {
+  const farmerCtx = useContext(FarmerContext);
+
   // --------------------------------------------------------------------------
   // CORE STATES (backed by localStorage)
   // --------------------------------------------------------------------------
@@ -161,6 +219,32 @@ export function BuyerProvider({ children }) {
 
   // Global Toast State
   const [toastMessage, setToastMessage] = useState('');
+
+  // Combine buyer catalog products with live farmer harvests
+  const allProducts = useMemo(() => {
+    let liveHarvests = farmerCtx?.harvests;
+    if (!liveHarvests) {
+      try {
+        const saved = localStorage.getItem('naam_uzhavar_harvests_v3');
+        if (saved) liveHarvests = JSON.parse(saved);
+      } catch {}
+    }
+    if (!Array.isArray(liveHarvests)) liveHarvests = [];
+
+    const activeFarmerHarvests = liveHarvests.filter(
+      (h) => h && h.status !== 'Sold' && h.status !== 'Deleted'
+    );
+
+    const farmerProducts = activeFarmerHarvests.map((h) =>
+      harvestToBuyerProduct(h, farmerCtx?.farmerProfile)
+    );
+
+    const farmerIdSet = new Set(farmerProducts.map((p) => String(p.id)));
+    const regularProducts = products.filter((p) => !farmerIdSet.has(String(p.id)));
+
+    // Farmer harvests appear first at the top of the marketplace!
+    return [...farmerProducts, ...regularProducts];
+  }, [products, farmerCtx?.harvests, farmerCtx?.farmerProfile]);
 
   // --------------------------------------------------------------------------
   // PERSISTENCE SYNC
@@ -288,6 +372,37 @@ export function BuyerProvider({ children }) {
       ...newRequestData
     };
     setRequests((prev) => [newReq, ...prev]);
+
+    // Forward directly to FarmerContext so request immediately appears in Farmer module
+    if (farmerCtx?.addBuyerRequest) {
+      farmerCtx.addBuyerRequest(newReq);
+    } else {
+      try {
+        const saved = localStorage.getItem('naam_uzhavar_buyer_requests_v3');
+        const parsed = saved ? JSON.parse(saved) : [];
+        const qtyStr = `${newReq.quantity} ${newReq.unit || 'kg'}`;
+        const priceStr = `₹${newReq.price || newReq.offeredPrice || 25} / kg`;
+        const totalStr = `₹${Number(calcTotal).toLocaleString('en-IN')}`;
+        const farmerReq = {
+          id: newReq.id,
+          buyerName: newReq.buyerName || 'FreshMart Supermarkets',
+          buyerType: 'Wholesale & Retail Buyer',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+          cropRequested: newReq.productName || newReq.crop || 'Produce',
+          harvestId: newReq.harvestId || newReq.productId,
+          quantity: qtyStr,
+          offerPrice: priceStr,
+          totalValue: totalStr,
+          location: newReq.deliveryLocation || 'Dindigul Central Hub',
+          requestDate: 'Today, Just Now',
+          message: newReq.message || 'Direct procurement request placed from Naam Uzhavar marketplace.',
+          phone: '+91 94432 10987',
+          status: 'Pending'
+        };
+        localStorage.setItem('naam_uzhavar_buyer_requests_v3', JSON.stringify([farmerReq, ...parsed]));
+      } catch (e) {}
+    }
+
     showToast(`✓ Request #${id} submitted to farmer!`);
     return newReq;
   };
@@ -323,8 +438,16 @@ export function BuyerProvider({ children }) {
     const normalizedAllocations = (matchResult.allocations || []).map((a, idx) => ({
       ...a,
       lotId: a.lotId || `LOT-${idx + 1}`,
-      farmer: a.anonymizedLabel || a.farmer || `Farmer Partner #${idx + 1}`,
-      location: a.location || 'Dindigul Regional Hub',
+      farmer: a.farmerName || a.farmer || a._rawFarmer?.name || a.anonymizedLabel || `Farmer Partner #${idx + 1}`,
+      farmerName: a.farmerName || a.farmer || a._rawFarmer?.name || `Farmer Partner #${idx + 1}`,
+      farmerPhone: a.farmerPhone || a._rawFarmer?.phone || '+91 98421 77234',
+      farmAddress: a.farmAddress || a._rawFarmer?.farmAddress || `${a.location || 'Dindigul'}, Tamil Nadu`,
+      fpo: a.fpo || a._rawFarmer?.fpo || `${a.location || 'Dindigul'} Farmers Collective (FPO)`,
+      image: a.image || a._rawFarmer?.image || '',
+      images: a.images || (a.image ? [a.image] : []),
+      rating: a.rating || a._rawFarmer?.rating || '4.9',
+      experience: a.experience || a._rawFarmer?.experience || '15+ Years',
+      location: a.location || a._rawFarmer?.location || 'Dindigul Regional Hub',
       allocatedQty: Number(a.allocatedKg ?? a.allocatedQty ?? 0),
       allocatedKg: Number(a.allocatedKg ?? a.allocatedQty ?? 0),
       price: Number(a.pricePerKg ?? a.price ?? safeAvgPrice),
@@ -496,6 +619,26 @@ export function BuyerProvider({ children }) {
     }
 
     setOrders((prev) => [newOrder, ...prev]);
+
+    // Forward to FarmerContext so farmer receives buyer order notification
+    if (farmerCtx?.addBuyerRequest) {
+      farmerCtx.addBuyerRequest({
+        id: `ORD-${Date.now().toString().slice(-4)}`,
+        buyerName: 'Direct Farmgate Buyer',
+        buyerType: 'Direct Procurement Buyer',
+        cropRequested: product.crop || product.name,
+        productName: product.crop || product.name,
+        harvestId: product.id,
+        productId: product.id,
+        quantity: buyerDetails.quantity || product.quantity,
+        unit: product.unit || 'kg',
+        price: product.price,
+        totalAmount: (Number(buyerDetails.quantity) || Number(product.quantity) || 100) * Number(product.price || 25),
+        deliveryLocation: buyerDetails.deliveryLocation || product.location || 'Dindigul Central Hub',
+        message: buyerDetails.notes || 'Instant Direct Farmgate purchase order placed by buyer.'
+      });
+    }
+
     showToast(`✓ Order #${newOrder.id} Placed! Direct purchase confirmed.`);
     return newOrder;
   };
@@ -599,7 +742,7 @@ export function BuyerProvider({ children }) {
   );
 
   const value = {
-    products,
+    products: allProducts,
     setProducts,
     orders,
     setOrders,

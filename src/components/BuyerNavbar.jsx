@@ -408,7 +408,7 @@ export default function BuyerNavbar({
             TIER 2: HORIZONTAL BUYER NAVIGATION TABS (COBALT BLUE ACTIVE PILL)
             Desktop only (hidden on mobile < lg to avoid duplicate navbars)
             ===================================================================== */}
-        <div className="border-t border-slate-100 bg-white hidden lg:block">
+        <div className="border-t border-slate-100 bg-white d-none d-lg-block">
           <nav className="px-4 sm:px-6 py-2 flex items-center gap-2 max-w-7xl mx-auto overflow-x-auto no-scrollbar scroll-smooth">
             {navTabs.map((tab) => {
               const IconComponent = tab.icon;

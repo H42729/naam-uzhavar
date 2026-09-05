@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useBuyer } from '../../context/BuyerContext';
 import { matchSupplyLocally } from '../../services/bulkProcurementService';
+import FarmerMatchingDetailsModal from './FarmerMatchingDetailsModal';
 
 export default function BulkProcurementModal({ product, onClose }) {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export default function BulkProcurementModal({ product, onClose }) {
 
   // Step 2 State: Matching Results
   const [matchResult, setMatchResult] = useState(null);
+  const [selectedLotForDetails, setSelectedLotForDetails] = useState(null);
 
   // Step 3 State: Order Confirmation Submitting
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -554,46 +556,62 @@ export default function BulkProcurementModal({ product, onClose }) {
                     <table className="table table-hover align-middle mb-0 small">
                       <thead className="table-light">
                         <tr>
-                          <th>{language === 'ta' ? 'விவசாயி அடையாளம்' : 'Farmer Identifier (Anonymized)'}</th>
+                          <th>{language === 'ta' ? 'விவசாயி' : 'Farmer Partner'}</th>
                           <th className="text-end">{language === 'ta' ? 'இருப்பு' : 'Stock'}</th>
                           <th className="text-end">{language === 'ta' ? 'ஒதுக்கீடு' : 'Allocated Qty'}</th>
                           <th className="text-end">{language === 'ta' ? 'கிலோ விலை' : 'Rate / kg'}</th>
                           <th className="text-end">{language === 'ta' ? 'துணைத்தொகை' : 'Subtotal'}</th>
+                          <th className="text-center">{language === 'ta' ? 'விவரங்கள்' : 'Action'}</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {matchResult.allocations.map((item, idx) => (
-                          <tr key={idx}>
-                            <td>
-                              <div className="d-flex align-items-center gap-2">
-                                <div
-                                  className="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold"
-                                  style={{ width: '28px', height: '28px', fontSize: '0.78rem' }}
+                        {matchResult.allocations.map((item, idx) => {
+                          const farmerName = item.farmerName || item._rawFarmer?.name || item.farmer || item.anonymizedLabel || `Farmer #${idx + 1}`;
+                          return (
+                            <tr key={idx}>
+                              <td>
+                                <div className="d-flex align-items-center gap-2">
+                                  <div
+                                    className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold shadow-2xs"
+                                    style={{ width: '28px', height: '28px', fontSize: '0.78rem' }}
+                                  >
+                                    {farmerName.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <strong className="text-dark d-block">{farmerName}</strong>
+                                    <span className="text-muted small" style={{ fontSize: '0.7rem' }}>
+                                      ✓ {item.fpo || `${item.location || 'Dindigul'} Cluster`}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="text-end font-monospace text-muted">
+                                {item.availableKg} kg
+                              </td>
+                              <td className="text-end font-monospace fw-bold text-success">
+                                {item.allocatedKg} kg
+                              </td>
+                              <td className="text-end font-monospace">
+                                ₹{item.pricePerKg} / kg
+                              </td>
+                              <td className="text-end font-monospace fw-bold text-dark">
+                                ₹{item.subtotal.toLocaleString('en-IN')}
+                              </td>
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-success rounded-pill px-2.5 py-0.5 fw-bold d-inline-flex align-items-center gap-1 shadow-2xs"
+                                  style={{ fontSize: '0.74rem' }}
+                                  onClick={() => setSelectedLotForDetails({ ...item, crop: matchResult.crop })}
+                                  title="View Farmer & Produce Details"
                                 >
-                                  {idx + 1}
-                                </div>
-                                <div>
-                                  <strong className="text-dark d-block">{item.anonymizedLabel}</strong>
-                                  <span className="text-muted small" style={{ fontSize: '0.7rem' }}>
-                                    ✓ Verified Producer • {item.location}
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="text-end font-monospace text-muted">
-                              {item.availableKg} kg
-                            </td>
-                            <td className="text-end font-monospace fw-bold text-success">
-                              {item.allocatedKg} kg
-                            </td>
-                            <td className="text-end font-monospace">
-                              ₹{item.pricePerKg} / kg
-                            </td>
-                            <td className="text-end font-monospace fw-bold text-dark">
-                              ₹{item.subtotal.toLocaleString('en-IN')}
-                            </td>
-                          </tr>
-                        ))}
+                                  <i className="bi bi-eye-fill"></i>
+                                  <span>{language === 'ta' ? 'விவரங்கள்' : 'View'}</span>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                       <tfoot className="table-light fw-bold">
                         <tr>
@@ -607,6 +625,7 @@ export default function BulkProcurementModal({ product, onClose }) {
                           <td className="text-end font-monospace text-primary fs-6">
                             ₹{matchResult.totalAmount.toLocaleString('en-IN')}
                           </td>
+                          <td></td>
                         </tr>
                       </tfoot>
                     </table>
@@ -801,6 +820,15 @@ export default function BulkProcurementModal({ product, onClose }) {
           )}
         </div>
       </div>
+
+      {/* Farmer & Produce Lot Details Modal */}
+      {selectedLotForDetails && (
+        <FarmerMatchingDetailsModal
+          lot={selectedLotForDetails}
+          cropName={matchResult?.crop || product?.crop}
+          onClose={() => setSelectedLotForDetails(null)}
+        />
+      )}
     </div>,
     document.body
   );
