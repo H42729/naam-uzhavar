@@ -8,7 +8,6 @@ const DEFAULT_AVATAR =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDbsSudoKNyE7RJZob9ewQOMJwTcwZUjLC5hQwyUPRj0Jw5fUDlpXhqui_Y4_7IcAnQmAdgWVOcPEnf6cV1rotCpFACgesUn3oD-PCwQkJP7f8H7tO4HZzAkGd9HVZm9pXVk9ajbGmq5nOT3u50Rhr06u7IEESRHxHUfaFbkfSXThrWGF37A-1rj954tpLOOk8g1neswi5Qr6ZZQdHyAZ2SODHuakgv-slcE-AxKG-YQO6u39Trc4sqnA';
 
 export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUser, onOpenAuth, onOpenMarketplace }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
@@ -17,12 +16,12 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
   const effectiveUser = currentUser || user;
   const effectiveIsLoggedIn = isLoggedIn !== undefined ? isLoggedIn : isAuthenticated;
 
+  const isContactActive = activeTab === 'contact' || location.pathname === '/contact';
   const isMarketplaceActive = activeTab === 'marketplace' || location.pathname.startsWith('/buyer/browse');
-  const isHomeActive = !isMarketplaceActive && (activeTab === 'home' || location.pathname === '/');
+  const isHomeActive = !isContactActive && !isMarketplaceActive && (activeTab === 'home' || location.pathname === '/');
 
   const handleNavClick = (sectionId, tabName) => {
     if (setActiveTab) setActiveTab(tabName);
-    setMobileMenuOpen(false);
     if (tabName === 'home' && location.pathname !== '/') {
       navigate('/');
       return;
@@ -67,40 +66,65 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
               <li>
                 <button
                   type="button"
-                  className={`px-4 py-2 text-sm font-semibold rounded-full transition-all border-0 cursor-pointer ${
-                    isHomeActive
-                      ? 'bg-[#2563EB] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 bg-transparent'
-                  }`}
+                  id="nav-home-btn"
+                  className="px-4 py-2 text-sm font-semibold rounded-pill transition-all border-0 cursor-pointer"
+                  style={{
+                    backgroundColor: isHomeActive ? '#2563EB' : 'transparent',
+                    color: isHomeActive ? '#ffffff' : '#475569'
+                  }}
                   onClick={() => handleNavClick('top', 'home')}
                 >
                   {t('navHome')}
                 </button>
               </li>
 
-              {/* 2. Marketplace */}
+              {/* 2. Contact (replaced Marketplace as requested) */}
               <li>
                 <button
                   type="button"
-                  className={`px-4 py-2 text-sm font-semibold rounded-full transition-all border-0 cursor-pointer flex items-center gap-1.5 ${
-                    isMarketplaceActive
-                      ? 'bg-[#2563EB] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 bg-transparent'
-                  }`}
+                  id="nav-contact-btn"
+                  className="px-4 py-2 text-sm font-semibold rounded-pill transition-all border-0 cursor-pointer d-flex align-items-center gap-1.5"
+                  style={{
+                    backgroundColor: isContactActive ? '#2563EB' : 'transparent',
+                    color: isContactActive ? '#ffffff' : '#475569'
+                  }}
                   onClick={() => {
-                    if (onOpenMarketplace) onOpenMarketplace();
-                    else navigate('/buyer/browse');
+                    if (setActiveTab) setActiveTab('contact');
+                    navigate('/contact');
                   }}
                 >
-                  <i className="bi bi-shop"></i>
-                  <span>{t('navMarketplace')}</span>
+                  <i className="bi bi-telephone"></i>
+                  <span>{t('navContact')}</span>
                 </button>
               </li>
             </ul>
           </nav>
 
           {/* Nav Actions (Right) */}
-          <div className="fd-nav-actions">
+          <div className="fd-nav-actions d-flex align-items-center gap-1.5 gap-sm-2">
+            {/* Mobile Contact Quick Nav Button */}
+            <nav aria-label="Mobile Navigation" className="d-flex d-md-none">
+              <button
+                type="button"
+                id="mobile-nav-contact-btn"
+                className="btn btn-sm rounded-pill px-2.5 py-1 d-flex align-items-center gap-1.5 border-0 shadow-none"
+                style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  backgroundColor: isContactActive ? '#2563EB' : '#f1f5f9',
+                  color: isContactActive ? '#ffffff' : '#334155'
+                }}
+                onClick={() => {
+                  if (setActiveTab) setActiveTab('contact');
+                  navigate('/contact');
+                }}
+                title={t('navContact')}
+              >
+                <i className="bi bi-telephone-fill" style={{ fontSize: '0.75rem' }}></i>
+                <span>{t('navContact')}</span>
+              </button>
+            </nav>
+
             {/* Language Switcher */}
             <LanguageSwitcher />
 
@@ -133,8 +157,8 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                 <span className="small fw-bold text-dark">{currentUser?.name || 'Ravi Kumar'}</span>
               </button>
             ) : (
-              /* If Not Logged In: Login & Register Buttons */
-              <div className="d-flex align-items-center gap-2">
+              /* If Not Logged In: Login & Register Buttons (Desktop & Tablet only; removed on mobile view) */
+              <div className="d-none d-md-flex align-items-center gap-2">
                 <button
                   type="button"
                   className="fd-btn-login d-inline-flex align-items-center gap-1"
@@ -142,106 +166,19 @@ export default function Navbar({ activeTab, setActiveTab, isLoggedIn, currentUse
                   title={t('signIn')}
                 >
                   <i className="bi bi-box-arrow-in-right"></i>
-                  <span className="d-none d-sm-inline">{t('signIn')}</span>
+                  <span>{t('signIn')}</span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn-success btn-sm rounded-pill px-3 fw-bold d-none d-md-inline-flex align-items-center gap-1"
+                  className="btn btn-success btn-sm rounded-pill px-3 fw-bold d-inline-flex align-items-center gap-1"
                   onClick={() => navigate('/register')}
                 >
-                  <i className="bi bi-person-plus"></i>
-                  <span>{t('registerAs')}</span>
+                  <span>{t('register', 'Register')}</span>
                 </button>
               </div>
             )}
-
-            {/* Mobile Menu Hamburger */}
-            <button
-              type="button"
-              className="fd-icon-btn d-md-none"
-              aria-label="Toggle navigation menu"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <i className={`bi ${mobileMenuOpen ? 'bi-x-lg' : 'bi-list'}`}></i>
-            </button>
           </div>
         </div>
-
-        {/* Mobile Navigation Drawer with 44px+ Accessible Touch Targets */}
-        {mobileMenuOpen && (
-          <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-lg mb-3 d-md-none animate__animated animate__fadeIn">
-            <div className="d-flex flex-column gap-2">
-              {/* Home */}
-              <button
-                type="button"
-                className={`min-h-[44px] h-[48px] w-full text-start px-3.5 rounded-xl font-bold flex items-center justify-between border-0 transition-all cursor-pointer ${
-                  isHomeActive ? 'bg-[#2563EB] text-white shadow-xs' : 'bg-slate-50 text-slate-800 hover:bg-slate-100'
-                }`}
-                onClick={() => handleNavClick('top', 'home')}
-              >
-                <span className="flex items-center gap-2">
-                  <i className="bi bi-house-door"></i>
-                  <span>{t('navHome')}</span>
-                </span>
-                <i className="bi bi-chevron-right text-xs opacity-60"></i>
-              </button>
-
-              {/* Marketplace */}
-              <button
-                type="button"
-                className={`min-h-[44px] h-[48px] w-full text-start px-3.5 rounded-xl font-bold flex items-center justify-between border-0 transition-all cursor-pointer ${
-                  isMarketplaceActive ? 'bg-[#2563EB] text-white shadow-xs' : 'bg-slate-50 text-slate-800 hover:bg-slate-100'
-                }`}
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  if (onOpenMarketplace) onOpenMarketplace();
-                  else navigate('/buyer/browse');
-                }}
-              >
-                <span className="flex items-center gap-2">
-                  <i className="bi bi-shop"></i>
-                  <span>{t('navMarketplace')}</span>
-                </span>
-                <i className="bi bi-chevron-right text-xs opacity-60"></i>
-              </button>
-              {!isLoggedIn ? (
-                <div className="pt-2 border-top d-flex flex-column gap-2">
-                  <button
-                    className="btn btn-success w-100 fw-bold"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      navigate('/login');
-                    }}
-                  >
-                    {t('loginToPortal')}
-                  </button>
-                  <button
-                    className="btn btn-outline-success w-100 fw-bold"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      navigate('/register');
-                    }}
-                  >
-                    <i className="bi bi-person-plus me-1"></i>
-                    {t('registerNewAccount')}
-                  </button>
-                </div>
-              ) : (
-                <div className="pt-2 border-top">
-                  <button
-                    className="btn btn-outline-success w-100 fw-bold"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      handleUserDashboardRedirect();
-                    }}
-                  >
-                    {t('goToDashboard')} ({currentUser?.role || 'Farmer'})
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );

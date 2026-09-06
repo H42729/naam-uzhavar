@@ -16,6 +16,7 @@ function ScrollToTop() {
 
 // Public & Auth Pages
 import HomePage from './pages/HomePage';
+import ContactPage from './pages/ContactPage';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import RoleLoginPage from './pages/RoleLoginPage';
 import RegisterRoleSelectPage from './pages/register/RegisterRoleSelectPage';
@@ -55,9 +56,9 @@ import DriverRequestsPage from './pages/driver/DriverRequestsPage';
 import DriverMessagesPage from './pages/driver/DriverMessagesPage';
 import DriverHistoryPage from './pages/driver/DriverHistoryPage';
 import DriverTripSummaryPage from './pages/driver/DriverTripSummaryPage';
-import DriverNotificationsPage from './pages/driver/DriverNotificationsPage';
 import DriverProfilePage from './pages/driver/DriverProfilePage';
 import DriverBuyerRequestsPage from './pages/driver/DriverBuyerRequestsPage';
+import AlgorithmExplorerPage from './pages/AlgorithmExplorerPage';
 import { LanguageProvider } from './context/LanguageContext';
 
 export default function App() {
@@ -71,6 +72,7 @@ export default function App() {
               <Routes>
                 {/* 1. Public Home Page */}
                 <Route path="/" element={<HomePage />} />
+                <Route path="/contact" element={<ContactPage />} />
 
                 {/* 2. Role Selection Page */}
                 <Route path="/login" element={<RoleSelectionPage />} />
@@ -170,6 +172,12 @@ export default function App() {
 
                 {/* 8. Admin Dashboard */}
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+                {/* 9. AI Algorithm Engine Explorer */}
+                <Route path="/algorithms" element={<AlgorithmExplorerPage />} />
+                <Route path="/algorithm-explorer" element={<AlgorithmExplorerPage />} />
+                <Route path="/buyer/algorithms" element={<AlgorithmExplorerPage />} />
+                <Route path="/admin/algorithms" element={<AlgorithmExplorerPage />} />
 
                 {/* Catch-all redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />

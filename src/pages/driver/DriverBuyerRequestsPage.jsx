@@ -14,6 +14,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DriverLayout from '../../components/driver/DriverLayout';
 import { useLanguage } from '../../context/LanguageContext';
+import deliveryService from '../../services/deliveryService';
 import {
   ShoppingBag,
   MapPin,
@@ -160,52 +161,27 @@ export default function DriverBuyerRequestsPage() {
   };
 
   // Handle Accept Request
-  const handleAccept = (req) => {
+  const handleAccept = async (req) => {
     const updated = requests.map((item) =>
       item.id === req.id ? { ...item, status: 'Accepted' } : item
     );
     saveRequests(updated);
 
-    // Also integrate into driver deliveries so it shows in Active Route
     try {
-      const activeDeliveries = JSON.parse(localStorage.getItem('naam_uzhavar_driver_deliveries') || '[]');
-      const newDelivery = {
-        id: `ORD-${req.id.replace('BREQ-', '3')}`,
-        trackingNumber: `TRK-NU-2026-${req.id.replace('BREQ-', 'B')}`,
+      await deliveryService.createDelivery({
+        orderId: `ORD-${req.id.replace('BREQ-', '3')}`,
+        crop: req.productName,
+        weight: req.quantityKg,
+        crates: Math.ceil(req.quantityKg / 25),
+        distance: req.distanceKm || 28,
         status: 'ACCEPTED',
-        assignedAt: new Date().toISOString(),
-        acceptedAt: new Date().toISOString(),
-        pickupCompletedAt: null,
-        deliveredAt: null,
-        farmer: {
-          name: req.farmerName,
-          farmName: req.pickupLocation,
-          phone: '+91 94432 11099',
-          address: req.pickupLocation,
-          district: 'Dindigul'
-        },
-        buyer: {
-          name: req.buyerName,
-          contactPerson: req.buyerContact,
-          phone: req.buyerPhone,
-          deliveryAddress: req.dropLocation,
-          district: 'Dindigul'
-        },
-        cargo: {
-          produceName: req.productName,
-          tamilName: req.productTamilName,
-          totalWeightKg: req.quantityKg,
-          cratesCount: Math.ceil(req.quantityKg / 25),
-          payout: req.payout
-        }
-      };
-
-      if (!activeDeliveries.some((d) => d.id === newDelivery.id)) {
-        activeDeliveries.unshift(newDelivery);
-        localStorage.setItem('naam_uzhavar_driver_deliveries', JSON.stringify(activeDeliveries));
-      }
+        farmerName: req.farmerName,
+        pickupLocation: req.pickupLocation,
+        buyerName: req.buyerName,
+        dropoffLocation: req.dropLocation
+      });
     } catch (err) {
-      console.warn('Error integrating delivery:', err);
+      console.warn('Error creating delivery on backend:', err);
     }
 
     setActionAlert({

@@ -4,13 +4,59 @@
  * Displays past completed trips, verified receiver signatures, payout receipts, and customer ratings.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DriverLayout from '../../components/driver/DriverLayout';
 import { DELIVERY_HISTORY } from '../../data/driverData';
+import deliveryService from '../../services/deliveryService';
 
 export default function DriverHistoryPage() {
-  const [historyList] = useState(DELIVERY_HISTORY);
+  const [historyList, setHistoryList] = useState(DELIVERY_HISTORY);
   const [selectedProof, setSelectedProof] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadHistory() {
+      try {
+        const deliveries = await deliveryService.getAllDeliveries();
+        if (isMounted && Array.isArray(deliveries) && deliveries.length > 0) {
+          const completed = deliveries.filter((d) => d.status === 'DELIVERED');
+          if (completed.length > 0) {
+            const mapped = completed.map((d, idx) => ({
+              id: d.orderId || d.id || `ORD-${1020 + idx}`,
+              trackingNumber: d.trackingNumber || `TRK-NU-2026-${d.id}`,
+              completedAt: d.deliveredAt
+                ? new Date(d.deliveredAt).toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
+                : 'Completed Recently',
+              farmer: d.farmer?.farmName || d.farmer?.name || 'Organic Farm, Dindigul',
+              buyer: d.buyer?.name || 'Retail Supermarket, Dindigul',
+              crop: d.products?.[0]?.name || 'Produce Lot',
+              weight: `${d.totalWeight || 250} kg`,
+              distance: `${d.distance || 18} km`,
+              payout: Math.round((d.distance || 18) * 45 + 500),
+              rating: 5,
+              receiver: d.proofOfDelivery?.receiverName || d.buyer?.receiverName || 'Store Inward Manager',
+              status: 'DELIVERED',
+              proofPhoto:
+                d.proofOfDelivery?.photoUrl ||
+                'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=200&auto=format&fit=crop&q=80'
+            }));
+            setHistoryList(mapped);
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading history:', e);
+      }
+    }
+    loadHistory();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const totalEarnings = historyList.reduce((acc, curr) => acc + curr.payout, 0);
 

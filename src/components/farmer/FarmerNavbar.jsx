@@ -48,7 +48,6 @@ export default function FarmerNavbar({ onToggleMobileSidebar }) {
 
   const handleLogout = () => {
     if (logout) logout();
-    navigate('/login');
   };
 
   return (

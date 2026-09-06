@@ -10,7 +10,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFarmer } from '../../context/FarmerContext';
-import { POPULAR_CROPS, MORE_CROPS } from '../../data/cropsData';
+import cropService from '../../services/cropService';
+
+const DEFAULT_FALLBACK_CROP = {
+  id: 'tomato',
+  name: 'Tomato',
+  tamilName: 'நாட்டு தக்காளி',
+  image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80',
+  typicalPricePerKg: 28
+};
 
 export default function AddHarvestModal({
   show,
@@ -22,7 +30,19 @@ export default function AddHarvestModal({
   const navigate = useNavigate();
 
   // Selected crop
-  const [selectedCrop, setSelectedCrop] = useState(initialCrop || POPULAR_CROPS[0]);
+  const [selectedCrop, setSelectedCrop] = useState(initialCrop || DEFAULT_FALLBACK_CROP);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!initialCrop) {
+      cropService.getCrops().then((list) => {
+        if (isMounted && Array.isArray(list) && list.length > 0) {
+          setSelectedCrop(list[0]);
+        }
+      });
+    }
+    return () => { isMounted = false; };
+  }, [initialCrop]);
 
   // Wizard Step: 1, 2, 3, 4, or 5 (Success)
   const [step, setStep] = useState(1);

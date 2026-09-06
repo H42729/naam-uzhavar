@@ -63,7 +63,7 @@ export default function BookVehicleModal({
   const estDistanceKm = selectedDropoff ? selectedDropoff.distanceKm : 25;
   const calculatedFare = vehicle.baseFare + Math.round(estDistanceKm * vehicle.ratePerKm);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (Number(weightKg) > vehicle.capacityKg) {
@@ -76,7 +76,7 @@ export default function BookVehicleModal({
     }
 
     setErrorMsg('');
-    const booking = createVehicleBookingRequest({
+    const booking = await createVehicleBookingRequest({
       vehicle,
       pickupLocation,
       dropoffLocation,
@@ -91,9 +91,9 @@ export default function BookVehicleModal({
     setCountdown(3);
   };
 
-  const handleSimulateResponse = (status) => {
+  const handleSimulateResponse = async (status) => {
     if (!currentBooking) return;
-    const updated = updateBookingStatus(
+    const updated = await updateBookingStatus(
       currentBooking.id,
       status,
       status === 'DECLINED' ? 'Driver is currently engaged on another farmgate pickup.' : null

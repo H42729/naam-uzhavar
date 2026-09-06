@@ -11,16 +11,32 @@ import { useFarmer } from '../../context/FarmerContext';
 import { useLanguage } from '../../context/LanguageContext';
 import FarmerLayout from '../../components/farmer/FarmerLayout';
 import AddHarvestModal from '../../components/farmer/AddHarvestModal';
-import { POPULAR_CROPS } from '../../data/cropsData';
+import cropService from '../../services/cropService';
 
 export default function FarmerHarvestPage() {
   const { harvests, removeHarvest, updateHarvest } = useFarmer();
   const { t, language } = useLanguage();
   const navigate = useNavigate();
 
+  const [crops, setCrops] = useState([]);
   const [activeFilter, setActiveFilter] = useState('All');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedCrop, setSelectedCrop] = useState(POPULAR_CROPS[0]);
+  const [selectedCrop, setSelectedCrop] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCrops() {
+      const fetched = await cropService.getCrops();
+      if (isMounted && Array.isArray(fetched) && fetched.length > 0) {
+        setCrops(fetched);
+        if (!selectedCrop) {
+          setSelectedCrop(fetched[0]);
+        }
+      }
+    }
+    loadCrops();
+    return () => { isMounted = false; };
+  }, []);
 
   // Delete confirmation modal state
   const [harvestToDelete, setHarvestToDelete] = useState(null);

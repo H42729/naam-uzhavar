@@ -81,7 +81,7 @@ export default function TraceabilityModal({ isOpen, onClose }) {
 
           <div className="d-flex justify-content-between align-items-center pt-3 border-top">
             <div className="small text-muted">
-              {t('traceabilityFarmerPayout')} <strong className="text-success">₹70 / 500g box (88% of retail)</strong>
+              {t('traceabilityFarmerPayout')} <strong className="text-success">{t('traceabilityFarmerPayoutValue', '₹70 / 500g box (Direct Fair Share)')}</strong>
             </div>
             <button type="button" className="btn btn-outline-success btn-sm px-3" onClick={onClose}>
               {t('closeInspector')}

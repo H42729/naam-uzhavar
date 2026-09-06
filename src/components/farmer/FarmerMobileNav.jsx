@@ -21,6 +21,81 @@ import {
   PackageCheck
 } from 'lucide-react';
 
+// Subcomponent to measure text and smoothly scroll long Tamil words (like "கோரிக்கைகள்") without truncation
+function FarmerNavLabel({ label, to, isActive, language }) {
+  const containerRef = React.useRef(null);
+  const textRef = React.useRef(null);
+  const isKnownLong = label === 'கோரிக்கைகள்' || label.length > 8;
+  const [shouldScroll, setShouldScroll] = React.useState(isKnownLong);
+  const [scrollDistance, setScrollDistance] = React.useState(isKnownLong ? 24 : 0);
+
+  React.useLayoutEffect(() => {
+    const measure = () => {
+      if (textRef.current && containerRef.current) {
+        const textWidth = textRef.current.scrollWidth;
+        const containerWidth = containerRef.current.clientWidth;
+        if (textWidth > containerWidth + 2) {
+          setShouldScroll(true);
+          setScrollDistance(Math.ceil(textWidth - containerWidth + 6));
+        } else {
+          setShouldScroll(false);
+          setScrollDistance(0);
+        }
+      }
+    };
+
+    measure();
+    const timer = setTimeout(measure, 40);
+    window.addEventListener('resize', measure);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', measure);
+    };
+  }, [label, language]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="farm-nav-label-container mt-0.5"
+      style={{
+        overflow: 'hidden',
+        position: 'relative',
+        width: '100%',
+        maxWidth: '72px',
+        minHeight: '16px'
+      }}
+    >
+      <div
+        key={`anim-${to}-${language}`}
+        className="farm-nav-scroll-anim w-full flex items-center"
+        style={{
+          justifyContent: shouldScroll ? 'flex-start' : 'center',
+          width: '100%'
+        }}
+      >
+        <span
+          ref={textRef}
+          className={`text-[10px] sm:text-[11px] leading-tight whitespace-nowrap inline-block ${
+            isActive ? 'text-[#2563EB] font-bold' : 'text-slate-500 font-medium'
+          } ${shouldScroll ? 'farm-marquee-scroll' : ''}`}
+          style={
+            shouldScroll
+              ? {
+                  '--scroll-dist': `-${scrollDistance}px`,
+                  paddingLeft: '1px',
+                  paddingRight: '1px'
+                }
+              : undefined
+          }
+          title={label}
+        >
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function FarmerMobileNav() {
   const { stats } = useFarmer();
   const { language } = useLanguage();
@@ -103,9 +178,12 @@ export default function FarmerMobileNav() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] sm:text-[11px] leading-tight mt-1 truncate max-w-[62px]">
-                {item.label}
-              </span>
+              <FarmerNavLabel
+                label={item.label}
+                to={item.to}
+                isActive={isActive}
+                language={language}
+              />
             </NavLink>
           );
         })}

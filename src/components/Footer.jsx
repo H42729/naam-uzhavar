@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Footer({ onOpenAuth }) {
@@ -28,12 +29,14 @@ export default function Footer({ onOpenAuth }) {
 
           <div className="col-6 col-md-3 col-lg-2">
             <h6 className="fw-bold text-dark mb-3">{t('footerPlatform')}</h6>
-            <ul className="list-unstyled text-muted small d-flex flex-column gap-2 mb-0">
-              <li><a href="#how-it-works" className="text-decoration-none text-muted">{t('footerHowItWorks')}</a></li>
-              <li><a href="#marketplace" className="text-decoration-none text-muted">{t('footerMarketplace')}</a></li>
-              <li><a href="#benefits" className="text-decoration-none text-muted">{t('footerFarmerEconomics')}</a></li>
-              <li><a href="#traceability" className="text-decoration-none text-muted">{t('footerTraceability')}</a></li>
-            </ul>
+            <nav aria-label="Platform Links">
+              <ul className="list-unstyled text-muted small d-flex flex-column gap-2 mb-0">
+                <li><a href="#how-it-works" className="text-decoration-none text-muted">{t('footerHowItWorks')}</a></li>
+                <li><Link to="/contact" id="footer-contact-link" className="text-decoration-none text-muted">{t('footerContact')}</Link></li>
+                <li><a href="#benefits" className="text-decoration-none text-muted">{t('footerFarmerEconomics')}</a></li>
+                <li><a href="#traceability" className="text-decoration-none text-muted">{t('footerTraceability')}</a></li>
+              </ul>
+            </nav>
           </div>
 
           <div className="col-6 col-md-3 col-lg-2">

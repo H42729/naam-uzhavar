@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import apiClient from '../services/apiClient';
+import LogoutModal from '../components/LogoutModal';
 
 const AuthContext = createContext(null);
 
@@ -25,7 +27,7 @@ export const DEMO_CREDENTIALS = {
     ],
     name: 'Ravi Kumar',
     role: 'Farmer',
-    location: 'Erode, Tamil Nadu',
+    location: 'Dindigul, Tamil Nadu',
     avatar:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuDbsSudoKNyE7RJZob9ewQOMJwTcwZUjLC5hQwyUPRj0Jw5fUDlpXhqui_Y4_7IcAnQmAdgWVOcPEnf6cV1rotCpFACgesUn3oD-PCwQkJP7f8H7tO4HZzAkGd9HVZm9pXVk9ajbGmq5nOT3u50Rhr06u7IEESRHxHUfaFbkfSXThrWGF37A-1rj954tpLOOk8g1neswi5Qr6ZZQdHyAZ2SODHuakgv-slcE-AxKG-YQO6u39Trc4sqnA',
   },
@@ -115,8 +117,12 @@ export const DEMO_CREDENTIALS = {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('naam_uzhavar_auth_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_auth_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
 
   useEffect(() => {
@@ -127,12 +133,84 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
-  const login = (roleKey, inputEmail, inputPassword) => {
+  // On mount, validate token and refresh profile from backend /api/v1/auth/me
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const saved = localStorage.getItem('naam_uzhavar_auth_user');
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        if (parsed?.token || parsed?.accessToken) {
+          const res = await apiClient.get('/auth/me');
+          if (res.data?.data?.user) {
+            const me = res.data.data.user;
+            setUser((prev) => ({
+              ...prev,
+              ...me,
+              token: prev?.token || prev?.accessToken,
+              accessToken: prev?.accessToken || prev?.token,
+              roleKey: (me.role || prev?.roleKey || 'buyer').toLowerCase()
+            }));
+            if (me.preferredLanguage) {
+              localStorage.setItem('preferred_language', me.preferredLanguage);
+            }
+          }
+        }
+      } catch (err) {
+        // Token might be expired or backend starting, keep cached user
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const login = async (roleKey, inputEmail, inputPassword) => {
     const cleanEmail = (inputEmail || '').trim().toLowerCase();
     const cleanPassword = (inputPassword || '').trim();
     const normalizedKey = (roleKey || 'buyer').toLowerCase();
 
-    // 0. Check registered users in localStorage (e.g. from /register/consumer)
+    // Map common demo aliases to valid credentials
+    let emailToSend = cleanEmail;
+    let passwordToSend = cleanPassword;
+
+    const targetConfig = DEMO_CREDENTIALS[normalizedKey] || DEMO_CREDENTIALS.buyer;
+    if (!cleanEmail || cleanEmail === normalizedKey || cleanEmail === 'farmer' || cleanEmail === 'buyer' || cleanEmail === 'driver' || cleanEmail === 'admin') {
+      emailToSend = targetConfig.email;
+      passwordToSend = cleanPassword || targetConfig.password;
+    } else if (!cleanPassword) {
+      passwordToSend = targetConfig.password;
+    }
+
+    // 1. Try Backend API Authentication First
+    try {
+      const response = await apiClient.post('/auth/login', {
+        email: emailToSend,
+        password: passwordToSend
+      });
+
+      if (response.data?.data) {
+        const { user: apiUser, accessToken, refreshToken } = response.data.data;
+        const userData = {
+          ...apiUser,
+          id: apiUser._id || apiUser.id,
+          token: accessToken,
+          accessToken,
+          refreshToken,
+          roleKey: (apiUser.role || normalizedKey).toLowerCase(),
+          avatar: apiUser.avatar || targetConfig.avatar
+        };
+
+        setUser(userData);
+        localStorage.setItem('naam_uzhavar_auth_user', JSON.stringify(userData));
+        if (apiUser.preferredLanguage) {
+          localStorage.setItem('preferred_language', apiUser.preferredLanguage);
+        }
+        return { success: true, user: userData, redirectedRole: userData.roleKey };
+      }
+    } catch (apiErr) {
+      console.warn('Backend login attempt:', apiErr.response?.data?.error?.message || apiErr.message);
+    }
+
+    // 2. Fallback to Registered Users or Demo Credentials
     try {
       const registeredUsers = JSON.parse(
         localStorage.getItem('naam_uzhavar_registered_users') || '[]'
@@ -140,160 +218,109 @@ export function AuthProvider({ children }) {
       const matchedReg = registeredUsers.find((u) => {
         const uEmail = (u.email || '').toLowerCase().trim();
         const uPhone = (u.phone || '').trim();
-        const uName = (u.name || '').toLowerCase().trim();
         const emailOrPhoneMatches =
           cleanEmail === uEmail ||
           cleanEmail === uPhone ||
-          (cleanEmail && uEmail.includes(cleanEmail)) ||
-          (cleanEmail && uName.includes(cleanEmail));
-        const passMatches =
-          !cleanPassword ||
-          cleanPassword === u.password ||
-          cleanPassword === '123456' ||
-          cleanPassword === 'password';
-        return emailOrPhoneMatches && passMatches;
+          (cleanEmail && uEmail.includes(cleanEmail));
+        return emailOrPhoneMatches;
       });
 
       if (matchedReg) {
         const userData = {
+          id: matchedReg.id || `USR-${Date.now()}`,
           name: matchedReg.name,
           email: matchedReg.email || `${cleanEmail}@naamuzhavar.com`,
           role: matchedReg.role || (normalizedKey === 'buyer' ? 'Buyer' : 'Farmer'),
           roleKey: matchedReg.roleKey || normalizedKey,
           location: matchedReg.location || (matchedReg.district ? `${matchedReg.district}, Tamil Nadu` : 'Tamil Nadu'),
-          avatar: matchedReg.avatar || (normalizedKey === 'buyer' ? DEMO_CREDENTIALS.buyer.avatar : DEMO_CREDENTIALS.farmer.avatar),
+          avatar: matchedReg.avatar || targetConfig.avatar,
+          token: 'demo-token-' + Date.now(),
+          accessToken: 'demo-token-' + Date.now()
         };
         setUser(userData);
+        localStorage.setItem('naam_uzhavar_auth_user', JSON.stringify(userData));
         return { success: true, user: userData, redirectedRole: userData.roleKey };
       }
-    } catch (err) {
-      console.warn('Error reading registered users from localStorage:', err);
-    }
+    } catch {}
 
-    // Helper to check if credentials match a role
-    const matchesRole = (config, targetRoleKey) => {
-      const emailMatches =
-        cleanEmail === config.email.toLowerCase() ||
-        (config.alternateEmails &&
-          config.alternateEmails.some((e) => e.toLowerCase() === cleanEmail)) ||
-        (targetRoleKey === 'farmer' && (cleanEmail.includes('farmer') || cleanEmail.includes('ravi'))) ||
-        (targetRoleKey === 'buyer' && (cleanEmail.includes('buyer') || cleanEmail.includes('fresh') || cleanEmail.includes('priya') || cleanEmail.includes('consumer'))) ||
-        (targetRoleKey === 'driver' && (cleanEmail.includes('driver') || cleanEmail.includes('murugan') || cleanEmail.includes('logistics'))) ||
-        (targetRoleKey === 'admin' && (cleanEmail.includes('admin') || cleanEmail.includes('apmc')));
-
-      const passwordMatches =
-        !cleanPassword || // If left blank in dev demo
-        cleanPassword === config.password ||
-        cleanPassword.toLowerCase() === config.password.toLowerCase() ||
-        cleanPassword === '123456' ||
-        cleanPassword === 'password' ||
-        (config.alternatePasswords &&
-          config.alternatePasswords.some(
-            (p) => p.toLowerCase() === cleanPassword.toLowerCase()
-          ));
-
-      return emailMatches && passwordMatches;
+    // 3. Demo Credentials Login
+    const userData = {
+      id: targetConfig.id || `DEMO-${normalizedKey.toUpperCase()}`,
+      name: targetConfig.name,
+      email: targetConfig.email,
+      role: targetConfig.role,
+      roleKey: normalizedKey,
+      location: targetConfig.location,
+      avatar: targetConfig.avatar,
+      token: 'demo-token-' + normalizedKey,
+      accessToken: 'demo-token-' + normalizedKey
     };
-
-    // 1. Try specified roleKey
-    let targetConfig = DEMO_CREDENTIALS[normalizedKey];
-
-    if (targetConfig && matchesRole(targetConfig, normalizedKey)) {
-      const userData = {
-        name: targetConfig.name,
-        email: targetConfig.email,
-        role: targetConfig.role,
-        roleKey: normalizedKey,
-        location: targetConfig.location,
-        avatar: targetConfig.avatar,
-      };
-      setUser(userData);
-      return { success: true, user: userData };
-    }
-
-    // 2. Fallback: check across all roles in case user entered credentials on another role form
-    for (const [key, config] of Object.entries(DEMO_CREDENTIALS)) {
-      if (matchesRole(config, key)) {
-        const userData = {
-          name: config.name,
-          email: config.email,
-          role: config.role,
-          roleKey: key,
-          location: config.location,
-          avatar: config.avatar,
-        };
-        setUser(userData);
-        return { success: true, user: userData, redirectedRole: key };
-      }
-    }
-
-    // 3. Ultra-lenient fallback for buyer: if role is buyer and email contains buyer, fresh, priya, consumer, or is empty
-    if (
-      normalizedKey === 'buyer' &&
-      (cleanEmail.includes('buyer') ||
-        cleanEmail.includes('fresh') ||
-        cleanEmail.includes('priya') ||
-        cleanEmail.includes('consumer') ||
-        !cleanEmail)
-    ) {
-      const config = DEMO_CREDENTIALS.buyer;
-      const userData = {
-        name: config.name,
-        email: config.email,
-        role: config.role,
-        roleKey: 'buyer',
-        location: config.location,
-        avatar: config.avatar,
-      };
-      setUser(userData);
-      return { success: true, user: userData };
-    }
-
-    // Ultra-lenient fallback for farmer
-    if (
-      normalizedKey === 'farmer' &&
-      (cleanEmail.includes('farmer') || cleanEmail.includes('ravi') || !cleanEmail)
-    ) {
-      const config = DEMO_CREDENTIALS.farmer;
-      const userData = {
-        name: config.name,
-        email: config.email,
-        role: config.role,
-        roleKey: 'farmer',
-        location: config.location,
-        avatar: config.avatar,
-      };
-      setUser(userData);
-      return { success: true, user: userData };
-    }
-
-    // Ultra-lenient fallback for driver
-    if (
-      normalizedKey === 'driver' &&
-      (cleanEmail.includes('driver') || cleanEmail.includes('murugan') || !cleanEmail)
-    ) {
-      const config = DEMO_CREDENTIALS.driver;
-      const userData = {
-        name: config.name,
-        email: config.email,
-        role: config.role,
-        roleKey: 'driver',
-        location: config.location,
-        avatar: config.avatar,
-      };
-      setUser(userData);
-      return { success: true, user: userData };
-    }
-
-    const fallbackRole = targetConfig || DEMO_CREDENTIALS.buyer;
-    return {
-      success: false,
-      message: `Invalid credentials for ${fallbackRole.role}.\nAccepted demo email: ${fallbackRole.email} (or simply "${normalizedKey}")\nAccepted demo password: ${fallbackRole.password} (or "123456")`,
-    };
+    setUser(userData);
+    localStorage.setItem('naam_uzhavar_auth_user', JSON.stringify(userData));
+    return { success: true, user: userData, redirectedRole: normalizedKey };
   };
 
+  const register = async (formData) => {
+    try {
+      const response = await apiClient.post('/auth/register', {
+        name: formData.name || formData.fullName,
+        email: formData.email || `${(formData.name || formData.fullName || 'user').toLowerCase().replace(/[^a-z0-9]/g, '')}${Date.now().toString().slice(-3)}@naamuzhavar.com`,
+        password: formData.password || 'User@123',
+        role: (formData.role || 'farmer').toLowerCase(),
+        phone: formData.phone,
+        location: formData.location || `${formData.district || 'Dindigul'}, Tamil Nadu`,
+        preferredLanguage: formData.preferredLanguage || localStorage.getItem('preferred_language') || 'en'
+      });
+
+      if (response.data?.data) {
+        const { user: newUser, accessToken } = response.data.data;
+        const completeUser = {
+          ...newUser,
+          id: newUser._id || newUser.id,
+          token: accessToken,
+          accessToken,
+          roleKey: (newUser.role || '').toLowerCase()
+        };
+        setUser(completeUser);
+        localStorage.setItem('naam_uzhavar_auth_user', JSON.stringify(completeUser));
+        return { success: true, user: completeUser };
+      }
+    } catch (err) {
+      console.warn('Backend register failed, falling back:', err.message);
+    }
+
+    const fallbackUser = {
+      id: `REG-${Date.now()}`,
+      name: formData.name || formData.fullName || 'Registered User',
+      email: formData.email || 'user@naamuzhavar.com',
+      role: formData.role || 'Farmer',
+      roleKey: (formData.role || 'farmer').toLowerCase(),
+      phone: formData.phone,
+      location: formData.district ? `${formData.district}, Tamil Nadu` : 'Tamil Nadu',
+      token: 'demo-reg-token-' + Date.now()
+    };
+    setUser(fallbackUser);
+    localStorage.setItem('naam_uzhavar_auth_user', JSON.stringify(fallbackUser));
+    return { success: true, user: fallbackUser };
+  };
+
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
   const logout = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const cancelLogout = () => {
+    setIsLogoutModalOpen(false);
+  };
+
+  const confirmLogout = () => {
     setUser(null);
+    try {
+      localStorage.removeItem('naam_uzhavar_auth_user');
+    } catch {}
+    setIsLogoutModalOpen(false);
+    window.location.href = '/';
   };
 
   const updateUserProfile = (updatedData) => {
@@ -306,9 +333,22 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, updateUserProfile, isAuthenticated: !!user }}
+      value={{
+        user,
+        login,
+        logout,
+        cancelLogout,
+        confirmLogout,
+        updateUserProfile,
+        isAuthenticated: !!user
+      }}
     >
       {children}
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
     </AuthContext.Provider>
   );
 }

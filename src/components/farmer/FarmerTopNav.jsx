@@ -25,6 +25,65 @@ import {
   LogOut
 } from 'lucide-react';
 
+// Subcomponent to measure text and smoothly scroll long Tamil names/badges in mobile view without truncation
+function CapsuleMarqueeText({ text, className, containerClassName, language, defaultScrollDist = 32 }) {
+  const containerRef = React.useRef(null);
+  const textRef = React.useRef(null);
+  const isTamil = language === 'ta';
+  const [shouldScroll, setShouldScroll] = React.useState(isTamil && (text || '').length > 8);
+  const [scrollDist, setScrollDist] = React.useState(defaultScrollDist);
+
+  React.useLayoutEffect(() => {
+    const measure = () => {
+      if (textRef.current && containerRef.current) {
+        const textWidth = textRef.current.scrollWidth;
+        const containerWidth = containerRef.current.clientWidth;
+        if (textWidth > containerWidth + 2) {
+          setShouldScroll(true);
+          setScrollDist(Math.ceil(textWidth - containerWidth + 8));
+        } else {
+          setShouldScroll(false);
+          setScrollDist(0);
+        }
+      }
+    };
+    measure();
+    const timer = setTimeout(measure, 50);
+    window.addEventListener('resize', measure);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', measure);
+    };
+  }, [text, language]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={`capsule-marquee-container ${containerClassName || ''}`}
+      style={{
+        overflow: 'hidden',
+        position: 'relative'
+      }}
+    >
+      <div
+        key={`banner-anim-${text}-${language}`}
+        className={`capsule-marquee-track capsule-switch-anim ${shouldScroll ? 'capsule-marquee-active' : ''}`}
+        style={
+          shouldScroll
+            ? {
+                '--banner-scroll-dist': `-${scrollDist}px`
+              }
+            : undefined
+        }
+      >
+        <span ref={textRef} className={className} title={text}>
+          {text}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function FarmerTopNav() {
   const { user, logout } = useAuth();
   const { farmerProfile } = useFarmer();
@@ -58,7 +117,6 @@ export default function FarmerTopNav() {
       e.stopPropagation();
     }
     if (logout) logout();
-    navigate('/login');
   };
 
   // Farmer identity details
@@ -178,13 +236,19 @@ export default function FarmerTopNav() {
                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-amber-400 object-cover flex-shrink-0"
               />
               <div className="flex flex-col text-left leading-tight justify-center min-w-0">
-                <span className="font-bold text-slate-900 text-xs sm:text-base leading-tight block truncate max-w-[110px] xs:max-w-[140px] sm:max-w-[200px]">
-                  {farmerName}
-                </span>
+                <CapsuleMarqueeText
+                  text={farmerName}
+                  className="font-bold text-slate-900 text-xs sm:text-base leading-tight block"
+                  containerClassName="max-w-[110px] xs:max-w-[140px] sm:max-w-[200px]"
+                  language={language}
+                />
                 <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mt-0.5 flex-wrap min-w-0">
-                  <span className="text-[#D97706] font-semibold truncate max-w-[110px] xs:max-w-[140px] sm:max-w-none">
-                    ✔ {language === 'ta' ? 'சரிபார்க்கப்பட்ட விவசாயி' : 'Verified Farmer'}
-                  </span>
+                  <CapsuleMarqueeText
+                    text={language === 'ta' ? '✔ சரிபார்க்கப்பட்ட விவசாயி' : '✔ Verified Farmer'}
+                    className="text-[#D97706] font-semibold block"
+                    containerClassName="max-w-[110px] xs:max-w-[140px] sm:max-w-none"
+                    language={language}
+                  />
                   <span className="text-slate-400 hidden lg:inline">•</span>
                   <span className="text-slate-500 text-xs font-medium hidden lg:inline">
                     📍 {language === 'ta' ? 'திண்டுக்கல் மையம்' : 'Dindigul Hub'}

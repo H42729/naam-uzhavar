@@ -85,8 +85,8 @@ export default function FarmerRequestsPage() {
           </div>
         </div>
 
-        {/* Filter Tabs (Sticky Sub-Header) */}
-        <div className="farm-sticky-sub-header bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 mb-4 flex items-center gap-2 overflow-x-auto scrollbar-none shadow-xs">
+        {/* Filter Tabs (Sticky Sub-Header) - 1 tab per row on mobile, horizontal on desktop */}
+        <div className="farm-sticky-sub-header bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 mb-4 farm-tabs-container scrollbar-none shadow-xs">
           {filterTabs.map((tab) => {
             const count =
               tab === 'All'
@@ -98,7 +98,7 @@ export default function FarmerRequestsPage() {
               <button
                 key={tab}
                 type="button"
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm shrink-0 whitespace-nowrap transition-colors cursor-pointer border ${
+                className={`farm-tab-pill border ${
                   isActive
                     ? 'bg-emerald-700 text-white font-semibold border-emerald-700 shadow-xs'
                     : 'bg-white text-slate-700 font-medium border-slate-200 hover:bg-slate-50'

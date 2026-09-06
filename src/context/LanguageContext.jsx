@@ -6,6 +6,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import en from '../translations/en';
 import ta from '../translations/ta';
+import apiClient from '../services/apiClient';
 
 const LanguageContext = createContext(null);
 
@@ -17,6 +18,11 @@ const translations = {
 export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(() => {
     try {
+      const savedUser = localStorage.getItem('naam_uzhavar_auth_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed?.preferredLanguage) return parsed.preferredLanguage;
+      }
       const saved = localStorage.getItem('preferred_language');
       return saved === 'ta' ? 'ta' : 'en';
     } catch (e) {
@@ -29,9 +35,23 @@ export function LanguageProvider({ children }) {
     setLanguageState(validLang);
     try {
       localStorage.setItem('preferred_language', validLang);
+      const savedUser = localStorage.getItem('naam_uzhavar_auth_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        parsed.preferredLanguage = validLang;
+        localStorage.setItem('naam_uzhavar_auth_user', JSON.stringify(parsed));
+      }
     } catch (e) {
       console.warn('Unable to persist language choice to localStorage:', e);
     }
+
+    // Sync language change to backend API
+    apiClient
+      .post('/translations/preference', { language: validLang })
+      .catch(() => {});
+    apiClient
+      .patch('/auth/me/language', { preferredLanguage: validLang })
+      .catch(() => {});
   };
 
   const toggleLanguage = () => {

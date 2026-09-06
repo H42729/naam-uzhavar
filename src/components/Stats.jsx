@@ -7,21 +7,21 @@ export default function Stats({ onSelectStat }) {
   const statsData = [
     {
       id: 'farmers',
-      value: '50,000+',
+      value: '2,500+',
       label: t('statFarmersLabel'),
       sub: t('statFarmersSub'),
       icon: 'bi-people',
     },
     {
       id: 'products',
-      value: '200+',
+      value: '150+',
       label: t('statCropsLabel'),
       sub: t('statCropsSub'),
       icon: 'bi-box-seam',
     },
     {
       id: 'orders',
-      value: '1,000,000+',
+      value: '15,000+',
       label: t('statOrdersLabel'),
       sub: t('statOrdersSub'),
       icon: 'bi-truck',

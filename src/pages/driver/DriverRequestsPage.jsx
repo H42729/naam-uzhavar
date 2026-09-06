@@ -8,7 +8,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DriverLayout from '../../components/driver/DriverLayout';
 import DriverRequestsCarousel from '../../components/driver/DriverRequestsCarousel';
-import { AVAILABLE_REQUESTS, INITIAL_DELIVERIES, DRIVER_PROFILE } from '../../data/driverData';
+import { AVAILABLE_REQUESTS, DRIVER_PROFILE } from '../../data/driverData';
+import deliveryService from '../../services/deliveryService';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -20,13 +21,50 @@ export default function DriverRequestsPage() {
   const { language } = useLanguage();
   const { user } = useAuth();
 
+  // Load available deliveries from backend
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRequests() {
+      try {
+        const live = await deliveryService.getAvailableDeliveries();
+        if (isMounted && Array.isArray(live) && live.length > 0) {
+          const mapped = live.map((d, index) => ({
+            id: d.id || `REQ-DRV-${101 + index}`,
+            orderId: d.orderId || d.id || `ORD-${1028 + index}`,
+            crop: d.products?.[0]?.name || d.crop || 'Farm Harvest Lot',
+            tamilCrop: d.products?.[0]?.tamilName || d.tamilCrop || 'விவசாய விளைச்சல்',
+            farmer: d.farmer?.name || 'Farmer',
+            farmLocation: d.farmer?.address || 'Oddanchatram Vegetable Yard, Dindigul',
+            buyer: d.buyer?.name || 'Central Supermarket Depot',
+            dropLocation: d.buyer?.address || 'Mattuthavani Central Market, Madurai',
+            weight: `${d.totalWeight || 350} kg`,
+            crates: d.totalCrates || 14,
+            distance: `${d.distance || 45} km`,
+            pickupTime: 'Today, Available Now',
+            payout: Number(d.payout || 2450),
+            vehicleRequired: d.vehicle?.type || 'Tata Ace / Bolero Pickup',
+            temperature: d.isTemperatureControlled ? 'Cold-Chain (14-16°C)' : 'Ventilated Crate Transport',
+            status: d.status || 'AVAILABLE'
+          }));
+          setRequests(mapped);
+        }
+      } catch (e) {
+        console.warn('Error loading driver available requests:', e);
+      }
+    }
+    loadRequests();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Read driver profile for personal greeting
   const [driverProfile, setDriverProfile] = useState(() => {
     try {
       const saved = localStorage.getItem('naam_uzhavar_driver_profile_data');
-      return saved ? JSON.parse(saved) : DRIVER_PROFILE;
+      return saved ? JSON.parse(saved) : (user || DRIVER_PROFILE);
     } catch {
-      return DRIVER_PROFILE;
+      return user || DRIVER_PROFILE;
     }
   });
 
@@ -34,77 +72,32 @@ export default function DriverRequestsPage() {
     try {
       const saved = localStorage.getItem('naam_uzhavar_driver_profile_data');
       if (saved) setDriverProfile(JSON.parse(saved));
+      else if (user) setDriverProfile(user);
     } catch {}
-  }, []);
+  }, [user]);
 
-  const handleAcceptRequest = (req) => {
+  const handleAcceptRequest = async (req) => {
     setAcceptedId(req.id);
+    try {
+      await deliveryService.createDelivery({
+        orderId: req.orderId,
+        crop: req.crop,
+        weight: parseInt(req.weight) || 350,
+        crates: req.crates || 14,
+        distance: parseFloat(req.distance) || 25,
+        status: 'ACCEPTED',
+        farmerName: req.farmer,
+        pickupLocation: req.farmLocation,
+        buyerName: req.buyer,
+        dropoffLocation: req.dropLocation
+      });
+    } catch (e) {
+      console.warn('Accept delivery error:', e);
+    }
+
     setTimeout(() => {
-      // Simulate adding to active deliveries in localStorage
-      try {
-        const stored = JSON.parse(localStorage.getItem('naam_uzhavar_driver_deliveries') || '[]');
-        const newDelivery = {
-          id: req.orderId,
-          trackingNumber: `TRK-NU-2026-${req.orderId.replace('ORD-', '')}`,
-          status: 'ACCEPTED',
-          assignedAt: new Date().toISOString(),
-          acceptedAt: new Date().toISOString(),
-          pickupCompletedAt: null,
-          deliveredAt: null,
-          farmer: {
-            name: req.farmer,
-            farmName: req.farmLocation,
-            phone: '+91 94432 11099',
-            address: req.farmLocation,
-            district: 'Dindigul',
-            latitude: 10.485,
-            longitude: 77.755,
-            pickupInstructions: 'Report to loading shed #2. Bring vehicle weighment slip.'
-          },
-          buyer: {
-            name: req.buyer,
-            address: req.dropLocation,
-            phone: '+91 98421 88344',
-            district: 'Madurai',
-            latitude: 9.925,
-            longitude: 78.119,
-            dropInstructions: 'Unload at main receiving bay. Verification officer available.'
-          },
-          products: [
-            {
-              id: 'CRG-NEW',
-              name: req.crop,
-              tamilName: req.tamilCrop,
-              quantity: parseInt(req.weight),
-              unit: 'kg',
-              crates: req.crates,
-              crateWeight: 25,
-              image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=200&auto=format&fit=crop&q=80'
-            }
-          ],
-          totalWeight: parseInt(req.weight),
-          totalCrates: req.crates,
-          cargoVerificationCode: 'NU-SEAL-9921',
-          distance: parseFloat(req.distance),
-          remainingDistance: parseFloat(req.distance),
-          distanceToPickup: 12.0,
-          etaMinutes: 65,
-          speedKmh: 0,
-          currentLocation: {
-            name: 'Checkpost Yard',
-            latitude: 10.48,
-            longitude: 77.75
-          }
-        };
-
-        const updated = [newDelivery, ...stored];
-        localStorage.setItem('naam_uzhavar_driver_deliveries', JSON.stringify(updated));
-      } catch (e) {
-        console.warn('Local storage write err:', e);
-      }
-
       navigate(`/driver/routes/${req.orderId}`);
-    }, 800);
+    }, 400);
   };
 
   const handleDeclineRequest = (id) => {

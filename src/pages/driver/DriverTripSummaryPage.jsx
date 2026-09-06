@@ -4,14 +4,37 @@
  * Tracks driver earnings, weekly metrics, performance ratings, and payout withdrawals.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DriverLayout from '../../components/driver/DriverLayout';
 import { DRIVER_EARNINGS } from '../../data/driverData';
+import deliveryService from '../../services/deliveryService';
 
 export default function DriverTripSummaryPage() {
   const [earnings, setEarnings] = useState(DRIVER_EARNINGS);
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadMetrics() {
+      try {
+        const deliveries = await deliveryService.getAllDeliveries();
+        if (isMounted && Array.isArray(deliveries) && deliveries.length > 0) {
+          const completed = deliveries.filter((d) => d.status === 'DELIVERED');
+          const totalEarned = completed.reduce((acc, d) => acc + Math.round((d.distance || 18) * 45 + 500), 0);
+          setEarnings((prev) => ({
+            ...prev,
+            today: totalEarned > 0 ? totalEarned : prev.today,
+            totalTrips: prev.totalTrips + deliveries.length
+          }));
+        }
+      } catch (err) {
+        console.warn('Trip summary load error:', err);
+      }
+    }
+    loadMetrics();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleWithdraw = () => {
     setWithdrawing(true);

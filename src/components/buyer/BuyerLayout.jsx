@@ -14,7 +14,6 @@ export default function BuyerLayout({ children }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
   };
 
   return (

@@ -47,12 +47,12 @@ export default function RoleLoginPage({ defaultRole }) {
     executeLogin(roleConfig.email, roleConfig.password);
   };
 
-  const executeLogin = (userEmail, userPass) => {
+  const executeLogin = async (userEmail, userPass) => {
     setIsLoading(true);
     setErrorMessage('');
 
-    setTimeout(() => {
-      const res = login(currentRoleKey, userEmail, userPass);
+    try {
+      const res = await login(currentRoleKey, userEmail, userPass);
       setIsLoading(false);
 
       if (res.success) {
@@ -71,7 +71,10 @@ export default function RoleLoginPage({ defaultRole }) {
       } else {
         setErrorMessage(res.message);
       }
-    }, 250);
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Login failed');
+    }
   };
 
   const handleSubmit = (e) => {

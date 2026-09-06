@@ -4,6 +4,7 @@ import { useBuyer } from '../../context/BuyerContext';
 import { useLanguage } from '../../context/LanguageContext';
 import BuyerLayout from '../../components/buyer/BuyerLayout';
 import { INITIAL_PRODUCTS } from '../../data/buyerData';
+import algorithmService from '../../services/algorithmService';
 
 export default function BuyerAggregateDetailsPage() {
   const { id } = useParams();
@@ -14,6 +15,7 @@ export default function BuyerAggregateDetailsPage() {
 
   const [selectedImg, setSelectedImg] = useState(0);
   const [lotConfirmed, setLotConfirmed] = useState(false);
+  const [transportEstimate, setTransportEstimate] = useState(null);
 
   // Scroll to the very top immediately whenever this page loads or route parameters change
   useEffect(() => {
@@ -110,6 +112,27 @@ export default function BuyerAggregateDetailsPage() {
   const mandiSubtotal = allocatedQty * mandiRate;
   const buyerSavings = mandiSubtotal - subtotal;
   const savingsPercent = Math.max(5, Math.round((buyerSavings / mandiSubtotal) * 100));
+
+  useEffect(() => {
+    let isMounted = true;
+    async function computeTransport() {
+      try {
+        const res = await algorithmService.calculateTransportCost({
+          distance_km: 35.0,
+          weight_kg: allocatedQty,
+          vehicle_type: allocatedQty > 1000 ? 'tata_407' : 'bolero_pickup',
+          fuel_price_per_litre: 98.5
+        });
+        if (isMounted && res) {
+          setTransportEstimate(res);
+        }
+      } catch (err) {
+        console.warn('Transport estimation fallback', err);
+      }
+    }
+    computeTransport();
+    return () => { isMounted = false; };
+  }, [allocatedQty]);
 
   const handleConfirmLot = () => {
     setLotConfirmed(true);
@@ -581,6 +604,24 @@ export default function BuyerAggregateDetailsPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Algorithmic Logistics Costing */}
+                {transportEstimate && (
+                  <div className="mt-3 p-3 rounded-3 border" style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style={{ fontSize: '0.72rem' }}>
+                        <i className="bi bi-cpu me-1"></i>SIH Dynamic Logistics Engine
+                      </span>
+                      <span className="fw-bold font-monospace text-dark" style={{ fontSize: '0.85rem' }}>
+                        Est. ₹{transportEstimate.total_cost ?? Math.round(allocatedQty * 1.5)}
+                      </span>
+                    </div>
+                    <div className="d-flex justify-content-between text-muted mt-1" style={{ fontSize: '0.75rem' }}>
+                      <span>Logistics Rate: ₹{transportEstimate.cost_per_kg ?? '1.25'} / kg</span>
+                      <span>Transit: ~{transportEstimate.distance_km || 35} km</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

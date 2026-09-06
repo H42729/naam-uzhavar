@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { NEARBY_VEHICLES } from '../../data/vehicleData';
 import {
+  getVehicles,
+  fetchVehicleBookings,
   getStoredVehicleBookings,
   updateBookingStatus
 } from '../../services/vehicleBookingService';
@@ -9,14 +10,36 @@ import BookVehicleModal from './BookVehicleModal';
 
 export default function NearbyVehiclesSection({ onNavigateToDeliveries }) {
   const { t, language } = useLanguage();
+  const [vehicles, setVehicles] = useState([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeModalVehicle, setActiveModalVehicle] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  // Sync bookings from localStorage and listen to updates
+  // Fetch live vehicles and sync bookings
   useEffect(() => {
-    setBookings(getStoredVehicleBookings());
+    let isMounted = true;
+    async function loadData() {
+      try {
+        const [vehList, bkList] = await Promise.all([
+          getVehicles(),
+          fetchVehicleBookings()
+        ]);
+        if (isMounted) {
+          if (Array.isArray(vehList) && vehList.length > 0) {
+            setVehicles(vehList);
+          }
+          if (Array.isArray(bkList)) {
+            setBookings(bkList);
+          }
+          setLoadingVehicles(false);
+        }
+      } catch (err) {
+        if (isMounted) setLoadingVehicles(false);
+      }
+    }
+    loadData();
 
     const handleUpdate = (e) => {
       setBookings(e.detail || getStoredVehicleBookings());
@@ -24,16 +47,17 @@ export default function NearbyVehiclesSection({ onNavigateToDeliveries }) {
 
     window.addEventListener('naam_uzhavar_bookings_updated', handleUpdate);
     return () => {
+      isMounted = false;
       window.removeEventListener('naam_uzhavar_bookings_updated', handleUpdate);
     };
   }, []);
 
-  const filteredVehicles = NEARBY_VEHICLES.filter((v) => {
+  const filteredVehicles = vehicles.filter((v) => {
     if (selectedCategory === 'all') return true;
     if (selectedCategory === 'mini') return v.category === 'mini';
     if (selectedCategory === 'pickup') return v.category === 'pickup';
     if (selectedCategory === 'reefer') return v.isRefrigerated;
-    if (selectedCategory === 'heavy') return v.category === 'heavy';
+    if (selectedCategory === 'heavy') return v.category === 'heavy' || v.category === 'large';
     return true;
   });
 
@@ -60,7 +84,7 @@ export default function NearbyVehiclesSection({ onNavigateToDeliveries }) {
               {language === 'ta' ? 'அருகிலுள்ள வாகனங்கள்' : 'Nearby Vehicles'}
             </span>
             <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small fw-bold">
-              ● {NEARBY_VEHICLES.length} {language === 'ta' ? 'செயலில்' : 'Available Now'}
+              ● {vehicles.length} {language === 'ta' ? 'செயலில்' : 'Available Now'}
             </span>
           </div>
           <h4 className="fw-black text-dark mb-1 mt-2">
@@ -234,7 +258,7 @@ export default function NearbyVehiclesSection({ onNavigateToDeliveries }) {
                 <button
                   type="button"
                   className="btn btn-primary btn-sm rounded-pill px-3 fw-bold"
-                  onClick={() => setActiveModalVehicle(NEARBY_VEHICLES[0])}
+                  onClick={() => setActiveModalVehicle(vehicles[0])}
                 >
                   <i className="bi bi-arrow-repeat me-1"></i>
                   <span>{language === 'ta' ? 'வேறு வாகனம் தேடுக' : 'Rebook Another Vehicle'}</span>

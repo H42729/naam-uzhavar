@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import apiClient from '../../services/apiClient';
 import { getDistricts, getTaluksByDistrict } from '../../data/tamilNaduLocations';
 import SearchableSelect from '../../components/common/SearchableSelect';
 import FormInput from '../../components/common/FormInput';
@@ -149,35 +150,52 @@ export default function FarmerRegisterPage() {
 
     setIsSubmitting(true);
 
-    try {
-      const existing = JSON.parse(localStorage.getItem('naam_uzhavar_registered_users') || '[]');
-      const newFarmer = {
+    const email = `${(formData.fullName || 'farmer').toLowerCase().replace(/[^a-z0-9]/g, '')}${Date.now().toString().slice(-3)}@naamuzhavar.com`;
+    const locationStr = formData.district ? `${formData.taluk ? formData.taluk + ', ' : ''}${formData.district}, Tamil Nadu` : 'Dindigul, Tamil Nadu';
+
+    // Call backend registration API
+    apiClient
+      .post('/auth/register', {
         name: formData.fullName || 'Registered Farmer',
-        email: `${(formData.fullName || 'farmer').toLowerCase().replace(/[^a-z0-9]/g, '')}@naamuzhavar.com`,
+        email,
         phone: formData.phone,
         password: formData.password,
-        role: 'Farmer',
-        roleKey: 'farmer',
-        district: formData.district,
-        taluk: formData.taluk,
-        village: formData.village,
-        landArea: formData.landArea,
-        pattaNumber: formData.pattaNumber,
-        location: formData.district ? `${formData.district}, Tamil Nadu` : 'Erode, Tamil Nadu',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDbsSudoKNyE7RJZob9ewQOMJwTcwZUjLC5hQwyUPRj0Jw5fUDlpXhqui_Y4_7IcAnQmAdgWVOcPEnf6cV1rotCpFACgesUn3oD-PCwQkJP7f8H7tO4HZzAkGd9HVZm9pXVk9ajbGmq5nOT3u50Rhr06u7IEESRHxHUfaFbkfSXThrWGF37A-1rj954tpLOOk8g1neswi5Qr6ZZQdHyAZ2SODHuakgv-slcE-AxKG-YQO6u39Trc4sqnA',
-      };
-      const filtered = existing.filter((u) => u.phone !== formData.phone);
-      filtered.push(newFarmer);
-      localStorage.setItem('naam_uzhavar_registered_users', JSON.stringify(filtered));
-    } catch (err) {
-      console.warn('Error saving registered farmer:', err);
-    }
+        role: 'farmer',
+        location: locationStr,
+        fpoDetails: {
+          name: formData.fpoName || 'Local Farmers Association',
+          district: formData.district
+        }
+      })
+      .catch((err) => {
+        console.warn('Backend register error (continuing with local session):', err.message);
+      })
+      .finally(() => {
+        try {
+          const existing = JSON.parse(localStorage.getItem('naam_uzhavar_registered_users') || '[]');
+          const newFarmer = {
+            name: formData.fullName || 'Registered Farmer',
+            email,
+            phone: formData.phone,
+            password: formData.password,
+            role: 'Farmer',
+            roleKey: 'farmer',
+            district: formData.district,
+            taluk: formData.taluk,
+            village: formData.village,
+            landArea: formData.landArea,
+            pattaNumber: formData.pattaNumber,
+            location: locationStr,
+            avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDbsSudoKNyE7RJZob9ewQOMJwTcwZUjLC5hQwyUPRj0Jw5fUDlpXhqui_Y4_7IcAnQmAdgWVOcPEnf6cV1rotCpFACgesUn3oD-PCwQkJP7f8H7tO4HZzAkGd9HVZm9pXVk9ajbGmq5nOT3u50Rhr06u7IEESRHxHUfaFbkfSXThrWGF37A-1rj954tpLOOk8g1neswi5Qr6ZZQdHyAZ2SODHuakgv-slcE-AxKG-YQO6u39Trc4sqnA',
+          };
+          const filtered = existing.filter((u) => u.phone !== formData.phone);
+          filtered.push(newFarmer);
+          localStorage.setItem('naam_uzhavar_registered_users', JSON.stringify(filtered));
+        } catch (err) {}
 
-    // Simulate clean state processing for API readiness
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccessOpen(true);
-    }, 300);
+        setIsSubmitting(false);
+        setIsSuccessOpen(true);
+      });
   };
 
   const handleReset = () => {

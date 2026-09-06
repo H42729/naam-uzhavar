@@ -12,6 +12,9 @@ import {
   createDirectBuyOrderRecord,
   deductInventoryFromProducts
 } from '../services/bulkProcurementService';
+import productService from '../services/productService';
+import requestService from '../services/requestService';
+import apiClient from '../services/apiClient';
 import FarmerContext from './FarmerContext';
 
 const CROP_FALLBACK = {
@@ -246,6 +249,52 @@ export function BuyerProvider({ children }) {
     return [...farmerProducts, ...regularProducts];
   }, [products, farmerCtx?.harvests, farmerCtx?.farmerProfile]);
 
+  // Fetch live products and requests from backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadBackendBuyerData() {
+      try {
+        const fetchedProducts = await productService.getProducts();
+        if (isMounted && Array.isArray(fetchedProducts) && fetchedProducts.length > 0) {
+          setProducts(fetchedProducts);
+        }
+      } catch (err) {
+        console.warn('Backend products error, using cached state:', err);
+      }
+
+      try {
+        const fetchedRequests = await requestService.getBuyerRequests();
+        if (isMounted && Array.isArray(fetchedRequests) && fetchedRequests.length > 0) {
+          const mapped = fetchedRequests.map((r) => ({
+            id: r.id || r._id,
+            productId: r.productId,
+            productName: r.cropName || r.crop,
+            crop: r.cropName || r.crop,
+            tamilName: r.tamilName,
+            farmerName: r.farmerName,
+            farmerPhone: r.farmerPhone,
+            quantity: r.quantity,
+            unit: r.unit || 'kg',
+            offeredPrice: r.offeredPrice || r.price,
+            price: r.offeredPrice || r.price,
+            totalAmount: r.totalAmount,
+            deliveryLocation: r.deliveryLocation,
+            status: r.status === 'ACCEPTED' ? 'Accepted' : r.status === 'CONFIRMED' ? 'Confirmed' : r.status === 'DECLINED' ? 'Declined' : 'Pending',
+            productImage: r.productImage,
+            requestDate: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : 'Today'
+          }));
+          setRequests(mapped);
+        }
+      } catch (err) {
+        console.warn('Backend requests error, using cached state:', err);
+      }
+    }
+    loadBackendBuyerData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // --------------------------------------------------------------------------
   // PERSISTENCE SYNC
   // --------------------------------------------------------------------------
@@ -284,9 +333,16 @@ export function BuyerProvider({ children }) {
   // --------------------------------------------------------------------------
   // REQUEST CONFIRMATION WORKFLOW (User Requested Action)
   // --------------------------------------------------------------------------
-  const confirmRequest = (requestId) => {
+  const confirmRequest = async (requestId) => {
     const targetReq = requests.find((r) => r.id === requestId);
     if (!targetReq) return null;
+
+    // Send confirmation to backend
+    try {
+      await apiClient.post(`/requests/${requestId}/confirm`);
+    } catch (e) {
+      console.warn('Backend confirmRequest error:', e);
+    }
 
     // 1. Mark request as Confirmed
     setRequests((prev) =>
@@ -354,8 +410,25 @@ export function BuyerProvider({ children }) {
 
   const declineRequest = cancelRequest;
 
-  const createRequest = (newRequestData) => {
-    const id = `REQ-${Date.now().toString().slice(-4)}`;
+  const createRequest = async (newRequestData) => {
+    let apiCreated = null;
+    try {
+      apiCreated = await requestService.createRequest({
+        productId: newRequestData.harvestId || newRequestData.productId,
+        cropName: newRequestData.productName || newRequestData.crop || 'Produce',
+        tamilName: newRequestData.tamilName || '',
+        quantity: Number(newRequestData.quantity) || 100,
+        unit: newRequestData.unit || 'kg',
+        offeredPrice: Number(newRequestData.price || newRequestData.offeredPrice) || 25,
+        totalAmount: (Number(newRequestData.quantity) || 100) * (Number(newRequestData.price || newRequestData.offeredPrice) || 25),
+        deliveryLocation: newRequestData.deliveryLocation || 'Dindigul Central Hub',
+        message: newRequestData.message || 'Direct procurement proposal placed from marketplace'
+      });
+    } catch (err) {
+      console.warn('Backend createRequest error, using local fallback:', err);
+    }
+
+    const id = apiCreated?.id || `REQ-${Date.now().toString().slice(-4)}`;
     const calcTotal = (Number(newRequestData.quantity) || 0) * (Number(newRequestData.price || newRequestData.offeredPrice) || 0);
 
     const newReq = {
@@ -369,7 +442,8 @@ export function BuyerProvider({ children }) {
         receivedAt: 'Just now',
         responseAt: null
       },
-      ...newRequestData
+      ...newRequestData,
+      ...(apiCreated ? { id: apiCreated.id } : {})
     };
     setRequests((prev) => [newReq, ...prev]);
 

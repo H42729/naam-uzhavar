@@ -30,3 +30,4 @@ dist-ssr/
 *.sw?
 Thumbs.db
 scratch/
+verify_*.mjs

@@ -5,6 +5,9 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import productService from '../services/productService';
+import requestService from '../services/requestService';
+import deliveryService from '../services/deliveryService';
 
 const FarmerContext = createContext(null);
 
@@ -423,6 +426,91 @@ export function FarmerProvider({ children }) {
     localStorage.setItem('naam_uzhavar_conversations_v3', JSON.stringify(conversations));
   }, [conversations]);
 
+  // Load live data from backend APIs on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadBackendFarmerData() {
+      try {
+        const fetchedProducts = await productService.getProducts();
+        if (isMounted && Array.isArray(fetchedProducts) && fetchedProducts.length > 0) {
+          const mappedHarvests = fetchedProducts.map((p) => ({
+            id: p.id || p._id,
+            name: `${p.crop} (${p.tamilName || ''})`,
+            cropName: p.crop,
+            tamilName: p.tamilName || '',
+            quantity: String(p.quantity || 100),
+            unit: p.unit || 'kg',
+            isEstimated: false,
+            quality: p.grade || 'Good / Fresh',
+            location: p.location || 'Dindigul, Tamil Nadu',
+            status: p.status || 'Available',
+            buyerRequestCount: 0,
+            harvestDate: 'Today (Fresh)',
+            pricePerKg: Number(p.price || 28),
+            images: Array.isArray(p.images) && p.images.length > 0 ? p.images : [p.image]
+          }));
+          setHarvests(mappedHarvests);
+        }
+      } catch (err) {
+        console.warn('Error fetching farmer products from backend:', err);
+      }
+
+      try {
+        const fetchedRequests = await requestService.getFarmerRequests();
+        if (isMounted && Array.isArray(fetchedRequests) && fetchedRequests.length > 0) {
+          const mappedRequests = fetchedRequests.map((r) => ({
+            id: r.id || r._id,
+            buyerName: r.buyerName || 'Supermarket Procurement',
+            buyerType: 'Verified Wholesale Buyer',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+            cropRequested: `${r.cropName || 'Produce'} (${r.tamilName || ''})`,
+            quantity: `${r.quantity} ${r.unit || 'kg'}`,
+            offerPrice: `₹${r.offeredPrice || r.price || 28} / kg`,
+            totalValue: `₹${Number(r.totalAmount || 2800).toLocaleString('en-IN')}`,
+            location: r.deliveryLocation || 'Dindigul Central Market',
+            requestDate: 'Today',
+            message: 'Direct procurement request placed on platform.',
+            phone: r.buyerPhone || '+91 98765 01234',
+            status: r.status === 'ACCEPTED' ? 'Accepted' : r.status === 'DECLINED' ? 'Declined' : 'Pending'
+          }));
+          setBuyerRequests(mappedRequests);
+        }
+      } catch (err) {
+        console.warn('Error fetching farmer requests from backend:', err);
+      }
+
+      try {
+        const fetchedDeliveries = await deliveryService.getAllDeliveries();
+        if (isMounted && Array.isArray(fetchedDeliveries) && fetchedDeliveries.length > 0) {
+          const mappedDeliveries = fetchedDeliveries.map((d) => ({
+            id: d.orderId || d.id || d._id,
+            trackingNumber: d.trackingNumber,
+            buyerName: d.buyer?.name || 'ABC Retail',
+            crop: d.products?.[0]?.name || 'Produce',
+            quantity: `${d.totalWeight || 150} kg (${d.totalCrates || 6} crates)`,
+            driverName: d.driver?.name || 'Raj Kumar',
+            driverPhone: d.driver?.phone || '+91 98421 44550',
+            vehicleNumber: d.vehicle?.registrationNumber || 'TN-57-AB-4029',
+            pickupLocation: d.farmer?.address || 'Nilakottai, Dindigul',
+            dropLocation: d.buyer?.address || 'Dindigul Central Depot',
+            estimatedArrival: d.etaMinutes ? `In ${d.etaMinutes} mins` : 'Today',
+            currentStage: d.status === 'DELIVERED' ? 'Delivered' : d.status === 'IN_TRANSIT' ? 'In Transit' : 'Order Accepted',
+            stages: ['Order Accepted', 'Driver Assigned', 'Pickup', 'In Transit', 'Delivered'],
+            stageIndex: d.status === 'DELIVERED' ? 4 : d.status === 'IN_TRANSIT' ? 3 : 1,
+            statusText: `Delivery status: ${d.status}`
+          }));
+          setDeliveries(mappedDeliveries);
+        }
+      } catch (err) {
+        console.warn('Error fetching deliveries from backend:', err);
+      }
+    }
+    loadBackendFarmerData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const showToast = (title, message, type = 'success') => {
     setToast({ id: Date.now(), title, message, type });
     setTimeout(() => {
@@ -430,21 +518,38 @@ export function FarmerProvider({ children }) {
     }, 4000);
   };
 
-  // Add Harvest Flow
-  const addHarvest = (newHarvestData) => {
+  // Add Harvest Flow with Backend API Integration
+  const addHarvest = async (newHarvestData) => {
+    let createdProduct = null;
+    try {
+      createdProduct = await productService.createProduct({
+        cropName: newHarvestData.cropName || newHarvestData.name,
+        tamilName: newHarvestData.tamilName || '',
+        quantity: Number(newHarvestData.quantity) || 100,
+        unit: newHarvestData.unit || 'kg',
+        pricePerKg: Number(newHarvestData.pricePerKg) || 28,
+        location: newHarvestData.location || `${farmerProfile?.district || 'Dindigul'}, Tamil Nadu`,
+        images: newHarvestData.images || [],
+        grade: newHarvestData.quality || 'Grade A Premium'
+      });
+    } catch (apiErr) {
+      console.warn('Backend createProduct error, persisting locally:', apiErr);
+    }
+
     const newHarvest = {
-      id: `HRV-${Date.now().toString().slice(-4)}`,
+      id: createdProduct?.id || `HRV-${Date.now().toString().slice(-4)}`,
       status: 'Available',
       buyerRequestCount: 0,
       harvestDate: 'Just Now',
       location: 'Dindigul, Tamil Nadu',
-      ...newHarvestData
+      ...newHarvestData,
+      ...(createdProduct ? { id: createdProduct.id } : {})
     };
 
     setHarvests((prev) => [newHarvest, ...prev]);
     showToast(
       '🌱 Harvest Added Successfully!',
-      `Your ${newHarvest.cropName || 'crop'} (${newHarvest.quantity} ${newHarvest.unit}) is now visible to buyers.`,
+      `Your ${newHarvest.cropName || 'crop'} (${newHarvest.quantity} ${newHarvest.unit}) is now live in the marketplace.`,
       'success'
     );
     return newHarvest;
@@ -544,7 +649,13 @@ export function FarmerProvider({ children }) {
     return newFarmerReq;
   };
 
-  const acceptRequest = (requestId) => {
+  const acceptRequest = async (requestId) => {
+    try {
+      await requestService.respondToRequest(requestId, 'ACCEPTED', 'Offer accepted. Produce sorted and ready for morning pickup.');
+    } catch (apiErr) {
+      console.warn('Backend respondToRequest error:', apiErr);
+    }
+
     const req = buyerRequests.find((r) => r.id === requestId);
     setBuyerRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, status: 'Accepted' } : r))
@@ -585,7 +696,13 @@ export function FarmerProvider({ children }) {
     );
   };
 
-  const declineRequest = (requestId) => {
+  const declineRequest = async (requestId) => {
+    try {
+      await requestService.respondToRequest(requestId, 'DECLINED', 'Unable to fulfill this batch.');
+    } catch (apiErr) {
+      console.warn('Backend declineRequest error:', apiErr);
+    }
+
     setBuyerRequests((prev) =>
       prev.map((r) => (r.id === requestId ? { ...r, status: 'Declined' } : r))
     );

@@ -5,14 +5,14 @@
  * Add Harvest → Receive Buyer Request → View Request → Accept/Decline → Message Buyer → Track Order
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useFarmer } from '../../context/FarmerContext';
 import { useLanguage } from '../../context/LanguageContext';
 import FarmerLayout from '../../components/farmer/FarmerLayout';
 import AddHarvestModal from '../../components/farmer/AddHarvestModal';
 import BuyerRequestsGrid from '../../components/farmer/BuyerRequestsGrid';
-import { POPULAR_CROPS } from '../../data/cropsData';
+import cropService from '../../services/cropService';
 
 export default function FarmerDashboardPage() {
   const { t, language } = useLanguage();
@@ -29,9 +29,27 @@ export default function FarmerDashboardPage() {
 
   const navigate = useNavigate();
 
+  // Crops catalog loaded from backend
+  const [crops, setCrops] = useState([]);
+
   // Add Harvest Modal State
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedCropForModal, setSelectedCropForModal] = useState(POPULAR_CROPS[0]);
+  const [selectedCropForModal, setSelectedCropForModal] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCrops() {
+      const fetched = await cropService.getCrops();
+      if (isMounted && Array.isArray(fetched) && fetched.length > 0) {
+        setCrops(fetched);
+        if (!selectedCropForModal) {
+          setSelectedCropForModal(fetched[0]);
+        }
+      }
+    }
+    loadCrops();
+    return () => { isMounted = false; };
+  }, []);
 
   const pendingRequests = buyerRequests.filter((r) => r.status === 'Pending');
   const activeOrdersCount = deliveries.filter((d) => d.currentStage !== 'Delivered').length;

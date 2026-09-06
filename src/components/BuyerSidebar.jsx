@@ -85,7 +85,6 @@ export default function BuyerSidebar({ isOpen, onCloseMobile }) {
     }
     if (onCloseMobile) onCloseMobile();
     logout();
-    navigate('/login');
   };
 
   return (

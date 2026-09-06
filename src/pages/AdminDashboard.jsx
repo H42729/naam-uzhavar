@@ -16,7 +16,6 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
   };
 
   return (

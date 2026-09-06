@@ -30,6 +30,7 @@ import BuyerLayout from '../components/buyer/BuyerLayout';
 import BuyerRequestDetailsModal from '../components/buyer/BuyerRequestDetailsModal';
 import AcceptedRequestsCarousel from '../components/buyer/AcceptedRequestsCarousel';
 import { INITIAL_BUYER_REQUESTS } from '../data/buyerRequestsData';
+import requestService from '../services/requestService';
 
 const STORAGE_KEY = 'naam_uzhavar_buyer_request_details_v1';
 
@@ -48,6 +49,50 @@ export default function BuyerDashboard() {
       return INITIAL_BUYER_REQUESTS;
     }
   });
+
+  // Load live requests from backend MongoDB on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRequests() {
+      try {
+        const liveRequests = await requestService.getBuyerRequests();
+        if (isMounted && Array.isArray(liveRequests) && liveRequests.length > 0) {
+          const mapped = liveRequests.map((r) => ({
+            id: r.id || r._id,
+            productId: r.productId,
+            productName: r.cropName || r.crop,
+            crop: r.cropName || r.crop,
+            tamilName: r.tamilName,
+            farmerName: r.farmerName,
+            farmerPhone: r.farmerPhone,
+            quantity: `${r.quantity} ${r.unit || 'kg'}`,
+            quantityNum: r.quantity,
+            unit: r.unit || 'kg',
+            offeredPrice: `₹${r.offeredPrice || r.price}`,
+            offeredPriceNum: r.offeredPrice || r.price,
+            totalAmount: r.totalAmount,
+            deliveryLocation: r.deliveryLocation,
+            status: r.status === 'ACCEPTED' ? 'Accepted' : r.status === 'CONFIRMED' ? 'Confirmed' : r.status === 'DECLINED' ? 'Rejected' : 'Pending',
+            productImage: r.productImage || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400',
+            requestDate: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : 'Today',
+            farmerResponse: r.farmerResponse || (r.status === 'ACCEPTED' ? 'Lot verified. Grade A harvest ready for dispatch.' : null),
+            timeline: {
+              sentAt: 'Today, Morning',
+              receivedAt: 'Today, 10:15 AM',
+              responseAt: r.status !== 'PENDING' ? 'Today, 11:30 AM' : null
+            }
+          }));
+          setRequests(mapped);
+        }
+      } catch (err) {
+        console.warn('Error loading live buyer requests:', err);
+      }
+    }
+    loadRequests();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState('');

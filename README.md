@@ -28,8 +28,9 @@ A unique, accessible, and user-friendly frontend web application built with **Re
    - **25%** Avg. Farmer Savings (vibrant green)
 
 4. **Live Produce Marketplace (`Marketplace.jsx`)**:
+   - Dynamic real-time catalog fetched from `GET /api/v1/products`.
    - Category filtering (`All`, `Fruits`, `Vegetables`, `Grains`, `Honey & Oils`).
-   - Live search bar, farmer location, brix freshness score, price comparison against market price, and direct cart add.
+   - Live search bar, farmer location, mandi benchmark price comparison, and direct proposal placement.
 
 5. **Supply Chain Flow (`HowItWorks.jsx`)**:
    - 4-step pipeline: Farm Listing -> AI Quality Check -> Smart Cold-Chain -> Instant Payout.
@@ -41,17 +42,65 @@ A unique, accessible, and user-friendly frontend web application built with **Re
 7. **IoT Batch Traceability Inspector (`TraceabilityModal.jsx`)**:
    - Blockchain-verified batch timeline, optical brix logs, temperature readings, and origin GPS.
 
-8. **Multi-Role Authentication (`AuthModal.jsx`)**:
-   - Toggle between **Farmer / FPO** and **Consumer / B2B Buyer**.
+8. **Multi-Role Authentication (`AuthModal.jsx` & Portal Logins)**:
+   - Portals for **Farmer**, **Buyer**, and **Driver**.
+   - Backed by JWT Bearer token authentication stored in `localStorage` and synchronized with `GET /api/v1/auth/me`.
+
+---
+
+## 🏛️ Application Architecture & State Management
+
+```
+src/
+├── context/
+│   ├── LanguageContext.jsx       # Bilingual state (EN/TA) with backend sync (POST /translations/preference)
+│   ├── AuthContext.jsx           # JWT auth token management, user rehydration from GET /auth/me
+│   ├── FarmerContext.jsx         # Live harvest listings (products) and buyer proposals (requests)
+│   └── BuyerContext.jsx          # Marketplace state, cart, bulk purchase orders
+├── services/
+│   ├── apiClient.js              # Axios instance with baseURL 'http://localhost:5000/api/v1' & Bearer JWT interceptor
+│   ├── cropService.js            # GET /api/v1/crops (15 Master horticulture crops)
+│   ├── productService.js         # CRUD operations on produce listings (/api/v1/products)
+│   ├── requestService.js         # Procurement proposals and bargaining (/api/v1/requests)
+│   ├── vehicleBookingService.js  # Nearby logistics carriers & booking dispatch (/api/v1/vehicles)
+│   └── deliveryService.js        # Consignments, status milestones & Proof of Delivery (/api/v1/deliveries)
+├── pages/
+│   ├── farmer/                   # FarmerDashboardPage, FarmerHarvestPage, FarmerRequestsPage
+│   ├── buyer/                    # BuyerDashboard, Marketplace, ProductDetail, BulkAggregation
+│   ├── driver/                   # DriverRoutePage, DriverRequestsPage, DriverHistoryPage, DriverTripSummaryPage
+│   └── register/                 # Multi-role authentication & registration pages
+└── components/
+    ├── buyer/                    # NearbyVehiclesSection, BookVehicleModal, AcceptedRequestsCarousel
+    ├── driver/                   # DriverLayout, RouteMap, DeliveryProgress, CargoCard, PODModal
+    └── farmer/                   # AddHarvestModal, CropSelector, FarmerBidsTable
+```
+
+---
+
+## 🌐 Bilingual Support (English / தமிழ்)
+
+- **One-Click Switch**: Toggle in the navigation bar immediately switches language across all components.
+- **Backend Persistence**:
+  - Unauthenticated users: Persists to `localStorage` and `POST /api/v1/translations/preference`.
+  - Authenticated users: Persists directly to MongoDB via `PATCH /api/v1/auth/me/language` and rehydrates upon login.
 
 ---
 
 ## 🚀 Running Locally
 
 ```bash
-# In d:\hackathon
+# Navigate to frontend folder
+cd d:\Hackathon\naam-uzhavar-main
+
+# Install dependencies
 npm install
+
+# Build for production verification (zero errors)
+npm run build
+
+# Start Vite dev server
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+The frontend runs at: **`http://localhost:5173`** (proxies/connects to backend at `http://localhost:5000/api/v1`).
+

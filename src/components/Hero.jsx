@@ -27,24 +27,16 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
               {t('heroParagraph')}
             </p>
 
-            <div className="fd-hero-btn-row">
-              <button
-                type="button"
-                className="fd-btn-start-selling"
-                onClick={onStartSelling}
-              >
-                <span>{t('startSellingFarmer')}</span>
-                <i className="bi bi-arrow-right"></i>
-              </button>
-
-              <button
-                type="button"
-                className="fd-btn-explore-market"
-                onClick={onExploreMarketplace}
-              >
-                <i className="bi bi-shop"></i>
-                <span>{t('exploreMandi')}</span>
-              </button>
+            {/* Plain Informative Messages for Farmers and Buyers */}
+            <div className="fd-hero-messages-list">
+              <div className="fd-hero-message-item">
+                <i className="bi bi-check-circle-fill text-success"></i>
+                <span>{t('heroFarmerHint')}</span>
+              </div>
+              <div className="fd-hero-message-item">
+                <i className="bi bi-check-circle-fill text-primary"></i>
+                <span>{t('heroBuyerHint')}</span>
+              </div>
             </div>
 
             {/* Clean Feature List */}
@@ -54,7 +46,7 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
                 <span>{t('zeroCommission')}</span>
               </div>
               <div className="fd-badge-item">
-                <i className="bi bi-lightning-charge"></i>
+                <i className="bi bi-truck"></i>
                 <span>{t('sameDayDispatch')}</span>
               </div>
               <div className="fd-badge-item">
@@ -64,36 +56,17 @@ export default function Hero({ onStartSelling, onExploreMarketplace, onOpenTrace
             </div>
           </div>
 
-          {/* Right Column: Hero Visual Card */}
+          {/* Right Column: Clean, Fully-Visible Hero Illustration Card */}
           <div
             className="fd-hero-visual-bento"
             onClick={onOpenTraceability}
             title={t('viewSeedToSale')}
           >
-            <div
-              className="fd-hero-bg-cover"
-              style={{ backgroundImage: `url(${HERO_ILLUSTRATION_URL})` }}
-              role="img"
-              aria-label="FarmDirect Agricultural Supply Chain"
-            ></div>
-
-            <div className="fd-hero-bottom-overlay">
-              <div className="fd-tracking-caption">
-                <span className="fd-pulse-dot"></span>
-                <span>{t('seedToSaleTelemetry')}</span>
-              </div>
-
-              <button
-                type="button"
-                className="fd-btn-inspect-batch"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenTraceability();
-                }}
-              >
-                <span>{t('liveBatch')}</span>
-              </button>
-            </div>
+            <img
+              src={HERO_ILLUSTRATION_URL}
+              alt="Naam Uzhavar - Grow, Sell, Earn"
+              className="fd-hero-illustration-img"
+            />
           </div>
         </div>
       </div>

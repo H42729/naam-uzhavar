@@ -4,14 +4,27 @@
  * Facilitates direct messaging with farmers, buyer receiving managers, and central dispatch.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DriverLayout from '../../components/driver/DriverLayout';
 import { DRIVER_MESSAGES } from '../../data/driverData';
 
 export default function DriverMessagesPage() {
-  const [threads, setThreads] = useState(DRIVER_MESSAGES);
+  const [threads, setThreads] = useState(() => {
+    try {
+      const saved = localStorage.getItem('naam_uzhavar_driver_messages');
+      return saved ? JSON.parse(saved) : DRIVER_MESSAGES;
+    } catch {
+      return DRIVER_MESSAGES;
+    }
+  });
   const [activeContactId, setActiveContactId] = useState(threads[0]?.contactId || 'c1');
   const [replyText, setReplyText] = useState('');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('naam_uzhavar_driver_messages', JSON.stringify(threads));
+    } catch {}
+  }, [threads]);
 
   const activeThread = threads.find((t) => t.contactId === activeContactId) || threads[0];
 
