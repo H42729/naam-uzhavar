@@ -179,8 +179,9 @@ export default function FarmerHarvestPage() {
             <i className="bi bi-flower2 fs-1 text-muted mb-2 d-block"></i>
             <h3 className="fs-5 fw-bold text-dark mb-1">{t('noHarvestYetTitle')}</h3>
             <p className="text-muted small mb-4">{t('noHarvestYetDesc')}</p>
-            <Link to="/farmer/add-harvest" className="btn btn-success fw-bold px-4 py-2.5 rounded-pill shadow-xs">
-              {t('addHarvestCTA')}
+            <Link to="/farmer/add-harvest" className="btn btn-success fw-bold px-4 py-2.5 rounded-pill shadow-xs d-inline-flex align-items-center gap-2">
+              <i className="bi bi-plus-circle-fill fs-5"></i>
+              <span>{t('addHarvestCTA')}</span>
             </Link>
           </div>
         ) : (
@@ -197,6 +198,15 @@ export default function FarmerHarvestPage() {
                       }
                       alt={item.name}
                       className="w-100 h-100 object-fit-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        const lower = (item.cropName || item.name || '').toLowerCase();
+                        if (lower.includes('carrot') || lower.includes('கேரட்')) {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80';
+                        } else {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80';
+                        }
+                      }}
                     />
 
                     {/* Status Badge */}
@@ -505,6 +515,15 @@ export default function FarmerHarvestPage() {
                     alt={harvestToDelete.name}
                     className="rounded-2 object-fit-cover flex-shrink-0"
                     style={{ width: '48px', height: '48px' }}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      const lower = (harvestToDelete.cropName || harvestToDelete.name || '').toLowerCase();
+                      if (lower.includes('carrot') || lower.includes('கேரட்')) {
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80';
+                      } else {
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80';
+                      }
+                    }}
                   />
                   <div className="min-w-0 flex-1">
                     <strong className="text-dark d-block text-truncate" style={{ fontSize: '0.95rem' }}>

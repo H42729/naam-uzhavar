@@ -173,8 +173,6 @@ export default function FarmerTopNav() {
       label: language === 'ta' ? 'AI தேவை' : 'AI Demand',
       path: '/farmer/demand-forecast',
       icon: Sparkles,
-      badgeText: 'ORD-1030',
-      badgeInactiveClass: 'bg-[#EEF2FF] text-[#4F46E5] font-semibold',
       matchPatterns: ['/farmer/demand-forecast', '/farmer/supply-pool']
     },
     {

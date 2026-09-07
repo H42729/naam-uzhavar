@@ -84,7 +84,7 @@ export const INITIAL_HARVESTS = [
     harvestDate: '2 days ago',
     pricePerKg: 45,
     images: [
-      'https://images.unsplash.com/photo-1598170845058-32b9d6a5c317?w=600&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80'
     ]
   },
   {
@@ -367,7 +367,20 @@ export function FarmerProvider({ children }) {
     try {
       const saved = localStorage.getItem('naam_uzhavar_harvests_v3');
       const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) ? parsed : INITIAL_HARVESTS;
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => {
+          if (Array.isArray(item.images)) {
+            const fixedImages = item.images.map((img) =>
+              img && (img.includes('1598170845058') || img.includes('photo-1598170845058-32b9d6a5c317'))
+                ? 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80'
+                : img
+            );
+            return { ...item, images: fixedImages };
+          }
+          return item;
+        });
+      }
+      return INITIAL_HARVESTS;
     } catch {
       return INITIAL_HARVESTS;
     }

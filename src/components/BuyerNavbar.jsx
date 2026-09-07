@@ -122,25 +122,6 @@ export default function BuyerNavbar({
     }
   });
 
-  // Online / Offline status with localStorage persistence
-  const [isOnline, setIsOnline] = useState(() => {
-    try {
-      const saved = localStorage.getItem('naam_uzhavar_buyer_online_status');
-      return saved !== null ? JSON.parse(saved) : true;
-    } catch {
-      return true;
-    }
-  });
-
-  const handleToggleOnline = () => {
-    setIsOnline((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem('naam_uzhavar_buyer_online_status', JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  };
 
   const handleLogoutClick = (e) => {
     if (e) {
@@ -338,32 +319,6 @@ export default function BuyerNavbar({
 
             {/* Right Section: Desktop Utility Controls & Logout Button */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              {/* Desktop Only: Online / Offline Status Toggle */}
-              <button
-                type="button"
-                onClick={handleToggleOnline}
-                className={`hidden md:flex px-3.5 py-1.5 rounded-full text-xs font-bold items-center gap-2 transition-all cursor-pointer select-none border shadow-2xs min-h-[38px] ${
-                  isOnline
-                    ? 'bg-emerald-100/80 border-emerald-300 text-emerald-800 hover:bg-emerald-200/80'
-                    : 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200/80'
-                }`}
-                title={isOnline ? 'Status: Online (Accepting Direct Farmer Invoices)' : 'Status: Offline'}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    isOnline ? 'bg-[#059669] animate-pulse' : 'bg-slate-400'
-                  }`}
-                />
-                <span>
-                  {isOnline
-                    ? language === 'ta'
-                      ? 'ஆன்லைன்'
-                      : 'Online'
-                    : language === 'ta'
-                    ? 'ஆஃப்லைன்'
-                    : 'Offline'}
-                </span>
-              </button>
 
               {/* Desktop Only: Language Switcher */}
               <div
@@ -407,39 +362,12 @@ export default function BuyerNavbar({
             </div>
           </div>
 
-          {/* Mobile Row 2: Online/Offline Button and Language Switcher on dedicated next line (md:hidden) */}
+          {/* Mobile Row 2: Language Switcher on dedicated next line (md:hidden) */}
           <div className="md:hidden border-t border-slate-100 bg-slate-50/70 px-3 py-1.5">
-            <div className="flex items-center justify-between gap-2 max-w-7xl mx-auto">
-              {/* Mobile Online / Offline Toggle */}
-              <button
-                type="button"
-                onClick={handleToggleOnline}
-                className={`flex-1 justify-center px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all cursor-pointer select-none border shadow-2xs min-h-[36px] ${
-                  isOnline
-                    ? 'bg-emerald-100/90 border-emerald-300 text-emerald-800 hover:bg-emerald-200'
-                    : 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200'
-                }`}
-                title={isOnline ? 'Status: Online' : 'Status: Offline'}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    isOnline ? 'bg-[#059669] animate-pulse' : 'bg-slate-400'
-                  }`}
-                />
-                <span>
-                  {isOnline
-                    ? language === 'ta'
-                      ? 'ஆன்லைன்'
-                      : 'Online'
-                    : language === 'ta'
-                    ? 'ஆஃப்லைன்'
-                    : 'Offline'}
-                </span>
-              </button>
-
+            <div className="flex items-center justify-center max-w-7xl mx-auto">
               {/* Mobile Language Switcher */}
               <div
-                className="flex-1 justify-center bg-white border border-slate-200 rounded-full px-3 py-1 text-xs font-bold text-slate-700 flex items-center gap-2 min-h-[36px] shadow-2xs"
+                className="bg-white border border-slate-200 rounded-full px-4 py-1 text-xs font-bold text-slate-700 flex items-center gap-2 min-h-[34px] shadow-2xs"
                 role="group"
                 aria-label="Language selector"
               >

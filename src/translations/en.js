@@ -290,7 +290,7 @@ const en = {
   newBuyerRequestsBanner: 'New Buyer Requests',
   requestsWaitingReply: 'requests waiting for your reply.',
   viewRequestsCTA: 'VIEW REQUESTS →',
-  addHarvestCTA: '+ ADD HARVEST',
+  addHarvestCTA: 'ADD HARVEST',
   productsCount: 'Products',
   pendingCount: 'Pending',
   activeOrdersCount: 'Active Orders',

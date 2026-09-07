@@ -12,6 +12,25 @@ import { useBuyer } from '../../context/BuyerContext';
 import { useLanguage } from '../../context/LanguageContext';
 import BuyerLayout from '../../components/buyer/BuyerLayout';
 
+const CROP_IMAGES = {
+  onion: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600&auto=format&fit=crop&q=80',
+  tomato: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80',
+  carrot: 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80',
+  potato: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600&auto=format&fit=crop&q=80',
+  banana: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600&auto=format&fit=crop&q=80',
+  cabbage: 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=600&auto=format&fit=crop&q=80',
+  chilli: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=600&auto=format&fit=crop&q=80',
+  mango: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80'
+};
+
+function getCropImage(cropName = '') {
+  const lower = cropName.toLowerCase();
+  for (const [key, url] of Object.entries(CROP_IMAGES)) {
+    if (lower.includes(key)) return url;
+  }
+  return CROP_IMAGES.onion;
+}
+
 export default function BuyerOrdersPage() {
   const { orders, getOrCreateConversationForFarmer } = useBuyer();
   const { t, language } = useLanguage();
@@ -167,14 +186,27 @@ export default function BuyerOrdersPage() {
                     {getStatusBadge(order.status)}
                   </div>
 
-                  {/* Crop & Quantity */}
-                  <div className="mb-3">
-                    <h3 className="fs-5 fw-bold text-dark mb-1">
-                      {order.crop}
-                    </h3>
-                    <span className="text-muted small">
-                      {order.farmers || order.farmerBreakdown?.length || 1} {language === 'ta' ? 'விவசாயிகளிடமிருந்து தொகுக்கப்பட்டது' : 'farmers contributing'}
-                    </span>
+                  {/* Crop Image & Title */}
+                  <div className="d-flex align-items-center gap-3 mb-3">
+                    <div className="rounded-3 overflow-hidden border flex-shrink-0" style={{ width: '56px', height: '56px' }}>
+                      <img
+                        src={getCropImage(order.crop)}
+                        alt={order.crop}
+                        className="w-100 h-100 object-fit-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = CROP_IMAGES.onion;
+                        }}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="fs-5 fw-bold text-dark mb-0 text-truncate">
+                        {order.crop}
+                      </h3>
+                      <span className="text-muted small">
+                        {order.farmers || order.farmerBreakdown?.length || 1} {language === 'ta' ? 'விவசாயிகளிடமிருந்து' : 'farmers contributing'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Summary Box */}
@@ -202,16 +234,15 @@ export default function BuyerOrdersPage() {
                     </span>
                   </div>
 
-                  {/* CTA: VIEW ORDER */}
+                  {/* CTA: VIEW DETAILS (NAVIGATE TO DEDICATED DETAILS PAGE) */}
                   <div className="mt-auto pt-2 border-top">
-                    <button
-                      type="button"
-                      className="btn btn-outline-primary fw-bold w-100 rounded-pill py-2 d-flex align-items-center justify-content-center gap-1.5 shadow-2xs"
-                      onClick={() => setSelectedOrder(order)}
+                    <Link
+                      to={`/buyer/orders/${order.id}`}
+                      className="btn btn-outline-primary fw-bold w-100 rounded-pill py-2 d-flex align-items-center justify-content-center gap-1.5 shadow-2xs text-decoration-none hover-scale"
                     >
-                      <span>{language === 'ta' ? 'ஆர்டரைப் பார்' : 'View Order'}</span>
+                      <span>{language === 'ta' ? 'முழு விவரங்கள்' : 'View Details'}</span>
                       <i className="bi bi-arrow-right"></i>
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>

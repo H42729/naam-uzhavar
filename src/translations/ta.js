@@ -290,7 +290,7 @@ const ta = {
   newBuyerRequestsBanner: 'புதிய வாங்குபவர் கோரிக்கைகள்',
   requestsWaitingReply: 'கோரிக்கைகள் உங்கள் பதிலுக்காக காத்திருக்கின்றன.',
   viewRequestsCTA: 'கோரிக்கைகளைப் பார் →',
-  addHarvestCTA: '+ விளைச்சலைச் சேர்',
+  addHarvestCTA: 'விளைச்சலைச் சேர்',
   productsCount: 'பயிர்கள்',
   pendingCount: 'நிலுவையில்',
   activeOrdersCount: 'நடப்பு ஆர்டர்கள்',

@@ -85,7 +85,7 @@ export const INITIAL_REQUEST_DETAILS = [
     farmerFpo: "Hill Top Organic Farmers Group",
     productName: "Carrot",
     productTamilName: "கேரட்",
-    productImage: "https://images.unsplash.com/photo-1598170845058-32b9d6a5c317?w=600&auto=format&fit=crop&q=80",
+    productImage: "https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80",
     quantity: 150,
     unit: "kg",
     price: 46,

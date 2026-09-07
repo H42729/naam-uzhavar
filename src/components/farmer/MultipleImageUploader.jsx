@@ -31,7 +31,7 @@ const PRESET_PRODUCE_IMAGES = [
   },
   {
     name: 'Fresh Carrots',
-    url: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5c317?w=600&auto=format&fit=crop&q=80'
+    url: 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80'
   }
 ];
 

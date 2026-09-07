@@ -46,6 +46,7 @@ import BuyerRequestStatusPage from './pages/buyer/BuyerRequestStatusPage';
 import BuyerRequirementPage from './pages/buyer/BuyerRequirementPage';
 import BuyerAggregateDetailsPage from './pages/buyer/BuyerAggregateDetailsPage';
 import BuyerOrdersPage from './pages/buyer/BuyerOrdersPage';
+import BuyerOrderDetailPage from './pages/buyer/BuyerOrderDetailPage';
 import BulkRequirementPage from './pages/buyer/BulkRequirementPage';
 import BookVehiclePage from './pages/BookVehiclePage';
 import BuyerDeliveriesPage from './pages/buyer/BuyerDeliveriesPage';
@@ -127,6 +128,9 @@ export default function App() {
                 <Route path="/buyer/matched-supply" element={<BuyerAggregateDetailsPage />} />
                 <Route path="/buyer/messages" element={<BuyerMessagesPage />} />
                 <Route path="/buyer/orders" element={<BuyerOrdersPage />} />
+                <Route path="/buyer/orders/:id" element={<BuyerOrderDetailPage />} />
+                <Route path="/buyer/order/:id" element={<BuyerOrderDetailPage />} />
+                <Route path="/my-orders/:id" element={<BuyerOrderDetailPage />} />
                 <Route path="/buyer/deliveries" element={<BuyerDeliveriesPage />} />
                 <Route path="/buyer/profile" element={<BuyerProfilePage />} />
 

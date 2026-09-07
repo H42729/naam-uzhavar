@@ -316,8 +316,9 @@ export default function FarmerDashboardPage() {
               <i className="bi bi-flower2 fs-1 text-muted mb-2 d-block"></i>
               <strong className="fs-5 fw-bold text-dark d-block mb-1">{t('noHarvestYetTitle')}</strong>
               <p className="text-muted small mb-3">{t('noHarvestYetDesc')}</p>
-              <Link to="/farmer/add-harvest" className="btn btn-success fw-bold px-4 py-2 rounded-pill">
-                {t('addHarvestCTA')}
+              <Link to="/farmer/add-harvest" className="btn btn-success fw-bold px-4 py-2 rounded-pill d-inline-flex align-items-center gap-2">
+                <i className="bi bi-plus-circle-fill fs-5"></i>
+                <span>{t('addHarvestCTA')}</span>
               </Link>
             </div>
           ) : (
@@ -330,6 +331,15 @@ export default function FarmerDashboardPage() {
                         src={item.images?.[0] || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80'}
                         alt={item.name}
                         className="w-100 h-100 object-fit-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          const lower = (item.cropName || item.name || '').toLowerCase();
+                          if (lower.includes('carrot') || lower.includes('கேரட்')) {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop&q=80';
+                          } else {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop&q=80';
+                          }
+                        }}
                       />
                       <span
                         className={`position-absolute top-0 end-0 badge m-1.5 ${
